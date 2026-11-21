@@ -2,6 +2,7 @@
 
 import { AreaTexto, Campo, Selector } from "@/components/ui/campo";
 import { formatearColones } from "@/lib/formato";
+import { PROVINCIAS } from "@/lib/provincias";
 import { COSTO_ENTREGA } from "@/mocks/compra-simulada";
 import type { ModalidadEntrega } from "@/modules/ventas-pagos/schema";
 
@@ -11,8 +12,6 @@ export type DatosEntrega = {
   canton: string;
   direccion: string;
 };
-
-const PROVINCIAS = ["San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"];
 
 const OPCIONES: { modalidad: ModalidadEntrega; detalle: string }[] = [
   { modalidad: "Retiro presencial", detalle: "San Pedro · Sin costo" },

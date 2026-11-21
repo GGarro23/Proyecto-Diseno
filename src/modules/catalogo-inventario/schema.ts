@@ -17,9 +17,8 @@ export type Producto = {
   imagenUrl: string; // no está en el modelo (Figuras 11–13)
 };
 
-// PENDIENTE: RF-19 pide indicar si el ajuste aumenta o disminuye,
-// y el modelo no define cómo. Confirmar con el compañero.
-export type TipoMovimiento = string;
+// La dirección del ajuste (RF-19) va en el tipo. La cantidad siempre es positiva.
+export type TipoMovimiento = "Entrada" | "Ajuste positivo" | "Ajuste negativo" | "Descuento";
 
 export type MovimientoInventario = {
   idMovimiento: number;

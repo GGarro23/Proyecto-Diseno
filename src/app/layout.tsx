@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import { Encabezado } from "@/components/layout/encabezado";
-import { sesion } from "@/mocks/sesion";
 import "./globals.css";
 import { ProveedorCarrito } from "@/components/carrito/proveedor-carrito";
+import { ProveedorSesion } from "@/components/sesion/proveedor-sesion";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -23,10 +23,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${cormorant.variable} ${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <ProveedorCarrito sesionActiva={!!sesion}>
-          <Encabezado sesion={sesion} />
-          <main className="flex-1">{children}</main>
-        </ProveedorCarrito>
+        <ProveedorSesion>
+          <ProveedorCarrito>
+            <Encabezado />
+            <main className="flex-1">{children}</main>
+          </ProveedorCarrito>
+        </ProveedorSesion>
       </body>
     </html>
   );

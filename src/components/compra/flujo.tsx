@@ -2,11 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 import { useCarrito } from "@/components/carrito/proveedor-carrito";
+import { useSesion } from "@/components/sesion/proveedor-sesion";
 import { Boton, BotonEnlace } from "@/components/ui/boton";
 import { Pasos } from "@/components/ui/pasos";
 import { Sobretitulo } from "@/components/ui/textos";
 import { COSTO_ENTREGA, crearPedido, simularPago } from "@/mocks/compra-simulada";
-import type { Sesion } from "@/mocks/sesion";
 import { PasoConfirmacion } from "./confirmacion-compra";
 import { PasoEntrega, type DatosEntrega } from "./entrega-compra";
 import { PasoPago } from "./pago-compra";
@@ -16,7 +16,8 @@ import { ResumenCompra } from "./resumen-compra";
 const TITULOS = ["Tu selección", "¿Cómo lo recibes?", "Pago simulado", "Orden confirmada"];
 
 // Flujo de compra en cuatro pasos (Figuras 13–16, CU-09, HU-07)
-export function FlujoCompra({ sesion }: { sesion: Sesion | null }) {
+export function FlujoCompra() {
+  const { sesion } = useSesion();
   const { lineas, vaciar } = useCarrito();
   const [paso, setPaso] = useState<1 | 2 | 3 | 4>(1);
   const [entrega, setEntrega] = useState<DatosEntrega>({ modalidad: null, provincia: "San José", canton: "", direccion: "" });
@@ -38,7 +39,7 @@ export function FlujoCompra({ sesion }: { sesion: Sesion | null }) {
   if (!sesion) {
     return (
       <Mensaje encabezado={encabezado} texto="Inicia sesión para revisar tu carrito y completar la compra.">
-        <BotonEnlace href="/iniciar-sesion">Iniciar sesión</BotonEnlace>
+        <BotonEnlace href="/iniciar-sesion?volver=/carrito">Iniciar sesión</BotonEnlace>
       </Mensaje>
     );
   }

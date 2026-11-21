@@ -5,7 +5,7 @@ type Variante = "primario" | "secundario" | "enlace";
 
 const estilos: Record<Variante, string> = {
   primario:
-    "bg-cafe text-papel hover:bg-cafe-oscuro disabled:bg-borde disabled:text-gris",
+    "bg-naranja text-papel hover:bg-naranja-oscuro disabled:bg-borde disabled:text-gris",
   secundario:
     "border border-borde bg-papel text-tinta hover:border-cafe disabled:text-gris",
   enlace: "text-tinta underline-offset-8 hover:underline",

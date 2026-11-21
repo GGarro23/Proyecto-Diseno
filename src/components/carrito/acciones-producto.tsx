@@ -15,7 +15,7 @@ export function AccionesProducto({ producto }: { producto: Producto }) {
   const agotado = producto.existencias === 0;
 
   const alAgregar = () => {
-    if (!sesionActiva) return router.push("/iniciar-sesion");
+    if (!sesionActiva) return router.push(`/iniciar-sesion?volver=/catalogo/${producto.idProducto}`);
     const error = agregar(producto, 1);
     setMensaje(error ? { texto: error, error: true } : { texto: "Agregado al carrito.", error: false });
   };

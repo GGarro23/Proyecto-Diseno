@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from "react";
+import { useSesion } from "@/components/sesion/proveedor-sesion";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 import type { LineaCarrito } from "@/modules/ventas-pagos/schema";
 
@@ -48,7 +49,8 @@ type ContextoCarrito = {
 
 const Contexto = createContext<ContextoCarrito | null>(null);
 
-export function ProveedorCarrito({ sesionActiva, children }: { sesionActiva: boolean; children: ReactNode }) {
+export function ProveedorCarrito({ children }: { children: ReactNode }) {
+  const sesionActiva = useSesion().sesion !== null;
   const crudo = useSyncExternalStore(suscribir, leer, () => "[]");
   const lineas = useMemo(() => JSON.parse(crudo) as Linea[], [crudo]);
 
@@ -71,7 +73,7 @@ export function ProveedorCarrito({ sesionActiva, children }: { sesionActiva: boo
     return null;
   };
 
-    // Modificar la cantidad de una línea existente (RF-21)
+  // Modificar la cantidad de una línea existente (RF-21)
   const cambiarCantidad = (producto: Producto, cantidad: number) => {
     if (!Number.isInteger(cantidad) || cantidad <= 0) return "La cantidad debe ser un número entero positivo.";
     if (cantidad > producto.existencias) return `Solo hay ${producto.existencias} unidades disponibles.`;
@@ -83,7 +85,6 @@ export function ProveedorCarrito({ sesionActiva, children }: { sesionActiva: boo
   const eliminar = (idProducto: number) => escribir(lineas.filter((l) => l.idProducto !== idProducto));
 
   const vaciar = () => escribir([]);
-
 
   const cantidadTotal = lineas.reduce((suma, l) => suma + l.cantidad, 0);
 

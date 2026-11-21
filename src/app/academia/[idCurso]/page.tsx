@@ -6,7 +6,6 @@ import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { Sobretitulo } from "@/components/ui/textos";
 import { cursos, horarios } from "@/mocks/cursos";
-import { sesion } from "@/mocks/sesion";
 import { profesores } from "@/mocks/usuarios";
 
 // Mientras los datos vengan de mocks, las páginas se generan de antemano
@@ -48,7 +47,7 @@ export default async function DetalleCurso({ params }: PageProps<"/academia/[idC
             ))}
             <EstadoCurso curso={curso} claro />
           </div>
-          <InscripcionCurso curso={curso} horarios={horariosCurso} sesion={sesion} />
+          <InscripcionCurso curso={curso} horarios={horariosCurso} />
         </div>
       </div>
 
@@ -71,8 +70,8 @@ export default async function DetalleCurso({ params }: PageProps<"/academia/[idC
               {horariosCurso.map((h) => (
                 <tr key={h.idHorario} className="border-t border-borde">
                   <td className="py-3">{h.diaSemana}</td>
-                  <td className="py-3">{(h.horaInicio)}</td>
-                  <td className="py-3">{(h.horaFin)}</td>
+                  <td className="py-3">{h.horaInicio}</td>
+                  <td className="py-3">{h.horaFin}</td>
                 </tr>
               ))}
             </tbody>

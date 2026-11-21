@@ -1,8 +1,9 @@
-"use client";import { useCarrito } from "@/components/carrito/proveedor-carrito";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Sesion } from "@/mocks/sesion";
+import { useCarrito } from "@/components/carrito/proveedor-carrito";
+import { useSesion } from "@/components/sesion/proveedor-sesion";
 
 function Logo() {
   return (
@@ -32,15 +33,20 @@ function Icono({ d }: { d: string }) {
   );
 }
 
-export function Encabezado({ sesion }: { sesion: Sesion | null }) {
+// Roles que tienen panel propio (Figuras 22, 23, 28 y 31). El Cliente no tiene panel.
+const ROLES_CON_PANEL = ["Estudiante", "Profesor", "Encargado de pedidos", "Administrador", "Administrador del sistema"];
+
+export function Encabezado() {
   const ruta = usePathname();
+  const { sesion } = useSesion();
+  const tienePanel = !!sesion?.roles.some((r) => ROLES_CON_PANEL.includes(r));
   const { cantidadTotal } = useCarrito();
 
   const enlaces = sesion
     ? [
         { href: "/catalogo", texto: "Instrumentos" },
         { href: "/academia", texto: "Academia" },
-        { href: "/panel", texto: "Mi panel" },
+        ...(tienePanel ? [{ href: "/panel", texto: "Mi panel" }] : []),
         { href: "/perfil", texto: "Mi perfil" },
         { href: "/nosotros", texto: "Nosotros" },
       ]

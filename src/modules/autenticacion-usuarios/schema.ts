@@ -34,6 +34,12 @@ export type Permiso = {
   descripcion: string;
 };
 
+// Sesión del usuario autenticado (RF-02): datos públicos y roles vigentes
+export type Sesion = {
+  usuario: UsuarioPublico;
+  roles: NombreRol[];
+};
+
 export type UsuarioRol = {
   idUsuario: number;
   idRol: number;

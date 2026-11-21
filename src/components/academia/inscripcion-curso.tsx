@@ -5,22 +5,23 @@ import { useState } from "react";
 import { Boton, BotonEnlace } from "@/components/ui/boton";
 import { Icono } from "@/components/ui/icono";
 import { Modal } from "@/components/ui/modal";
+import { useSesion } from "@/components/sesion/proveedor-sesion";
 import { Sobretitulo } from "@/components/ui/textos";
 import { cuposDisponibles, inscribir } from "@/mocks/academia";
-import type { Sesion } from "@/mocks/sesion";
 import type { Curso, Horario } from "@/modules/academia/schema";
 import { useInscripciones } from "./inscripciones";
 
-type Props = { curso: Curso; horarios: Horario[]; sesion: Sesion | null };
+type Props = { curso: Curso; horarios: Horario[] };
 
 // Inscripción a un curso con confirmación (Figuras 18 y 19, RF-37, CU-14)
-export function InscripcionCurso({ curso, horarios, sesion }: Props) {
+export function InscripcionCurso({ curso, horarios }: Props) {
+  const { sesion } = useSesion();
   const inscripciones = useInscripciones();
   const [abierto, setAbierto] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!sesion) {
-    return <BotonEnlace href="/iniciar-sesion" className="self-start">Inicia sesión para inscribirte</BotonEnlace>;
+    return <BotonEnlace href={`/iniciar-sesion?volver=/academia/${curso.idCurso}`} className="self-start">Inicia sesión para inscribirte</BotonEnlace>;
   }
 
   const inscrito = inscripciones.some(

@@ -25,7 +25,7 @@ export function Carrusel({ total, children }: { total: number; children: ReactNo
           <Icono nombre="flecha" />
         </button>
       </div>
-      <div ref={fila} className="flex snap-x gap-6 overflow-x-auto [scrollbar-width:none]">
+      <div ref={fila} className="flex snap-x gap-6 overflow-x-auto [scrollbar-:none]">
         {children}
       </div>
     </div>

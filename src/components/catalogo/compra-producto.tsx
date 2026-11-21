@@ -19,7 +19,7 @@ export function CompraProducto({ producto }: { producto: Producto }) {
   const cambiar = (valor: number) => setCantidad(Math.min(Math.max(1, valor), producto.existencias));
 
   const alAgregar = () => {
-    if (!sesionActiva) return router.push("/iniciar-sesion");
+    if (!sesionActiva) return router.push(`/iniciar-sesion?volver=/catalogo/${producto.idProducto}`);
     const error = agregar(producto, cantidad);
     setMensaje(error ? { texto: error, error: true } : { texto: "Producto agregado al carrito.", error: false });
   };

@@ -9,6 +9,9 @@ const trazos = {
   calendario: "M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z",
   persona: "M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
   cerrar: "M6 6l12 12M18 6L6 18",
+  grafico: "M4 20h16M7 16v-5M12 16V8M17 16v-8",
+  caja: "M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zm0 0v18M4 7.5l8 4.5 8-4.5",
+  lista: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
 };
 
 export type NombreIcono = keyof typeof trazos;
