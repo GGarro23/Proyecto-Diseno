@@ -3,10 +3,11 @@ import { TarjetaProducto } from "@/components/catalogo/tarjeta-producto";
 import { BotonEnlace } from "@/components/ui/boton";
 import { Carrusel } from "@/components/ui/carrusel";
 import { Foto } from "@/components/ui/foto";
+import { Suspense } from "react";
 import { Icono } from "@/components/ui/icono";
 import { Sobretitulo } from "@/components/ui/textos";
-import { categorias } from "@/mocks/categorias";
-import { productos } from "@/mocks/productos";
+import { obtenerCategorias, obtenerProductos } from "@/modules/catalogo-inventario/consultas";
+import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 
 // Textos de las tarjetas de categoría (Figura 09). No forman parte del modelo de datos.
 const detalleCategoria: Record<string, { nota: string; texto: string }> = {
@@ -70,7 +71,7 @@ function Presentacion() {
   );
 }
 
-function Categorias() {
+function Categorias({ categorias }: { categorias: Categoria[] }) {
   return (
     <section className="mx-auto max-w-6xl px-6 py-10">
       <Sobretitulo>Encuentra tu sonido</Sobretitulo>
@@ -101,7 +102,7 @@ function Categorias() {
   );
 }
 
-function Destacados() {
+function Destacados({ productos, categorias }: { productos: Producto[]; categorias: Categoria[] }) {
   const activos = productos.filter((p) => p.activo);
   return (
     <section className="mx-auto max-w-6xl px-6 py-10">
@@ -157,12 +158,40 @@ function Academia() {
   );
 }
 
+async function CatalogoInicio() {
+  const [productos, categorias] = await Promise.all([
+    obtenerProductos(),
+    obtenerCategorias(),
+  ]);
+
+  return (
+    <>
+      <Categorias categorias={categorias} />
+      <Destacados
+        productos={productos}
+        categorias={categorias}
+      />
+    </>
+  );
+}
+
 export default function Inicio() {
   return (
     <>
       <Presentacion />
-      <Categorias />
-      <Destacados />
+
+      <Suspense
+        fallback={
+          <div className="mx-auto max-w-6xl px-6 py-12">
+            <p className="text-center text-gris">
+              Cargando catálogo de instrumentos...
+            </p>
+          </div>
+        }
+      >
+        <CatalogoInicio />
+      </Suspense>
+
       <Academia />
     </>
   );

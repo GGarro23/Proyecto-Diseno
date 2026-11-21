@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useAsistencias } from "@/components/academia/asistencias";
+import { avisarAsistenciasActualizadas, useAsistencias } from "@/components/academia/asistencias";
 import { Avatar } from "@/components/ui/avatar";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/textos";
-import { registrarAsistencias } from "@/mocks/academia";
 import type { Asistencia, Inscripcion } from "@/modules/academia/schema";
 
 type Estado = Asistencia["estadoAsistencia"];
@@ -22,6 +21,7 @@ export function RegistroAsistenciasProfesor({ idProfesor, idCurso, inscripciones
   const [fecha, setFecha] = useState(() => new Date().toLocaleDateString("en-CA")); // AAAA-MM-DD
   const [marcas, setMarcas] = useState<Record<number, Estado>>({});
   const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
+  const [procesando, setProcesando] = useState(false);
 
   // Lo ya registrado para esa fecha se muestra en modo consulta (RF-43) y no se repite (RF-42)
   const registradas = asistencias.filter(
@@ -38,15 +38,36 @@ export function RegistroAsistenciasProfesor({ idProfesor, idCurso, inscripciones
   const alternar = (idInscripcion: number) =>
     setMarcas({ ...marcas, [idInscripcion]: estadoDe(idInscripcion) === "Presente" ? "Ausente" : "Presente" });
 
-  const guardar = () => {
-    const resultado = registrarAsistencias(
-      idProfesor,
-      idCurso,
-      fecha,
-      pendientes.map((i) => ({ idInscripcion: i.idInscripcion, estadoAsistencia: estadoDe(i.idInscripcion) }))
-    );
-    setMensaje(resultado.ok ? { texto: "Asistencia guardada.", error: false } : { texto: resultado.error, error: true });
-    if (resultado.ok) setMarcas({});
+  const guardar = async () => {
+    if (procesando || pendientes.length === 0) return;
+    setProcesando(true);
+    setMensaje(null);
+    try {
+      const respuesta = await fetch("/api/asistencias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idCurso,
+          fecha,
+          registros: pendientes.map((i) => ({
+            idInscripcion: i.idInscripcion,
+            estadoAsistencia: estadoDe(i.idInscripcion),
+          })),
+        }),
+      });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) {
+        setMensaje({ texto: resultado.error ?? "No se pudo registrar la asistencia.", error: true });
+        return;
+      }
+      setMensaje({ texto: "Asistencia guardada en PostgreSQL.", error: false });
+      setMarcas({});
+      avisarAsistenciasActualizadas();
+    } catch {
+      setMensaje({ texto: "No se pudo conectar con el servidor.", error: true });
+    } finally {
+      setProcesando(false);
+    }
   };
 
   return (
@@ -92,7 +113,7 @@ export function RegistroAsistenciasProfesor({ idProfesor, idCurso, inscripciones
 
       {mensaje && <p className={`text-sm ${mensaje.error ? "text-red-800" : "text-gris"}`}>{mensaje.texto}</p>}
       {pendientes.length > 0 && (
-        <Boton onClick={guardar} className="self-start">Guardar asistencia</Boton>
+        <Boton onClick={guardar} disabled={procesando} className="self-start">{procesando ? "Guardando..." : "Guardar asistencia"}</Boton>
       )}
     </div>
   );

@@ -24,18 +24,50 @@ export function estadoExistencias(producto: Producto): EstadoExistencias {
   return "Disponible";
 }
 
-// Saldo antes y después de cada movimiento (Figura 39). Recorre los movimientos de cada
-// producto en orden, desde existencias en 0, así que necesita el historial completo.
-export type MovimientoConSaldo = MovimientoInventario & { saldoAnterior: number; saldoNuevo: number };
+// Reconstrucción de saldos a partir del saldo ACTUAL y el historial disponible.
+// No se presupone que el inventario inició en cero: los datos semilla pueden
+// contener existencias anteriores al primer movimiento registrado.
+export type MovimientoConSaldo = MovimientoInventario & {
+  saldoAnterior: number | null;
+  saldoNuevo: number | null;
+};
 
-export function calcularSaldos(movimientos: MovimientoInventario[]): MovimientoConSaldo[] {
+export function calcularSaldos(
+  movimientos: MovimientoInventario[],
+  productos: Producto[]
+): MovimientoConSaldo[] {
+  const acumulados = new Map<number, number>();
+  const actuales = new Map(productos.map((p) => [p.idProducto, p.existencias]));
+
+  for (const movimiento of movimientos) {
+    acumulados.set(
+      movimiento.idProducto,
+      (acumulados.get(movimiento.idProducto) ?? 0) +
+        cambioEnExistencias(movimiento.tipo, movimiento.cantidad)
+    );
+  }
+
   const saldos = new Map<number, number>();
+  for (const [idProducto, actual] of actuales) {
+    const inicial = actual - (acumulados.get(idProducto) ?? 0);
+    // Si los movimientos disponibles no permiten reconstruir un saldo inicial
+    // no negativo, evitamos mostrar números falsos.
+    if (Number.isFinite(inicial) && inicial >= 0) saldos.set(idProducto, inicial);
+  }
+
   return [...movimientos]
     .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.idMovimiento - b.idMovimiento)
-    .map((m) => {
-      const saldoAnterior = saldos.get(m.idProducto) ?? 0;
-      const saldoNuevo = saldoAnterior + cambioEnExistencias(m.tipo, m.cantidad);
-      saldos.set(m.idProducto, saldoNuevo);
-      return { ...m, saldoAnterior, saldoNuevo };
+    .map((movimiento) => {
+      const anterior = saldos.get(movimiento.idProducto);
+      if (anterior === undefined) {
+        return { ...movimiento, saldoAnterior: null, saldoNuevo: null };
+      }
+      const nuevo = anterior + cambioEnExistencias(movimiento.tipo, movimiento.cantidad);
+      if (nuevo < 0) {
+        saldos.delete(movimiento.idProducto);
+        return { ...movimiento, saldoAnterior: null, saldoNuevo: null };
+      }
+      saldos.set(movimiento.idProducto, nuevo);
+      return { ...movimiento, saldoAnterior: anterior, saldoNuevo: nuevo };
     });
 }
