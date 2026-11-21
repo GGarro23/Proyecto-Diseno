@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import { leerEstadoPedidos, pedidosDesde, suscribirPedidos } from "@/mocks/compra-simulada";
+import { leerEstadoPedidos, pedidosDesde, suscribirPedidos } from "@/mocks/compra";
 
 // Pedidos e historial de estados actuales; se actualizan al avanzar un estado
 export function usePedidos() {

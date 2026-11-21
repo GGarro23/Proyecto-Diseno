@@ -7,15 +7,15 @@ import { Boton } from "@/components/ui/boton";
 import { Modal } from "@/components/ui/modal";
 import { PanelLateral } from "@/components/ui/panel-lateral";
 import { Sobretitulo } from "@/components/ui/textos";
-import { desactivarProducto } from "@/mocks/inventario-simulado";
+import { desactivarProducto } from "@/mocks/inventario";
 import { estadoExistencias, UMBRAL_INVENTARIO_BAJO } from "@/modules/catalogo-inventario/reglas";
 import { CategoriasAdmin } from "./categorias-admin";
-import { FichaExistencias } from "./ficha-existencias";
-import { FormularioMovimiento } from "./formulario-movimiento";
-import { FormularioProducto } from "./formulario-producto";
-import { HistorialMovimientos } from "./historial-movimientos";
-import { TablaExistencias, type AccionProducto } from "./tabla-existencias";
-import { useInventario } from "./use-inventario";
+import { FichaExistenciasAdmin } from "./ficha-existencias-admin";
+import { FormularioMovimientoAdmin } from "./formulario-movimiento-admin";
+import { FormularioProductoAdmin } from "./formulario-producto-admin";
+import { HistorialMovimientosAdmin } from "./historial-movimientos-admin";
+import { TablaExistenciasAdmin, type AccionProducto } from "./tabla-existencias-admin";
+import { useInventario } from "./inventario";
 
 const VISTAS = ["Existencias", "Historial de movimientos", "Categorías"] as const;
 
@@ -101,9 +101,9 @@ export function InventarioAdmin() {
       </div>
 
       {vista === "Existencias" && (
-        <TablaExistencias productos={productos} categorias={categorias} movimientos={movimientos} alElegir={elegir} />
+        <TablaExistenciasAdmin productos={productos} categorias={categorias} movimientos={movimientos} alElegir={elegir} />
       )}
-      {vista === "Historial de movimientos" && <HistorialMovimientos productos={productos} movimientos={movimientos} />}
+      {vista === "Historial de movimientos" && <HistorialMovimientosAdmin productos={productos} movimientos={movimientos} />}
       {vista === "Categorías" && <CategoriasAdmin categorias={categorias} productos={productos} alTerminar={setAviso} />}
 
       <PanelLateral
@@ -113,7 +113,7 @@ export function InventarioAdmin() {
         titulo={panel ? titulos[panel.clase][1] : ""}
       >
         {panel?.clase === "ficha" && productoPanel && (
-          <FichaExistencias
+          <FichaExistenciasAdmin
             producto={productoPanel}
             categorias={categorias}
             movimientos={movimientos}
@@ -121,7 +121,7 @@ export function InventarioAdmin() {
           />
         )}
         {(panel?.clase === "entrada" || panel?.clase === "ajuste") && (
-          <FormularioMovimiento
+          <FormularioMovimientoAdmin
             key={panel.clase}
             clase={panel.clase}
             productos={productos}
@@ -132,7 +132,7 @@ export function InventarioAdmin() {
           />
         )}
         {panel?.clase === "producto" && (
-          <FormularioProducto producto={productoPanel} categorias={categorias} alTerminar={terminar} alCancelar={() => setPanel(null)} />
+          <FormularioProductoAdmin producto={productoPanel} categorias={categorias} alTerminar={terminar} alCancelar={() => setPanel(null)} />
         )}
       </PanelLateral>
 

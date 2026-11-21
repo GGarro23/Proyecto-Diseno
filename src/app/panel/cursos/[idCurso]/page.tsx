@@ -1,4 +1,4 @@
-import { CursoAsignado } from "@/components/profesor/curso-asignado";
+import { CursoAsignadoProfesor } from "@/components/profesor/curso-asignado-profesor";
 import { cursos } from "@/mocks/cursos";
 
 // Mientras los datos vengan de mocks, las páginas se generan de antemano
@@ -11,7 +11,7 @@ export default async function PaginaCursoAsignado({ params }: PageProps<"/panel/
   const { idCurso } = await params;
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <CursoAsignado idCurso={Number(idCurso)} />
+      <CursoAsignadoProfesor idCurso={Number(idCurso)} />
     </div>
   );
 }

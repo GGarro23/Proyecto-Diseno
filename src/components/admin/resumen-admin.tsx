@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useInscripciones } from "@/components/academia/inscripciones";
-import { usePedidos } from "@/components/pedidos/use-pedidos";
+import { usePedidos } from "@/components/pedidos/pedidos";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
 import { formatearColones } from "@/lib/formato";
 import { categorias } from "@/mocks/categorias";

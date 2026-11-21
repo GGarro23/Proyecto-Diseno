@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Icono } from "@/components/ui/icono";
 import { Insignia } from "@/components/ui/textos";
-import { nombreDeUsuario } from "@/mocks/auth";
+import { nombreDeUsuario } from "@/mocks/autenticacion";
 import { calcularSaldos, cambioEnExistencias, type MovimientoConSaldo } from "@/modules/catalogo-inventario/reglas";
 import type { MovimientoInventario, Producto, TipoMovimiento } from "@/modules/catalogo-inventario/schema";
 
@@ -26,7 +26,7 @@ export function cantidadConSigno(m: MovimientoInventario): string {
 }
 
 // Historial de movimientos de inventario (Figura 39, RF-17 a RF-19)
-export function HistorialMovimientos({ productos, movimientos }: { productos: Producto[]; movimientos: MovimientoInventario[] }) {
+export function HistorialMovimientosAdmin({ productos, movimientos }: { productos: Producto[]; movimientos: MovimientoInventario[] }) {
   const [busqueda, setBusqueda] = useState("");
   const [tipo, setTipo] = useState("Todos");
   const [orden, setOrden] = useState<(typeof ORDENES)[number]>("Más recientes");

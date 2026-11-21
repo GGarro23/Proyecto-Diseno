@@ -1,7 +1,7 @@
 "use client";
 
-import { ListaPedidos } from "@/components/cuenta/lista-pedidos";
-import { RequiereSesion } from "@/components/cuenta/requiere-sesion";
+import { ListaPedidosCliente } from "@/components/cuenta/lista-pedidos-cliente";
+import { ControlSesion } from "@/components/cuenta/control-sesion";
 import { Sobretitulo } from "@/components/ui/textos";
 
 // Mis pedidos (RF-26, HU-08). Sin prototipo: sigue el estilo de las demás pantallas.
@@ -14,7 +14,7 @@ export default function MisPedidos() {
           Mis <em className="text-naranja">pedidos</em>
         </h1>
       </div>
-      <RequiereSesion volver="/mis-pedidos">{(sesion) => <ListaPedidos idUsuario={sesion.usuario.idUsuario} />}</RequiereSesion>
+      <ControlSesion volver="/mis-pedidos">{(sesion) => <ListaPedidosCliente idUsuario={sesion.usuario.idUsuario} />}</ControlSesion>
     </div>
   );
 }

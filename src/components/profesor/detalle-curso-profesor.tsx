@@ -7,12 +7,12 @@ import { useInscripciones } from "@/components/academia/inscripciones";
 import { Avatar } from "@/components/ui/avatar";
 import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
-import { Pestanas } from "@/components/ui/pestanias";
+import { Pestanias } from "@/components/ui/pestanias";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
 import { cursos, horarios } from "@/mocks/cursos";
 import { estudiantes } from "@/mocks/usuarios";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
-import { RegistroAsistencia } from "./registrar-asistencias";
+import { RegistroAsistenciasProfesor } from "./registro-asistencias-profesor";
 
 // Curso asignado al Profesor (Figuras 25 y 26, RF-40, RF-41, RF-42, RF-43)
 export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; sesion: Sesion }) {
@@ -74,7 +74,7 @@ export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; ses
       </div>
 
       <div>
-        <Pestanas opciones={["Resumen", "Estudiantes", "Asistencias"]} activa={pestana} alCambiar={setPestana} />
+        <Pestanias opciones={["Resumen", "Estudiantes", "Asistencias"]} activa={pestana} alCambiar={setPestana} />
         <div className="border border-t-0 border-borde bg-papel p-8">
           {pestana === "Resumen" && (
             <div className="flex flex-col gap-3">
@@ -103,7 +103,7 @@ export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; ses
             ))}
 
           {pestana === "Asistencias" && (
-            <RegistroAsistencia idProfesor={sesion.usuario.idUsuario} idCurso={idCurso} inscripciones={activas} nombreDe={nombreDe} />
+            <RegistroAsistenciasProfesor idProfesor={sesion.usuario.idUsuario} idCurso={idCurso} inscripciones={activas} nombreDe={nombreDe} />
           )}
         </div>
       </div>

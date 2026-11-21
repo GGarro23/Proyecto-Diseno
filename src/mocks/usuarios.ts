@@ -8,7 +8,7 @@ export const profesores: UsuarioPublico[] = [
 ];
 
 // Estudiantes de prueba: Ana Mora y quienes ocupan los cupos de los cursos
-// (idUsuario 1000 a 1004 en mocks/academia-simulada.ts). Nombres de las Figuras 24 a 26.
+// (idUsuario 1000 a 1004 en mocks/academia.ts). Nombres de las Figuras 24 a 26.
 export const estudiantes: UsuarioPublico[] = [
   { idUsuario: 1, nombre: "Ana Mora", correo: "ana@intervallum.cr", activo: true, telefono: "+506 8888 1840", provincia: "San José", fechaRegistro: "2023-02-14" },
   { idUsuario: 1000, nombre: "Diego Rojas", correo: "diego@correo.com", activo: true, telefono: "", provincia: "San José", fechaRegistro: "2024-01-10" },

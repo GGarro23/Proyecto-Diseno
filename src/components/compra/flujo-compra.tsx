@@ -6,11 +6,11 @@ import { useSesion } from "@/components/sesion/proveedor-sesion";
 import { Boton, BotonEnlace } from "@/components/ui/boton";
 import { Pasos } from "@/components/ui/pasos";
 import { Sobretitulo } from "@/components/ui/textos";
-import { COSTO_ENTREGA, crearPedido, simularPago } from "@/mocks/compra-simulada";
-import { PasoConfirmacion } from "./confirmacion-compra";
-import { PasoEntrega, type DatosEntrega } from "./entrega-compra";
-import { PasoPago } from "./pago-compra";
-import { PasoRevisar } from "./revisar-compra";
+import { COSTO_ENTREGA, crearPedido, simularPago } from "@/mocks/compra";
+import { ConfirmacionCompra } from "./confirmacion-compra";
+import { EntregaCompra, type DatosEntrega } from "./entrega-compra";
+import { PagoCompra } from "./pago-compra";
+import { RevisionCompra } from "./revision-compra";
 import { ResumenCompra } from "./resumen-compra";
 
 const TITULOS = ["Tu selección", "¿Cómo lo recibes?", "Pago simulado", "Orden confirmada"];
@@ -49,7 +49,7 @@ export function FlujoCompra() {
       <div>
         {encabezado}
         <div className="mx-auto max-w-3xl">
-          <PasoConfirmacion idPedido={idPedido} correo={sesion.usuario.correo} />
+          <ConfirmacionCompra idPedido={idPedido} correo={sesion.usuario.correo} />
         </div>
       </div>
     );
@@ -100,9 +100,9 @@ export function FlujoCompra() {
       {encabezado}
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
         <section className="border border-borde bg-papel p-7">
-          {paso === 1 && <PasoRevisar />}
-          {paso === 2 && <PasoEntrega datos={entrega} errores={erroresEntrega} alCambiar={setEntrega} />}
-          {paso === 3 && <PasoPago codigo={codigo} error={errorPago} alCambiar={setCodigo} />}
+          {paso === 1 && <RevisionCompra />}
+          {paso === 2 && <EntregaCompra datos={entrega} errores={erroresEntrega} alCambiar={setEntrega} />}
+          {paso === 3 && <PagoCompra codigo={codigo} error={errorPago} alCambiar={setCodigo} />}
         </section>
 
         <ResumenCompra lineas={lineas} costoEntrega={costoEntrega}>

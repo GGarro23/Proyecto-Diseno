@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { formatearColones } from "@/lib/formato";
-import { buscarProducto } from "@/mocks/compra-simulada";
+import { buscarProducto } from "@/mocks/compra";
 
 type Props = {
   lineas: { idProducto: number; cantidad: number }[];

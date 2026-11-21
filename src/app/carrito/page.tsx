@@ -1,4 +1,4 @@
-import { FlujoCompra } from "@/components/compra/flujo";
+import { FlujoCompra } from "@/components/compra/flujo-compra";
 
 // Carrito y compra (Figuras 13–16, CU-09)
 export default function Carrito() {

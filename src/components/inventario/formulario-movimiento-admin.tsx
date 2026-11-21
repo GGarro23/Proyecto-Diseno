@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo } from "@/components/ui/campo";
 import { Icono } from "@/components/ui/icono";
-import { registrarAjuste, registrarEntrada } from "@/mocks/inventario-simulado";
+import { registrarAjuste, registrarEntrada } from "@/mocks/inventario";
 import { cambioEnExistencias } from "@/modules/catalogo-inventario/reglas";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 import { validarAjuste, validarCantidad } from "@/modules/catalogo-inventario/validaciones";
@@ -12,7 +12,7 @@ import { validarAjuste, validarCantidad } from "@/modules/catalogo-inventario/va
 type TipoAjuste = "Ajuste positivo" | "Ajuste negativo";
 
 // Registro de entradas y ajustes de inventario (Figuras 37 y 38, RF-18, RF-19)
-export function FormularioMovimiento({
+export function FormularioMovimientoAdmin({
   clase,
   productos,
   idProductoInicial,

@@ -5,18 +5,18 @@ import { Aviso } from "@/components/ui/aviso";
 import { Icono } from "@/components/ui/icono";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
 import { formatearColones } from "@/lib/formato";
-import { nombreDeUsuario } from "@/mocks/auth";
-import { avanzarEstadoPedido, type PedidoConDetalle } from "@/mocks/compra-simulada";
+import { nombreDeUsuario } from "@/mocks/autenticacion";
+import { avanzarEstadoPedido, type PedidoConDetalle } from "@/mocks/compra";
 import { esEstadoFinal, siguienteEstado } from "@/modules/gestion-pedidos/transiciones";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 import type { EstadoOperativo } from "@/modules/ventas-pagos/schema";
-import { usePedidos } from "./use-pedidos";
+import { usePedidos } from "./pedidos";
 
 const VISTAS = ["Vista Kanban", "Lista de pedidos", "Historial"] as const;
 const COLUMNAS: EstadoOperativo[] = ["Pendiente", "En preparación", "Empacado", "Listo para retiro"];
 
 // Panel de gestión de pedidos (Figuras 28 y 29, RF-27, RF-28)
-export function PanelPedidos({ sesion }: { sesion: Sesion }) {
+export function PanelEncargado({ sesion }: { sesion: Sesion }) {
   const { pedidos, historial } = usePedidos();
   const [vista, setVista] = useState<(typeof VISTAS)[number]>("Vista Kanban");
   const [aviso, setAviso] = useState<string | null>(null);

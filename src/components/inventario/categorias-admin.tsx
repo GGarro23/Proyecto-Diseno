@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
-import { modificarCategoria, registrarCategoria } from "@/mocks/inventario-simulado";
+import { modificarCategoria, registrarCategoria } from "@/mocks/inventario";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 
 // Registro y modificación de categorías (RF-11, RF-12). Sin prototipo en el documento.

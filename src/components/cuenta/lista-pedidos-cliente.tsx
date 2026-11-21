@@ -3,13 +3,13 @@
 import { useSyncExternalStore } from "react";
 import { Insignia } from "@/components/ui/textos";
 import { formatearColones } from "@/lib/formato";
-import { pedidosDeUsuario } from "@/mocks/compra-simulada";
+import { pedidosDeUsuario } from "@/mocks/compra";
 import { BotonEnlace } from "@/components/ui/boton";
 
 const sinCambios = () => () => {};
 
 // Pedidos propios con fecha, importe, modalidad, estado de pago y estado operativo (RF-26)
-export function ListaPedidos({ idUsuario }: { idUsuario: number }) {
+export function ListaPedidosCliente({ idUsuario }: { idUsuario: number }) {
   // Se lee del navegador sin romper la primera carga
   const guardado = useSyncExternalStore(sinCambios, () => JSON.stringify(pedidosDeUsuario(idUsuario)), () => "[]");
   const pedidos: ReturnType<typeof pedidosDeUsuario> = JSON.parse(guardado);

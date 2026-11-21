@@ -6,10 +6,10 @@ import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { formatearColones } from "@/lib/formato";
 import { categorias } from "@/mocks/categorias";
-import { buscarProducto } from "@/mocks/compra-simulada";
+import { buscarProducto } from "@/mocks/compra";
 
 // Paso 1: revisar el carrito (Figura 13, RF-21, RF-22)
-export function PasoRevisar() {
+export function RevisionCompra() {
   const { lineas, cambiarCantidad, eliminar } = useCarrito();
   const [errores, setErrores] = useState<Record<number, string>>({});
 

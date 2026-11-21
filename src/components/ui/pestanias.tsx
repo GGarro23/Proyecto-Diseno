@@ -1,7 +1,7 @@
 "use client";
 
 // Pestañas (Figuras 25 y 26)
-export function Pestanas({ opciones, activa, alCambiar }: { opciones: string[]; activa: string; alCambiar: (opcion: string) => void }) {
+export function Pestanias({ opciones, activa, alCambiar }: { opciones: string[]; activa: string; alCambiar: (opcion: string) => void }) {
   return (
     <div role="tablist" className="flex gap-2 border-b border-borde">
       {opciones.map((o) => (

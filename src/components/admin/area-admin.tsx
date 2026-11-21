@@ -1,14 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { RequiereSesion } from "@/components/cuenta/requiere-sesion";
+import { ControlSesion } from "@/components/cuenta/control-sesion";
 import { BotonEnlace } from "@/components/ui/boton";
 import { BarraAdmin } from "./barra-admin";
 
 // Marco de las pantallas de administración: requiere sesión con rol Administrador (RF-44)
 export function AreaAdmin({ children }: { children: ReactNode }) {
   return (
-    <RequiereSesion volver="/admin">
+    <ControlSesion volver="/admin">
       {(sesion) =>
         sesion.roles.includes("Administrador") ? (
           <div className="flex min-h-[calc(100vh-5rem)]">
@@ -22,6 +22,6 @@ export function AreaAdmin({ children }: { children: ReactNode }) {
           </div>
         )
       }
-    </RequiereSesion>
+    </ControlSesion>
   );
 }

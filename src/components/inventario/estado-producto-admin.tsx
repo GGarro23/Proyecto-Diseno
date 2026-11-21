@@ -9,7 +9,7 @@ const COLORES = {
 };
 
 // Estado del producto en el inventario (Figura 34)
-export function EstadoProducto({ producto }: { producto: Producto }) {
+export function EstadoProductoAdmin({ producto }: { producto: Producto }) {
   const estado = estadoExistencias(producto);
   return (
     <span className={`inline-block whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold ${COLORES[estado]}`}>

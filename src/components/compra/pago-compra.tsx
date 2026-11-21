@@ -3,7 +3,7 @@
 import { Campo } from "@/components/ui/campo";
 
 // Paso 3: pago simulado (Figura 15, RF-25)
-export function PasoPago({ codigo, error, alCambiar }: { codigo: string; error?: string; alCambiar: (codigo: string) => void }) {
+export function PagoCompra({ codigo, error, alCambiar }: { codigo: string; error?: string; alCambiar: (codigo: string) => void }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="border-l-2 border-naranja bg-naranja-claro px-5 py-4">

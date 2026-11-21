@@ -3,7 +3,7 @@
 import { AreaTexto, Campo, Selector } from "@/components/ui/campo";
 import { formatearColones } from "@/lib/formato";
 import { PROVINCIAS } from "@/lib/provincias";
-import { COSTO_ENTREGA } from "@/mocks/compra-simulada";
+import { COSTO_ENTREGA } from "@/mocks/compra";
 import type { ModalidadEntrega } from "@/modules/ventas-pagos/schema";
 
 export type DatosEntrega = {
@@ -25,7 +25,7 @@ type Props = {
 };
 
 // Paso 2: modalidad de entrega (Figura 14, RF-24)
-export function PasoEntrega({ datos, errores, alCambiar }: Props) {
+export function EntregaCompra({ datos, errores, alCambiar }: Props) {
   const cambiar = (campo: keyof DatosEntrega, valor: string) => alCambiar({ ...datos, [campo]: valor });
 
   return (

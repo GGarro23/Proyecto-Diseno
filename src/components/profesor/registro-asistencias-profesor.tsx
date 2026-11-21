@@ -17,7 +17,7 @@ type Props = {
 };
 
 // Registro y consulta de asistencias de una sesión (Figura 26, RF-42, RF-43)
-export function RegistroAsistencia({ idProfesor, idCurso, inscripciones, nombreDe }: Props) {
+export function RegistroAsistenciasProfesor({ idProfesor, idCurso, inscripciones, nombreDe }: Props) {
   const asistencias = useAsistencias();
   const [fecha, setFecha] = useState(() => new Date().toLocaleDateString("en-CA")); // AAAA-MM-DD
   const [marcas, setMarcas] = useState<Record<number, Estado>>({});

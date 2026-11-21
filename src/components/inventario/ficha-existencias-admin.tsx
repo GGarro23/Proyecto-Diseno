@@ -5,12 +5,12 @@ import { Foto } from "@/components/ui/foto";
 import { formatearColones } from "@/lib/formato";
 import { calcularSaldos } from "@/modules/catalogo-inventario/reglas";
 import type { Categoria, MovimientoInventario, Producto } from "@/modules/catalogo-inventario/schema";
-import { EstadoProducto } from "./estado-producto";
-import { cantidadConSigno, origenMovimiento } from "./historial-movimientos";
-import type { AccionProducto } from "./tabla-existencias";
+import { EstadoProductoAdmin } from "./estado-producto-admin";
+import { cantidadConSigno, origenMovimiento } from "./historial-movimientos-admin";
+import type { AccionProducto } from "./tabla-existencias-admin";
 
 // Ficha de existencias de un producto (Figura 36, RF-17)
-export function FichaExistencias({
+export function FichaExistenciasAdmin({
   producto,
   categorias,
   movimientos,
@@ -33,7 +33,7 @@ export function FichaExistencias({
       <div className="border-b border-borde pb-5">
         <div className="flex items-center justify-between gap-4">
           <p className="text-xs text-gris">{producto.codigo}</p>
-          <EstadoProducto producto={producto} />
+          <EstadoProductoAdmin producto={producto} />
         </div>
         <h3 className="mt-2 font-serif text-3xl">{producto.nombre}</h3>
         <p className="mt-2 text-sm text-gris">

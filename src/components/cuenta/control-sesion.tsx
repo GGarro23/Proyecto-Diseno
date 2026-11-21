@@ -6,7 +6,7 @@ import { BotonEnlace } from "@/components/ui/boton";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 
 // Muestra el contenido solo con sesión activa; si no, invita a iniciar sesión
-export function RequiereSesion({ volver, children }: { volver: string; children: (sesion: Sesion) => ReactNode }) {
+export function ControlSesion({ volver, children }: { volver: string; children: (sesion: Sesion) => ReactNode }) {
   const { sesion } = useSesion();
   if (!sesion) {
     return (

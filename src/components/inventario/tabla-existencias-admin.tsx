@@ -5,7 +5,7 @@ import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { estadoExistencias, type EstadoExistencias } from "@/modules/catalogo-inventario/reglas";
 import type { Categoria, MovimientoInventario, Producto } from "@/modules/catalogo-inventario/schema";
-import { EstadoProducto } from "./estado-producto";
+import { EstadoProductoAdmin } from "./estado-producto-admin";
 
 export type AccionProducto = "ficha" | "entrada" | "ajuste" | "editar" | "desactivar";
 
@@ -15,7 +15,7 @@ const ORDENES = ["Nombre", "Menos existencias", "Más existencias"] as const;
 const filtro = "border border-borde bg-white px-3 py-3 text-sm text-tinta outline-none focus:border-cafe";
 
 // Existencias por producto con búsqueda, filtros y acciones (Figuras 34 y 35, RF-17)
-export function TablaExistencias({
+export function TablaExistenciasAdmin({
   productos,
   categorias,
   movimientos,
@@ -119,7 +119,7 @@ export function TablaExistencias({
                   <td className="px-5 py-3">{categorias.find((c) => c.idCategoria === p.idCategoria)?.nombre}</td>
                   <td className="px-5 py-3 text-right font-serif text-xl">{p.existencias}</td>
                   <td className="px-5 py-3">
-                    <EstadoProducto producto={p} />
+                    <EstadoProductoAdmin producto={p} />
                   </td>
                   <td className="px-5 py-3 text-gris">{ultimaActualizacion(p.idProducto)?.slice(0, 10) ?? "—"}</td>
                   <td className="px-5 py-3 text-right">

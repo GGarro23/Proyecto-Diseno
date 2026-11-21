@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import { inventarioDesde, leerEstadoInventario, suscribirInventario } from "@/mocks/inventario-simulado";
+import { inventarioDesde, leerEstadoInventario, suscribirInventario } from "@/mocks/inventario";
 
 // Productos, categorías y movimientos actuales; se actualizan con cada registro
 export function useInventario() {

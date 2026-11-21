@@ -3,12 +3,12 @@
 import { useState, type FormEvent } from "react";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Selector } from "@/components/ui/campo";
-import { modificarProducto, registrarProducto } from "@/mocks/inventario-simulado";
+import { modificarProducto, registrarProducto } from "@/mocks/inventario";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 import type { DatosProducto, ErroresProducto } from "@/modules/catalogo-inventario/validaciones";
 
 // Registro y modificación de productos (RF-13, RF-14). Sin prototipo en el documento.
-export function FormularioProducto({
+export function FormularioProductoAdmin({
   producto,
   categorias,
   alTerminar,
