@@ -119,3 +119,38 @@ export async function avanzarEstadoPedido(
 
   return filas[0].idCambio;
 }
+
+/**
+ * Consulta los pedidos de un usuario específico.
+ *
+ * El identificador del usuario se obtiene de
+ * la sesión autenticada en la capa de servicio.
+ *
+ * No devuelve pedidos de otros usuarios.
+ */
+export async function listarPedidosUsuario(
+  idUsuario: number
+) {
+  return consulta<{
+    idPedido: number;
+    idUsuario: number;
+    fechaCreacion: Date;
+    total: number | string;
+    modalidadEntrega: string;
+    estadoPago: string;
+    estadoOperativo: string;
+  }>(
+    `SELECT
+       id_pedido AS "idPedido",
+       id_usuario AS "idUsuario",
+       fecha_creacion AS "fechaCreacion",
+       total,
+       modalidad_entrega AS "modalidadEntrega",
+       estado_pago AS "estadoPago",
+       estado_operativo AS "estadoOperativo"
+     FROM pedido
+     WHERE id_usuario = $1
+     ORDER BY fecha_creacion DESC, id_pedido DESC`,
+    [idUsuario]
+  );
+}

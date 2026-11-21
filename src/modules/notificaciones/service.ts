@@ -1,7 +1,7 @@
 
 import { ErrorApi } from "@/lib/respuesta";
 import { requerirSesion } from "@/modules/autenticacion-usuarios/service";
-
+import { enviarCorreo } from "@/lib/correo";
 import * as repositorio from "./repository";
 
 import type {
@@ -146,5 +146,114 @@ export async function prepararNotificacionCompra(
     mensaje:
       `Tu compra correspondiente al pedido #${idPedido} ` +
       "ha sido confirmada correctamente.",
+  };
+}
+
+/**
+ * Prepara una notificación cuando cambia
+ * el estado operativo de un pedido.
+ *
+ * No envía correos ni registra una solicitud
+ * como aceptada.
+ */
+export async function prepararNotificacionEstadoPedido(
+  idPedido: number
+) {
+  validarId(idPedido);
+
+  const { obtenerPedido } = await import(
+    "@/modules/gestion-pedidos/repository"
+  );
+
+  const pedido = await obtenerPedido(idPedido);
+
+  if (!pedido) {
+    throw new ErrorApi(
+      404,
+      "Pedido no encontrado."
+    );
+  }
+
+  const destinatario =
+    await repositorio.obtenerDestinatarioPedido(idPedido);
+
+  if (!destinatario) {
+    throw new ErrorApi(
+      404,
+      "No se encontró el destinatario del pedido."
+    );
+  }
+
+  const nombresEstados: Record<string, string> = {
+    PENDIENTE: "Pendiente",
+    EN_PREPARACION: "En preparación",
+    EMPACADO: "Empacado",
+    ENVIADO: "Enviado",
+    LISTO_RETIRO: "Listo para retirar",
+    RETIRADO: "Retirado",
+  };
+
+  const estado =
+    nombresEstados[pedido.estadoOperativo] ??
+    pedido.estadoOperativo;
+
+  return {
+    idUsuario: destinatario.idUsuario,
+    idPedido,
+    tipoEvento: "CAMBIO_ESTADO_PEDIDO" as const,
+    destinatario: destinatario.correo,
+    asunto: `Actualización de pedido #${idPedido}`,
+    mensaje:
+      `El estado de tu pedido #${idPedido} ` +
+      `ha cambiado a: ${estado}.`,
+  };
+}
+
+
+/**
+ * Solicita el envío de una notificación y registra
+ * el resultado devuelto por el proveedor.
+ *
+ * Una respuesta ACEPTADA significa que el proveedor
+ * aceptó la solicitud, no que el correo fue entregado.
+ */
+export async function enviarYRegistrarNotificacion(
+  datos: {
+    idUsuario: number;
+    tipoEvento: TipoEventoCorreo;
+    destinatario: string;
+    asunto: string;
+    mensaje: string;
+    idPedido?: number | null;
+    idInscripcion?: number | null;
+  }
+) {
+  const resultado = await enviarCorreo({
+    destinatario: datos.destinatario,
+    asunto: datos.asunto,
+    mensaje: datos.mensaje,
+  });
+
+  const estadoSolicitud: EstadoSolicitudCorreo =
+    resultado.aceptado ? "ACEPTADA" : "RECHAZADA";
+
+  const detalleError = resultado.aceptado
+    ? null
+    : resultado.error;
+
+  const idNotificacion =
+    await registrarEventoNotificacion(
+      datos.idUsuario,
+      datos.tipoEvento,
+      datos.destinatario,
+      estadoSolicitud,
+      detalleError,
+      datos.idPedido ?? null,
+      datos.idInscripcion ?? null
+    );
+
+  return {
+    idNotificacion,
+    estadoSolicitud,
   };
 }

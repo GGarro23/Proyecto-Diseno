@@ -5,11 +5,12 @@ import {
   leerCuerpo,
   manejar,
 } from "@/lib/respuesta";
-import { consultarPedidos } from "@/modules/gestion-pedidos/service";
+import {
+  consultarPedidos,
+  consultarMisPedidos,
+} from "@/modules/gestion-pedidos/service";
 import { crearPedido } from "@/modules/ventas-pagos/service";
-
-// POST /api/pedidos
-// Crear pedido desde el carrito del usuario autenticado.
+import { connection } from "next/server";
 export function POST(peticion: Request) {
   return manejar(async () => {
     const datos = await leerCuerpo<{
@@ -50,18 +51,16 @@ export function POST(peticion: Request) {
   });
 }
 
-/**
- * GET /api/pedidos
- *
- * Permite consultar todos los pedidos.
- *
- * Roles autorizados:
- * - Administrador
- * - Encargado de pedidos
- */
-export function GET() {
+export async function GET(peticion: Request) {
+  await connection();
+
   return manejar(async () => {
-    const pedidos = await consultarPedidos();
+    const url = new URL(peticion.url);
+    const soloMios = url.searchParams.get("mios") === "true";
+
+    const pedidos = soloMios
+      ? await consultarMisPedidos()
+      : await consultarPedidos();
 
     return exito(pedidos);
   });

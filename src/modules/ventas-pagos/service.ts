@@ -2,7 +2,10 @@
 import { ErrorApi } from "@/lib/respuesta";
 import { requerirSesion } from "@/modules/autenticacion-usuarios/service";
 import * as repositorio from "./repository";
-
+import {
+  prepararNotificacionCompra,
+  enviarYRegistrarNotificacion,
+} from "@/modules/notificaciones/service";
 // Validar identificadores de productos.
 function validarIdProducto(idProducto: number) {
   if (!Number.isSafeInteger(idProducto) || idProducto <= 0) {
@@ -247,7 +250,21 @@ export async function simularPago(
     idPedido,
     codigoEscenario
   );
+  // Notificar únicamente cuando el pago se confirma.
+if (resultado.resultadoConfirmacion === "CONFIRMADO") {
+  try {
+    const notificacion = await prepararNotificacionCompra(idPedido);
 
+    await enviarYRegistrarNotificacion(notificacion);
+  } catch (error) {
+    // La compra ya fue confirmada.
+    // Una falla del correo no debe revertirla ni mostrarla como fallida.
+    console.error(
+      "No se pudo procesar la notificación de compra:",
+      error
+    );
+  }
+}
   return {
     idPedido,
     resultadoSimulacion: resultado.resultadoSimulacion,

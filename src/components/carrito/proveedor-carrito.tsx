@@ -1,95 +1,251 @@
+
 "use client";
 
-import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+
 import { useSesion } from "@/components/sesion/proveedor-sesion";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 import type { LineaCarrito } from "@/modules/ventas-pagos/schema";
 
-// Carrito temporal en el navegador mientras no exista la API (HU-06, RF-20 a RF-22).
-type Linea = Omit<LineaCarrito, "idCarrito">;
+import {
+  apiConsultarCarrito,
+  apiAgregarCarrito,
+  apiActualizarCarrito,
+  apiEliminarCarrito,
+} from "@/lib/api-ventas";
 
-const CLAVE = "intervallum-carrito";
-const oyentes = new Set<() => void>();
-let memoria = "[]"; // respaldo si el navegador no permite localStorage
-
-function leer() {
-  try {
-    return localStorage.getItem(CLAVE) ?? memoria;
-  } catch {
-    return memoria;
-  }
-}
-
-function escribir(lineas: Linea[]) {
-  memoria = JSON.stringify(lineas);
-  try {
-    localStorage.setItem(CLAVE, memoria);
-  } catch {}
-  oyentes.forEach((avisar) => avisar());
-}
-
-function suscribir(avisar: () => void) {
-  oyentes.add(avisar);
-  window.addEventListener("storage", avisar);
-  return () => {
-    oyentes.delete(avisar);
-    window.removeEventListener("storage", avisar);
-  };
-}
+type Linea = Omit<LineaCarrito, "idCarrito"> & {
+  nombre: string;
+  precio: number;
+};
 
 type ContextoCarrito = {
   lineas: Linea[];
   cantidadTotal: number;
   sesionActiva: boolean;
-  agregar: (producto: Producto, cantidad: number) => string | null;
-  cambiarCantidad: (producto: Producto, cantidad: number) => string | null;
-  eliminar: (idProducto: number) => void;
+  cargando: boolean;
+  agregar: (
+    producto: Producto,
+    cantidad: number
+  ) => Promise<string | null>;
+  cambiarCantidad: (
+  producto: Pick<Producto, "idProducto">,
+  cantidad: number
+) => Promise<string | null>;
+  eliminar: (idProducto: number) => Promise<string | null>;
   vaciar: () => void;
+  refrescar: () => Promise<void>;
 };
 
 const Contexto = createContext<ContextoCarrito | null>(null);
 
-export function ProveedorCarrito({ children }: { children: ReactNode }) {
-  const sesionActiva = useSesion().sesion !== null;
-  const crudo = useSyncExternalStore(suscribir, leer, () => "[]");
-  const lineas = useMemo(() => JSON.parse(crudo) as Linea[], [crudo]);
+export function ProveedorCarrito({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const { sesion, cargando: cargandoSesion } = useSesion();
 
-  // Devuelve un mensaje de error o null si se agregó (HU-06, criterios 6 y 7)
-  const agregar = (producto: Producto, cantidad: number) => {
-    if (!sesionActiva) return "Inicia sesión para agregar productos al carrito.";
-    if (!producto.activo) return "Este producto no está disponible.";
-    if (!Number.isInteger(cantidad) || cantidad <= 0) return "La cantidad debe ser un número entero positivo.";
+  const idUsuario = sesion?.usuario.idUsuario ?? null;
+  const sesionActiva = idUsuario !== null;
 
-    const actual = lineas.find((l) => l.idProducto === producto.idProducto)?.cantidad ?? 0;
-    if (actual + cantidad > producto.existencias) {
-      return `Solo hay ${producto.existencias} unidades disponibles.`;
+  const [lineas, setLineas] = useState<Linea[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  // Evita aplicar resultados de una sesión anterior.
+  const sesionActual = useRef(idUsuario);
+
+useEffect(() => {
+  sesionActual.current = idUsuario;
+}, [idUsuario]);
+
+  const cargarCarrito = useCallback(async (
+    usuarioEsperado: number
+  ) => {
+    const resultado = await apiConsultarCarrito();
+
+    if (sesionActual.current !== usuarioEsperado) {
+      return;
     }
 
-    escribir(
-      actual
-        ? lineas.map((l) => (l.idProducto === producto.idProducto ? { ...l, cantidad: actual + cantidad } : l))
-        : [...lineas, { idProducto: producto.idProducto, cantidad }]
+    if (!resultado.ok) {
+      throw new Error(resultado.error);
+    }
+
+    setLineas(
+  resultado.dato.productos.map((producto) => ({
+    idProducto: producto.idProducto,
+    nombre: producto.nombre,
+    precio: Number(producto.precio),
+    cantidad: producto.cantidad,
+  }))
+);
+  }, []);
+
+
+useEffect(() => {
+  if (cargandoSesion) return;
+
+  let cancelado = false;
+
+  async function sincronizarCarrito() {
+    // Ejecutar la sincronización de forma asíncrona.
+    await Promise.resolve();
+
+    if (cancelado) return;
+
+    if (idUsuario === null) {
+      setLineas([]);
+      setCargando(false);
+      return;
+    }
+
+    setLineas([]);
+    setCargando(true);
+
+    try {
+      await cargarCarrito(idUsuario);
+    } catch (error) {
+      if (!cancelado) {
+        console.error(
+          "Error al cargar el carrito:",
+          error
+        );
+      }
+    } finally {
+      if (!cancelado) {
+        setCargando(false);
+      }
+    }
+  }
+
+  void sincronizarCarrito();
+
+  return () => {
+    cancelado = true;
+  };
+}, [idUsuario, cargandoSesion, cargarCarrito]);
+
+
+  const refrescar = useCallback(async () => {
+    if (idUsuario === null) {
+      setLineas([]);
+      return;
+    }
+
+    await cargarCarrito(idUsuario);
+  }, [idUsuario, cargarCarrito]);
+
+  const agregar = async (
+    producto: Producto,
+    cantidad: number
+  ): Promise<string | null> => {
+    if (!sesionActiva) {
+      return "Inicia sesión para agregar productos.";
+    }
+
+    if (!producto.activo) {
+      return "Este producto no está disponible.";
+    }
+
+    if (!Number.isSafeInteger(cantidad) || cantidad <= 0) {
+      return "La cantidad debe ser un entero positivo.";
+    }
+
+    const resultado = await apiAgregarCarrito(
+      producto.idProducto,
+      cantidad
     );
-    return null;
+
+    if (!resultado.ok) return resultado.error;
+
+    try {
+      await refrescar();
+      return null;
+    } catch {
+      return "Producto guardado, pero no se pudo actualizar el carrito.";
+    }
   };
 
-  // Modificar la cantidad de una línea existente (RF-21)
-  const cambiarCantidad = (producto: Producto, cantidad: number) => {
-    if (!Number.isInteger(cantidad) || cantidad <= 0) return "La cantidad debe ser un número entero positivo.";
-    if (cantidad > producto.existencias) return `Solo hay ${producto.existencias} unidades disponibles.`;
-    escribir(lineas.map((l) => (l.idProducto === producto.idProducto ? { ...l, cantidad } : l)));
-    return null;
+const cambiarCantidad = async (
+  producto: Pick<Producto, "idProducto">,
+  cantidad: number
+): Promise<string | null> => {
+    if (!sesionActiva) {
+      return "Inicia sesión para modificar el carrito.";
+    }
+
+    if (!Number.isSafeInteger(cantidad) || cantidad <= 0) {
+      return "La cantidad debe ser un entero positivo.";
+    }
+
+    const resultado = await apiActualizarCarrito(
+      producto.idProducto,
+      cantidad
+    );
+
+    if (!resultado.ok) return resultado.error;
+
+    try {
+      await refrescar();
+      return null;
+    } catch {
+      return "Cantidad guardada, pero no se pudo actualizar el carrito.";
+    }
   };
 
-  // Retirar una línea del carrito (RF-22)
-  const eliminar = (idProducto: number) => escribir(lineas.filter((l) => l.idProducto !== idProducto));
+  const eliminar = async (
+    idProducto: number
+  ): Promise<string | null> => {
+    if (!sesionActiva) {
+      return "Inicia sesión para modificar el carrito.";
+    }
 
-  const vaciar = () => escribir([]);
+    const resultado = await apiEliminarCarrito(idProducto);
 
-  const cantidadTotal = lineas.reduce((suma, l) => suma + l.cantidad, 0);
+    if (!resultado.ok) return resultado.error;
+
+    try {
+      await refrescar();
+      return null;
+    } catch {
+      return "Producto eliminado, pero no se pudo actualizar el carrito.";
+    }
+  };
+
+  // Solo limpia la visualización local.
+  // El vaciado persistente debe implementarse en el backend.
+  const vaciar = () => {
+    setLineas([]);
+  };
+
+  const cantidadTotal = lineas.reduce(
+    (suma, linea) => suma + linea.cantidad,
+    0
+  );
 
   return (
-    <Contexto.Provider value={{ lineas, cantidadTotal, sesionActiva, agregar, cambiarCantidad, eliminar, vaciar }}>
+    <Contexto.Provider
+      value={{
+        lineas,
+        cantidadTotal,
+        sesionActiva,
+        cargando: cargando || cargandoSesion,
+        agregar,
+        cambiarCantidad,
+        eliminar,
+        vaciar,
+        refrescar,
+      }}
+    >
       {children}
     </Contexto.Provider>
   );
@@ -97,6 +253,12 @@ export function ProveedorCarrito({ children }: { children: ReactNode }) {
 
 export function useCarrito() {
   const contexto = useContext(Contexto);
-  if (!contexto) throw new Error("useCarrito debe usarse dentro de ProveedorCarrito");
+
+  if (!contexto) {
+    throw new Error(
+      "useCarrito debe usarse dentro de ProveedorCarrito"
+    );
+  }
+
   return contexto;
 }

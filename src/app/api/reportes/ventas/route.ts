@@ -1,4 +1,4 @@
-
+import { connection } from "next/server";
 import {
   ErrorApi,
   exito,
@@ -18,8 +18,9 @@ import {
  * Ejemplo:
  * /api/reportes/ventas?fechaInicio=2026-11-01&fechaFin=2026-11-30
  */
-export function GET(peticion: Request) {
-  return manejar(async () => {
+export async function GET(peticion: Request) {
+    await connection();
+    return manejar(async () => {
     const url = new URL(peticion.url);
 
     const fechaInicio = url.searchParams.get("fechaInicio");

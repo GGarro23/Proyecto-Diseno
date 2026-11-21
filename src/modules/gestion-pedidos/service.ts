@@ -1,6 +1,9 @@
 
 import { ErrorApi } from "@/lib/respuesta";
-
+import {
+  prepararNotificacionEstadoPedido,
+  enviarYRegistrarNotificacion,
+} from "@/modules/notificaciones/service";
 import {
   requerirSesion,
   requerirRol,
@@ -24,6 +27,20 @@ export async function consultarPedidos() {
   await requerirRol("Encargado de pedidos", "Administrador");
 
   return repositorio.listarPedidos();
+}
+
+/**
+ * Consulta los pedidos del usuario autenticado.
+ *
+ * El identificador se obtiene de la sesión,
+ * no de un parámetro enviado por el cliente.
+ */
+export async function consultarMisPedidos() {
+  const sesion = await requerirSesion();
+
+  return repositorio.listarPedidosUsuario(
+    sesion.usuario.idUsuario
+  );
 }
 
 // Consultar un pedido y sus productos.
@@ -137,6 +154,23 @@ export async function cambiarEstadoPedido(
     sesion.usuario.idUsuario,
     estadoNuevo
   );
+
+  // Enviar la notificación únicamente después de
+  // actualizar correctamente el estado del pedido.
+  try {
+    const notificacion =
+      await prepararNotificacionEstadoPedido(idPedido);
+
+    await enviarYRegistrarNotificacion(notificacion);
+  } catch (error) {
+    // El estado del pedido ya fue actualizado.
+    // Una falla del correo no debe revertir el cambio.
+    console.error(
+      "No se pudo procesar la notificación del pedido:",
+      error
+    );
+  }
+
 
   return {
     idPedido,
