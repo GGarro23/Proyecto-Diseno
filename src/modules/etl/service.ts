@@ -5,15 +5,11 @@ import * as repositorio from "./repository";
 import { analizarCsv, estadoEjecucion, type ErrorFila } from "./reglas";
 import type { EjecucionDetalle, EjecucionETL, ErrorETL } from "./schema";
 
-// Proceso ETL (AF-08, RF-49, RF-50). Extracción y validación en reglas.ts; carga fila por fila
-// con cargar_producto_etl. Toda ejecución queda registrada, también las fallidas.
-
 const PERMISO = "etl.ejecutar";
-const TAMANO_MAXIMO = 10 * 1024 * 1024; // 10 MB (Figura 33)
+const TAMANO_MAXIMO = 10 * 1024 * 1024;
 
 type Resumen = Pick<EjecucionETL, "idEjecucion" | "estado" | "filasAceptadas" | "filasRechazadas">;
 
-// RF-49: el navegador envía el nombre del archivo y su texto ya leído
 export async function ejecutar(nombreArchivo: string, contenido: string): Promise<Resumen> {
   const sesion = await requerirPermiso(PERMISO);
   if (!nombreArchivo?.trim() || !nombreArchivo.toLowerCase().endsWith(".csv")) throw new ErrorApi(400, "El archivo debe ser .csv.");
@@ -45,7 +41,6 @@ export async function ejecutar(nombreArchivo: string, contenido: string): Promis
   });
 }
 
-// RF-50: historial sin volver a procesar los archivos
 export async function consultar(): Promise<{ ejecuciones: EjecucionDetalle[]; errores: ErrorETL[] }> {
   await requerirPermiso(PERMISO);
   return { ejecuciones: await repositorio.ejecuciones(), errores: await repositorio.errores() };

@@ -11,8 +11,6 @@ import type { Cuenta } from "@/modules/autenticacion-usuarios/schema";
 import { useCuentas } from "./cuentas";
 import { FormularioCuentaSistema } from "./formulario-cuenta-sistema";
 
-// Cuentas de usuario: registro, modificación, desactivación y roles (RF-06 a RF-09).
-// Sin prototipo en el documento.
 export function CuentasSistema({ idSolicitante, alAvisar }: { idSolicitante: number; alAvisar: (texto: string) => void }) {
   const { dato: cuentas, cargando, error, recargar } = useCuentas();
   const [busqueda, setBusqueda] = useState("");

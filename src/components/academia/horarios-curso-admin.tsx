@@ -7,7 +7,6 @@ import { DIAS } from "@/lib/horarios";
 import type { DiaSemana, Horario } from "@/modules/academia/schema";
 import type { DatosHorario } from "@/modules/academia/validaciones";
 
-// Registro y modificación de horarios de un curso (RF-32, RF-33). Sin prototipo en el documento.
 export function HorariosCursoAdmin({
   idCurso,
   horarios,

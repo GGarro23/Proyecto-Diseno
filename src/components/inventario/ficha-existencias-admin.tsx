@@ -16,7 +16,6 @@ import {
 } from "./historial-movimientos-admin";
 import type { AccionProducto } from "./tabla-existencias-admin";
 
-// Ficha de existencias de un producto (Figura 36, RF-17)
 export function FichaExistenciasAdmin({
   producto,
   categorias,

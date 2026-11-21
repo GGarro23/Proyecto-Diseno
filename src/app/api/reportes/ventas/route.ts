@@ -9,15 +9,6 @@ import {
   consultarReporteVentas,
 } from "@/modules/reportes/service";
 
-/**
- * GET /api/reportes/ventas
- *
- * Consulta las ventas confirmadas entre dos fechas.
- * Acceso exclusivo para Administrador.
- *
- * Ejemplo:
- * /api/reportes/ventas?fechaInicio=2026-11-01&fechaFin=2026-11-30
- */
 export async function GET(peticion: Request) {
     await connection();
     return manejar(async () => {

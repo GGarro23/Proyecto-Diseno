@@ -12,15 +12,6 @@ type DatosCorreo = {
   html?: string;
 };
 
-/**
- * Envía correos electrónicos mediante Gmail SMTP.
- *
- * Admite contenido HTML y texto plano.
- *
- * Una respuesta aceptada significa que Gmail aceptó
- * el mensaje para su procesamiento, no necesariamente
- * que ya fue entregado al destinatario.
- */
 export async function enviarCorreo({
   destinatario,
   asunto,
@@ -33,7 +24,6 @@ export async function enviarCorreo({
   const clave = process.env.SMTP_CLAVE;
   const remitente = process.env.CORREO_REMITENTE;
 
-  // Comprobar que las variables estén configuradas.
   if (
     !host ||
     !Number.isInteger(puerto) ||
@@ -49,7 +39,6 @@ export async function enviarCorreo({
     };
   }
 
-  // Crear la conexión con el servidor SMTP.
   const transporte = nodemailer.createTransport({
     host,
     port: puerto,
@@ -69,14 +58,11 @@ export async function enviarCorreo({
       to: destinatario,
       subject: asunto,
 
-      // Versión de texto plano.
       text: mensaje,
 
-      // Versión visual del correo.
       html,
     });
 
-    // Comprobar si el servidor aceptó el destinatario.
     if (
       resultado.accepted.length === 0 ||
       resultado.rejected.length > 0

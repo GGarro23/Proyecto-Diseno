@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { FormularioAcceso } from "@/components/cuenta/formulario-acceso";
 import { MarcoCuenta } from "@/components/cuenta/marco-cuenta";
 
-// Inicio de sesión (RF-02, CU-02). Sin prototipo: sigue el estilo de las demás pantallas.
 export default function IniciarSesion() {
   return (
     <MarcoCuenta titulo="Bienvenido de" destacado="nuevo">

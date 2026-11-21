@@ -1,4 +1,3 @@
--- Consultas de verificacion: solo lectura, puede ejecutarse varias veces.
 SELECT count(*) AS tablas_de_negocio
 FROM information_schema.tables
 WHERE table_schema='public' AND table_type='BASE TABLE'
@@ -9,7 +8,6 @@ WHERE table_schema='public' AND table_type='BASE TABLE'
     'historial_estado_pedido','notificacion_correo',
     'curso','horario','inscripcion','asistencia',
     'recomendacion','ejecucion_etl','error_etl');
--- Esperado: 22.
 
 SELECT 'usuario' AS tabla,count(*) AS cantidad FROM usuario
 UNION ALL SELECT 'categoria',count(*) FROM categoria

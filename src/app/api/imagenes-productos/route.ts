@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { readdir, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -28,8 +27,6 @@ export function GET() {
   });
 }
 
-// Subida para el entorno local de desarrollo. En un despliegue sin disco
-// persistente habrá que sustituirla por Supabase Storage (u otro object storage).
 export function POST(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");
@@ -44,7 +41,6 @@ export function POST(peticion: Request) {
       throw new ErrorApi(400, "La imagen debe pesar menos de 5 MB.");
     }
     const bytes = Buffer.from(await archivo.arrayBuffer());
-    // Validar firmas para no confiar solamente en el MIME declarado.
     const esJpeg = extension === ".jpg" && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
     const esPng = extension === ".png" && bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
     const esWebp = extension === ".webp" && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";

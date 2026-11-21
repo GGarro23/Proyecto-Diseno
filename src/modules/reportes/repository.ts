@@ -1,12 +1,6 @@
 
 import { consulta } from "@/lib/db";
 
-/**
- * AF-06 — Reportes
- * Consultas a las vistas SQL existentes.
- */
-
-// Reporte de ventas confirmadas.
 export async function obtenerReporteVentas(
   fechaInicio: string,
   fechaFin: string
@@ -42,7 +36,6 @@ export async function obtenerReporteVentas(
   );
 }
 
-// Reporte de inventario.
 export async function obtenerReporteInventario() {
   return consulta<{
     idProducto: number;
@@ -68,7 +61,6 @@ export async function obtenerReporteInventario() {
   );
 }
 
-// Reporte de ocupación académica.
 export async function obtenerReporteAcademia() {
   return consulta<{
     idCurso: number;

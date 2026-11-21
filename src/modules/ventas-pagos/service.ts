@@ -6,21 +6,18 @@ import {
   prepararNotificacionCompra,
   enviarYRegistrarNotificacion,
 } from "@/modules/notificaciones/service";
-// Validar identificadores de productos.
 function validarIdProducto(idProducto: number) {
   if (!Number.isSafeInteger(idProducto) || idProducto <= 0) {
     throw new ErrorApi(400, "El identificador del producto no es válido.");
   }
 }
 
-// Validar cantidades.
 function validarCantidad(cantidad: number) {
   if (!Number.isSafeInteger(cantidad) || cantidad <= 0) {
     throw new ErrorApi(400, "La cantidad debe ser un entero positivo.");
   }
 }
 
-// Convertir errores conocidos del repositorio en errores HTTP.
 function manejarErrorCarrito(error: unknown): never {
   if (error instanceof ErrorApi) {
     throw error;
@@ -46,7 +43,6 @@ function manejarErrorCarrito(error: unknown): never {
   throw error;
 }
 
-// RF: Consultar el carrito del usuario autenticado.
 export async function consultarCarrito() {
   const sesion = await requerirSesion();
   const idUsuario = sesion.usuario.idUsuario;
@@ -78,7 +74,6 @@ export async function consultarCarrito() {
   };
 }
 
-// Agregar un producto al carrito.
 export async function agregarAlCarrito(
   idProducto: number,
   cantidad: number
@@ -99,7 +94,6 @@ export async function agregarAlCarrito(
   }
 }
 
-// Actualizar cantidad de un producto.
 export async function actualizarCantidad(
   idProducto: number,
   cantidad: number
@@ -120,7 +114,6 @@ export async function actualizarCantidad(
   }
 }
 
-// Eliminar un producto del carrito.
 export async function eliminarDelCarrito(idProducto: number) {
   const sesion = await requerirSesion();
 
@@ -137,21 +130,13 @@ export async function eliminarDelCarrito(idProducto: number) {
 }
 
 
-/**
- * Crea un pedido a partir del carrito del usuario.
- *
- * RF-23: Registro de pedidos.
- * El pago permanece pendiente.
- */
 export async function crearPedido(
   modalidadEntrega: "ENVIO" | "RETIRO",
   direccionEntrega: string | null
 ) {
-  // Identificar al usuario mediante su sesión.
   const sesion = await requerirSesion();
   const idUsuario = sesion.usuario.idUsuario;
 
-  // Validar la modalidad de entrega.
   if (
     modalidadEntrega !== "ENVIO" &&
     modalidadEntrega !== "RETIRO"
@@ -162,13 +147,11 @@ export async function crearPedido(
     );
   }
 
-  // Normalizar la dirección recibida.
   const direccion =
     typeof direccionEntrega === "string"
       ? direccionEntrega.trim()
       : null;
 
-  // Los envíos requieren una dirección.
   if (modalidadEntrega === "ENVIO" && !direccion) {
     throw new ErrorApi(
       400,
@@ -176,7 +159,6 @@ export async function crearPedido(
     );
   }
 
-  // El retiro presencial no debe tener dirección.
   if (modalidadEntrega === "RETIRO" && direccion) {
     throw new ErrorApi(
       400,
@@ -184,7 +166,6 @@ export async function crearPedido(
     );
   }
 
-  // Comprobar que el carrito contiene productos.
   const carrito = await repositorio.obtenerCarrito(idUsuario);
 
   if (!carrito) {
@@ -199,7 +180,6 @@ export async function crearPedido(
     throw new ErrorApi(400, "Tu carrito está vacío.");
   }
 
-  // Registrar el pedido mediante la función SQL existente.
   const idPedido = await repositorio.crearPedidoDesdeCarrito(
     idUsuario,
     modalidadEntrega,
@@ -215,12 +195,6 @@ export async function crearPedido(
 }
 
 
-/**
- * Simula el pago electrónico de un pedido.
- *
- * PAGO_OK: intenta aprobar el pago.
- * PAGO_RECHAZADO: simula un rechazo.
- */
 export async function simularPago(
   idPedido: number,
   codigoEscenario: "PAGO_OK" | "PAGO_RECHAZADO"
@@ -250,15 +224,12 @@ export async function simularPago(
     idPedido,
     codigoEscenario
   );
-  // Notificar únicamente cuando el pago se confirma.
 if (resultado.resultadoConfirmacion === "CONFIRMADO") {
   try {
     const notificacion = await prepararNotificacionCompra(idPedido);
 
     await enviarYRegistrarNotificacion(notificacion);
   } catch (error) {
-    // La compra ya fue confirmada.
-    // Una falla del correo no debe revertirla ni mostrarla como fallida.
     console.error(
       "No se pudo procesar la notificación de compra:",
       error

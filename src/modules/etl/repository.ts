@@ -4,16 +4,12 @@ import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 import type { ErrorFila, FilaValida } from "./reglas";
 import type { EjecucionDetalle, EjecucionETL, ErrorETL } from "./schema";
 
-// Acceso a datos de AF-08 (tablas ejecucion_etl y error_etl). Los productos se crean con la
-// función cargar_producto_etl de la BD, que también registra el movimiento ENTRADA_ETL.
-
 const ESTADO_A_BD: Record<EjecucionETL["estado"], string> = {
   Exitosa: "EXITOSA",
   "Parcialmente Exitosa": "PARCIALMENTE_EXITOSA",
   Fallida: "FALLIDA",
 };
 
-// Lo que el ETL necesita para validar: códigos existentes y categorías
 export async function productos(): Promise<Producto[]> {
   return consulta<Producto>(
     `SELECT id_producto AS "idProducto", id_categoria AS "idCategoria", codigo, nombre,
@@ -27,7 +23,6 @@ export async function categorias(): Promise<Categoria[]> {
   return consulta<Categoria>(`SELECT id_categoria AS "idCategoria", nombre FROM categoria`);
 }
 
-// La ejecución se crea al inicio (Fallida, 0 y 0) porque cargar_producto_etl necesita su id
 export async function crearEjecucion(cliente: PoolClient, idAdministrador: number, nombreArchivo: string): Promise<number> {
   const { rows } = await cliente.query<{ idEjecucion: number }>(
     `INSERT INTO ejecucion_etl (id_administrador, nombre_archivo, estado)
@@ -37,7 +32,6 @@ export async function crearEjecucion(cliente: PoolClient, idAdministrador: numbe
   return rows[0].idEjecucion;
 }
 
-// Carga una fila en su propio SAVEPOINT: si falla, se deshace solo esa fila y el proceso sigue
 export async function cargarFila(cliente: PoolClient, idEjecucion: number, fila: FilaValida): Promise<ErrorFila | null> {
   await cliente.query("SAVEPOINT fila_etl");
   try {
@@ -45,7 +39,6 @@ export async function cargarFila(cliente: PoolClient, idEjecucion: number, fila:
       `SELECT cargar_producto_etl($1, $2, $3, $4, $5, $6) AS "idProducto"`,
       [idEjecucion, fila.idCategoria, fila.codigo, fila.nombre, fila.precio, fila.existencias]
     );
-    // Columnas opcionales del CSV
     if (fila.descripcion || fila.imagenUrl) {
       await cliente.query(`UPDATE producto SET descripcion = NULLIF($2, ''), imagen_url = NULLIF($3, '') WHERE id_producto = $1`, [
         rows[0].idProducto,
@@ -87,7 +80,6 @@ export async function cerrarEjecucion(
   }
 }
 
-// RF-50: historial con el nombre del Administrador
 export async function ejecuciones(): Promise<EjecucionDetalle[]> {
   return consulta<EjecucionDetalle>(
     `SELECT e.id_ejecucion AS "idEjecucion", e.id_administrador AS "idAdministrador", e.nombre_archivo AS "nombreArchivo",

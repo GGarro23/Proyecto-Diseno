@@ -7,7 +7,6 @@ import { useCarrito } from "@/components/carrito/proveedor-carrito";
 import { Icono } from "@/components/ui/icono";
 import { formatearColones } from "@/lib/formato";
 
-// Paso 1: revisar el carrito (Figura 13, RF-21, RF-22).
 export function RevisionCompra() {
   const {
     lineas,
@@ -103,7 +102,6 @@ export function RevisionCompra() {
             key={linea.idProducto}
             className="flex flex-wrap items-center gap-5 border-b border-borde py-5 first:pt-0"
           >
-            {/* Información real del producto */}
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <span className="text-xs uppercase tracking-[0.2em] text-naranja">
                 Producto N.º {linea.idProducto}
@@ -143,7 +141,6 @@ export function RevisionCompra() {
               )}
             </div>
 
-            {/* Controles de cantidad */}
             <div className="flex items-center border border-borde">
               <button
                 type="button"
@@ -183,7 +180,6 @@ export function RevisionCompra() {
               </button>
             </div>
 
-            {/* Subtotal real */}
             <span className="w-28 text-right font-serif text-xl">
               {formatearColones(
                 Number(linea.precio) *

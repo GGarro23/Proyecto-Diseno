@@ -16,8 +16,6 @@ import type {
   MovimientoInventario,
 } from "@/modules/catalogo-inventario/schema";
 
-// RF-17: Consultar inventario y movimientos reales.
-// Requiere permiso de administración del catálogo.
 export function GET() {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");
@@ -49,10 +47,10 @@ export function GET() {
 
         consulta<MovimientoInventario>(`
           SELECT
-            id_movimiento AS "idMovimiento",
-            id_producto AS "idProducto",
+            m.id_movimiento AS "idMovimiento",
+            m.id_producto AS "idProducto",
 
-            CASE tipo
+            CASE m.tipo
               WHEN 'ENTRADA_MANUAL' THEN 'Entrada'
               WHEN 'ENTRADA_ETL' THEN 'Entrada'
               WHEN 'AJUSTE_POSITIVO' THEN 'Ajuste positivo'
@@ -60,15 +58,17 @@ export function GET() {
               WHEN 'VENTA' THEN 'Descuento'
             END AS tipo,
 
-            cantidad,
-            COALESCE(motivo, '') AS motivo,
-            fecha,
-            id_responsable AS "idResponsable",
-            id_pedido AS "idPedido",
-            id_ejecucion AS "idEjecucion"
+            m.cantidad,
+            COALESCE(m.motivo, '') AS motivo,
+            m.fecha,
+            m.id_responsable AS "idResponsable",
+            u.nombre AS responsable,
+            m.id_pedido AS "idPedido",
+            m.id_ejecucion AS "idEjecucion"
 
-          FROM movimiento_inventario
-          ORDER BY fecha ASC, id_movimiento ASC
+          FROM movimiento_inventario m
+          LEFT JOIN usuario u ON u.id_usuario = m.id_responsable
+          ORDER BY m.fecha ASC, m.id_movimiento ASC
         `),
       ]);
 
@@ -87,7 +87,6 @@ type SolicitudMovimiento = {
   motivo?: string;
 };
 
-// RF-18 y RF-19: registrar movimientos reales.
 export function POST(peticion: Request) {
   return manejar(async () => {
     const sesion = await requerirPermiso(
@@ -141,7 +140,6 @@ export function POST(peticion: Request) {
     } as const;
 
     const resultado = await transaccion(async (cliente) => {
-      // Bloquear la fila para evitar actualizaciones concurrentes.
       const consultaProducto = await cliente.query<{
         existencias: number;
         activo: boolean;

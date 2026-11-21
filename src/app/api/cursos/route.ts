@@ -47,7 +47,6 @@ function errorBD(error: unknown): never {
   throw error;
 }
 
-// Mantiene el formato público existente para no romper los consumidores de GET /api/cursos.
 export async function GET() {
   try {
     return NextResponse.json(await obtenerOfertaAcademica());
@@ -57,7 +56,6 @@ export async function GET() {
   }
 }
 
-// RF-30. El nuevo curso siempre se registra sin profesor.
 export function POST(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("academia.administrar");
@@ -76,7 +74,6 @@ export function POST(peticion: Request) {
   });
 }
 
-// RF-31. El trigger de PostgreSQL protege el cupo frente a inscripciones vigentes.
 export function PUT(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("academia.administrar");

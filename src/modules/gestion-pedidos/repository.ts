@@ -1,7 +1,6 @@
 
 import { consulta } from "@/lib/db";
 
-// Consultar los pedidos registrados.
 export async function listarPedidos() {
   return consulta<{
     idPedido: number;
@@ -25,7 +24,6 @@ export async function listarPedidos() {
   );
 }
 
-// Consultar un pedido por su identificador.
 export async function obtenerPedido(idPedido: number) {
   const filas = await consulta<{
     idPedido: number;
@@ -54,7 +52,6 @@ export async function obtenerPedido(idPedido: number) {
   return filas[0] ?? null;
 }
 
-// Obtener los productos de un pedido.
 export async function obtenerDetallePedido(idPedido: number) {
   return consulta<{
     idProducto: number;
@@ -78,7 +75,6 @@ export async function obtenerDetallePedido(idPedido: number) {
   );
 }
 
-// Consultar el historial de cambios de estado.
 export async function obtenerHistorialPedido(idPedido: number) {
   return consulta<{
     idCambio: number;
@@ -100,7 +96,6 @@ export async function obtenerHistorialPedido(idPedido: number) {
   );
 }
 
-// Actualizar el estado utilizando la función SQL existente.
 export async function avanzarEstadoPedido(
   idPedido: number,
   idResponsable: number,
@@ -120,14 +115,6 @@ export async function avanzarEstadoPedido(
   return filas[0].idCambio;
 }
 
-/**
- * Consulta los pedidos de un usuario específico.
- *
- * El identificador del usuario se obtiene de
- * la sesión autenticada en la capa de servicio.
- *
- * No devuelve pedidos de otros usuarios.
- */
 export async function listarPedidosUsuario(
   idUsuario: number
 ) {

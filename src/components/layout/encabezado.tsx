@@ -34,7 +34,6 @@ function Icono({ d }: { d: string }) {
   );
 }
 
-// Roles que tienen panel propio (Figuras 22, 23, 28 y 31). El Cliente no tiene panel.
 const ROLES_CON_PANEL = ["Estudiante", "Profesor", "Encargado de pedidos", "Administrador", "Administrador del sistema"];
 
 export function Encabezado() {
@@ -42,8 +41,6 @@ export function Encabezado() {
   const { sesion } = useSesion();
   const tienePanel = !!sesion?.roles.some((r) => ROLES_CON_PANEL.includes(r));
   const { cantidadTotal } = useCarrito();
-  // false en el servidor y en el primer dibujo; true ya en el navegador.
-  // Evita que el número del carrito (guardado en el navegador) cause un error de hidratación.
   const montado = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   const enlaces = sesion

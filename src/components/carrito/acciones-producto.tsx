@@ -8,7 +8,6 @@ import { Icono } from "@/components/ui/icono";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 import { useCarrito } from "./proveedor-carrito";
 
-// Botones de la tarjeta de producto.
 export function AccionesProducto({
   producto,
 }: {

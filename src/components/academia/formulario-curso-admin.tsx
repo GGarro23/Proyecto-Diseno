@@ -7,7 +7,6 @@ import { validarCurso } from "@/modules/academia/validaciones";
 import type { Curso } from "@/modules/academia/schema";
 import type { DatosCurso, ErroresCurso } from "@/modules/academia/validaciones";
 
-// Registro y modificación de cursos (RF-30, RF-31). Sin prototipo en el documento.
 export function FormularioCursoAdmin({
   curso,
   alTerminar,

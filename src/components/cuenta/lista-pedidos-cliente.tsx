@@ -51,10 +51,6 @@ export function ListaPedidosCliente({
           return;
         }
 
-        // La API consulta únicamente los pedidos
-        // pertenecientes al usuario autenticado.
-        // Este filtro adicional no sustituye
-        // la validación de permisos del servidor.
         setPedidos(
           resultado.dato.filter(
             (pedido) =>

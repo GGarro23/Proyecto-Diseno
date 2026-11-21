@@ -1,6 +1,5 @@
 import { consulta, transaccion } from "@/lib/db";
 
-// Obtener el carrito de un usuario.
 export async function obtenerCarrito(idUsuario: number) {
   const filas = await consulta<{
     idCarrito: number;
@@ -17,7 +16,6 @@ export async function obtenerCarrito(idUsuario: number) {
   return filas[0] ?? null;
 }
 
-// Obtener los productos incluidos en un carrito.
 export async function obtenerLineasCarrito(idCarrito: number) {
   return consulta<{
     idProducto: number;
@@ -43,10 +41,6 @@ export async function obtenerLineasCarrito(idCarrito: number) {
   );
 }
 
-/**
- * Agrega un producto al carrito.
- * Si ya existe, aumenta su cantidad.
- */
 export async function agregarProductoCarrito(
   idUsuario: number,
   idProducto: number,
@@ -57,7 +51,6 @@ export async function agregarProductoCarrito(
   }
 
   return transaccion(async (cliente) => {
-    // Crear el carrito si todavía no existe.
     const carrito = await cliente.query<{ id_carrito: number }>(
       `INSERT INTO carrito (id_usuario)
        VALUES ($1)
@@ -69,7 +62,6 @@ export async function agregarProductoCarrito(
 
     const idCarrito = carrito.rows[0].id_carrito;
 
-    // Bloquear el producto y comprobar disponibilidad.
     const producto = await cliente.query<{
       activo: boolean;
       existencias: number;
@@ -110,9 +102,6 @@ export async function agregarProductoCarrito(
   });
 }
 
-/**
- * Modifica la cantidad de un producto del carrito.
- */
 export async function actualizarCantidadCarrito(
   idUsuario: number,
   idProducto: number,
@@ -166,16 +155,6 @@ export async function actualizarCantidadCarrito(
   });
 }
 
-/**
- * Elimina un producto del carrito del usuario.
- */
-
-/**
- * Elimina un producto del carrito del usuario.
- *
- * Bloquea el carrito antes de modificar sus líneas
- * para coordinarse con la creación de pedidos.
- */
 export async function eliminarProductoCarrito(
   idUsuario: number,
   idProducto: number
@@ -216,14 +195,6 @@ export async function eliminarProductoCarrito(
 
 
 
-/**
- * Crea un pedido pendiente a partir del carrito.
- *
- * La base de datos valida los productos,
- * las existencias y calcula el total.
- *
- * No confirma el pago ni descuenta inventario.
- */
 export async function crearPedidoDesdeCarrito(
   idUsuario: number,
   modalidadEntrega: "ENVIO" | "RETIRO",
@@ -244,15 +215,6 @@ export async function crearPedidoDesdeCarrito(
 }
 
 
-/**
- * Simula el pago de un pedido.
- *
- * PAGO_OK: intenta confirmar el pedido.
- * PAGO_RECHAZADO: registra un intento rechazado.
- *
- * PostgreSQL gestiona el inventario y los cambios
- * de estado dentro de la misma transacción.
- */
 export async function simularPagoPedido(
   idUsuario: number,
   idPedido: number,

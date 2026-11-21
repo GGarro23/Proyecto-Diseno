@@ -11,7 +11,6 @@ type Props = {
   cuposDisponibles: number;
 };
 
-// Tarjeta de curso (Figura 17, RF-35): nombre, descripción, horarios y cupos
 export function TarjetaCurso({ curso, horarios, profesor, cuposDisponibles }: Props) {
   return (
     <article className="flex flex-col border border-borde bg-papel">

@@ -1,14 +1,9 @@
--- Datos minimos de prueba. NO crea usuarios, carritos, pedidos ni inscripciones.
--- Incluye categorias, productos, cursos, horarios y recomendaciones de ejemplo.
--- Para pagos/matriculas hay que crear primero cuentas con hash y roles.
 BEGIN;
 
 INSERT INTO categoria(nombre) VALUES
  ('Cuerdas'),('Teclados'),('Accesorios'),('Percusion'),('Vientos')
 ON CONFLICT DO NOTHING;
 
--- Las existencias de este archivo son SALDOS INICIALES de fixture, no ajustes
--- operativos. Las operaciones posteriores deben generar movimientos atomicos.
 INSERT INTO producto(id_categoria,codigo,nombre,descripcion,precio,activo,existencias,imagen_url)
 VALUES
  ((SELECT id_categoria FROM categoria WHERE nombre='Cuerdas'),
@@ -51,7 +46,6 @@ FROM (VALUES
 ) AS v(nombre,descripcion,cupo,estado,imagen)
 WHERE NOT EXISTS(SELECT 1 FROM curso c WHERE c.nombre=v.nombre);
 
--- Sesiones semanales, 1=lunes ... 7=domingo. Sin asignar profesores.
 INSERT INTO horario(id_curso,dia_semana,hora_inicio,hora_fin)
 SELECT c.id_curso,v.dia,v.inicio::TIME,v.fin::TIME
 FROM (VALUES
@@ -68,8 +62,6 @@ WHERE NOT EXISTS (
    AND h.hora_inicio=v.inicio::TIME AND h.hora_fin=v.fin::TIME
 );
 
--- Registros ilustrativos para probar la pantalla del agente; NO son
--- recomendaciones calculadas automaticamente por el agente.
 INSERT INTO recomendacion(tipo,id_producto,id_curso,motivo,estado)
 SELECT 'REABASTECIMIENTO',p.id_producto,NULL,
        'Dato de prueba: existencias bajas', 'PENDIENTE'

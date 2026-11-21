@@ -9,7 +9,6 @@ import { proximoHorario, textoProximaClase } from "@/lib/horarios";
 import { useOferta } from "@/components/academia/oferta";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 
-// Panel académico del Profesor (Figura 23, RF-40)
 export function PanelProfesor({ sesion }: { sesion: Sesion }) {
   const inscripciones = useInscripciones();
   const { cursos, horarios, cargando, error } = useOferta();

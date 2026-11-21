@@ -4,17 +4,12 @@ import type { Producto } from "@/modules/catalogo-inventario/schema";
 import { ocupacionCurso } from "@/modules/reportes/reportes";
 import type { Recomendacion } from "./schema";
 
-// Criterios del agente de apoyo (RF-45, RF-46). Las usa el frontend y debe usarlas el backend.
-// El agente solo propone; no modifica inventario, pedidos, cursos ni inscripciones.
-
-// Un curso abierto con cupos y ocupación menor a este porcentaje se recomienda promocionar
 export const UMBRAL_OCUPACION_PROMOCION = 50;
 
 export type Propuesta = { idElemento: number; motivo: string };
 
 const pendiente = (r: Recomendacion, tipo: Recomendacion["tipo"]) => r.tipo === tipo && r.estado === "Pendiente";
 
-// RF-45: productos activos con existencias en el umbral o por debajo, sin otra recomendación pendiente
 export function productosParaReabastecer(productos: Producto[], recomendaciones: Recomendacion[]): Propuesta[] {
   const yaPendientes = new Set(recomendaciones.filter((r) => pendiente(r, "Reabastecimiento")).map((r) => r.idProducto));
   return productos
@@ -28,8 +23,6 @@ export function productosParaReabastecer(productos: Producto[], recomendaciones:
     }));
 }
 
-// RF-46: cursos abiertos con cupos y ocupación baja, sin otra recomendación pendiente.
-// Se excluyen cursos cerrados y sin cupos.
 export function cursosParaPromocionar(cursos: Curso[], inscripciones: Inscripcion[], recomendaciones: Recomendacion[]): Propuesta[] {
   const yaPendientes = new Set(recomendaciones.filter((r) => pendiente(r, "Promoción académica")).map((r) => r.idCurso));
   return cursos

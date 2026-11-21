@@ -1,4 +1,3 @@
-// Formato de precios de los prototipos: ₡489 000
 const colones = new Intl.NumberFormat("es-CR", {
   style: "currency",
   currency: "CRC",

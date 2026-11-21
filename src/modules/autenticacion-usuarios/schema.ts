@@ -1,5 +1,3 @@
-// AF-01 Gestión de usuarios y acceso
-
 export type NombreRol =
   | "Cliente"
   | "Estudiante"
@@ -14,12 +12,11 @@ export type Usuario = {
   correo: string;
   contrasenaHash: string;
   activo: boolean;
-  telefono: string;      // no está en el modelo (Figuras 20 y 21)
-  provincia: string;     // no está en el modelo (Figuras 20 y 21)
-  fechaRegistro: string; // no está en el modelo (Figura 20)
+  telefono: string;
+  provincia: string;
+  fechaRegistro: string;
 };
 
-// Lo que se envía al frontend: nunca incluye la contraseña
 export type UsuarioPublico = Omit<Usuario, "contrasenaHash">;
 
 export type Rol = {
@@ -34,7 +31,6 @@ export type Permiso = {
   descripcion: string;
 };
 
-// Sesión del usuario autenticado (RF-02): datos públicos y roles vigentes
 export type Sesion = {
   usuario: UsuarioPublico;
   roles: NombreRol[];
@@ -50,7 +46,6 @@ export type RolPermiso = {
   idPermiso: number;
 };
 
-// Cuenta vista por el Administrador del sistema (RF-06 a RF-09)
 export type Cuenta = {
   usuario: UsuarioPublico;
   roles: NombreRol[];

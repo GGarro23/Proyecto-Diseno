@@ -6,7 +6,21 @@ import { AreaTexto, Campo, Selector } from "@/components/ui/campo";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 import type { DatosProducto, ErroresProducto } from "@/modules/catalogo-inventario/validaciones";
 
-// Registro y modificación de productos (RF-13, RF-14). Sin prototipo en el documento.
+type ResultadoBiblioteca =
+  | { ok: true; imagenes: string[] }
+  | { ok: false; error: string };
+
+async function pedirBiblioteca(): Promise<ResultadoBiblioteca> {
+  try {
+    const respuesta = await fetch("/api/imagenes-productos", { cache: "no-store" });
+    const resultado = await respuesta.json();
+    if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error ?? "No se pudieron cargar las imágenes.");
+    return { ok: true, imagenes: resultado.dato };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "No se pudo cargar la biblioteca." };
+  }
+}
+
 export function FormularioProductoAdmin({
   producto,
   categorias,
@@ -36,20 +50,33 @@ export function FormularioProductoAdmin({
   const [arrastrando, setArrastrando] = useState(false);
   const archivoRef = useRef<HTMLInputElement>(null);
 
-  const cargarBiblioteca = async () => {
-    try {
-      const respuesta = await fetch("/api/imagenes-productos", { cache: "no-store" });
-      const resultado = await respuesta.json();
-      if (!respuesta.ok || !resultado.ok) throw new Error(resultado.error ?? "No se pudieron cargar las imágenes.");
-      setBiblioteca(resultado.dato);
+  const aplicarBiblioteca = (resultado: ResultadoBiblioteca) => {
+    if (resultado.ok) {
+      setBiblioteca(resultado.imagenes);
       setErrorImagen(null);
-    } catch (error) {
-      setErrorImagen(error instanceof Error ? error.message : "No se pudo cargar la biblioteca.");
+    } else {
+      setErrorImagen(resultado.error);
     }
   };
 
+  const cargarBiblioteca = async () => {
+    aplicarBiblioteca(await pedirBiblioteca());
+  };
+
   useEffect(() => {
-    void cargarBiblioteca();
+    let vigente = true;
+    pedirBiblioteca().then((resultado) => {
+      if (!vigente) return;
+      if (resultado.ok) {
+        setBiblioteca(resultado.imagenes);
+        setErrorImagen(null);
+      } else {
+        setErrorImagen(resultado.error);
+      }
+    });
+    return () => {
+      vigente = false;
+    };
   }, []);
 
   const subirImagen = async (archivo?: File) => {
@@ -172,7 +199,6 @@ export function FormularioProductoAdmin({
                 onClick={() => setDatos((actual) => ({ ...actual, imagenUrl: ruta }))}
                 className={`flex flex-col gap-2 border p-2 text-left ${datos.imagenUrl === ruta ? "border-cafe bg-crema" : "border-borde"}`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={ruta} alt="" className="h-24 w-full object-contain" />
                 <span className="break-all text-xs">{decodeURIComponent(ruta.split("/").pop() ?? "")}</span>
               </button>
@@ -181,7 +207,6 @@ export function FormularioProductoAdmin({
         )}
         {datos.imagenUrl && (
           <div className="flex items-center gap-4 border border-borde p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={datos.imagenUrl} alt="Vista previa del producto" className="size-24 object-contain" />
             <div className="min-w-0 flex-1">
               <p className="font-medium">Imagen seleccionada</p>

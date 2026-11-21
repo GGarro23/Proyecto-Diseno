@@ -9,21 +9,18 @@ import type { Asistencia, Inscripcion } from "@/modules/academia/schema";
 
 type Estado = Asistencia["estadoAsistencia"];
 type Props = {
-  idProfesor: number;
   idCurso: number;
-  inscripciones: Inscripcion[]; // activas del curso
+  inscripciones: Inscripcion[];
   nombreDe: (idUsuario: number) => string;
 };
 
-// Registro y consulta de asistencias de una sesión (Figura 26, RF-42, RF-43)
-export function RegistroAsistenciasProfesor({ idProfesor, idCurso, inscripciones, nombreDe }: Props) {
+export function RegistroAsistenciasProfesor({ idCurso, inscripciones, nombreDe }: Props) {
   const asistencias = useAsistencias();
-  const [fecha, setFecha] = useState(() => new Date().toLocaleDateString("en-CA")); // AAAA-MM-DD
+  const [fecha, setFecha] = useState(() => new Date().toLocaleDateString("en-CA"));
   const [marcas, setMarcas] = useState<Record<number, Estado>>({});
   const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
   const [procesando, setProcesando] = useState(false);
 
-  // Lo ya registrado para esa fecha se muestra en modo consulta (RF-43) y no se repite (RF-42)
   const registradas = asistencias.filter(
     (a) => a.fecha === fecha && inscripciones.some((i) => i.idInscripcion === a.idInscripcion)
   );

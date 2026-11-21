@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { Icono } from "./icono";
 import { Sobretitulo } from "./textos";
 
-// Panel que se abre desde la derecha sobre la pantalla (Figuras 36 a 38)
 export function PanelLateral({
   abierto,
   alCerrar,

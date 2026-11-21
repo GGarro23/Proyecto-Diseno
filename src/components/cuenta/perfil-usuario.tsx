@@ -12,7 +12,6 @@ import { PROVINCIAS } from "@/lib/provincias";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 import type { ErroresCuenta } from "@/modules/autenticacion-usuarios/validaciones";
 
-// Perfil del usuario (Figuras 20 y 21, RF-03, RF-04, RF-05)
 export function PerfilUsuario({ sesion }: { sesion: Sesion }) {
   const { actualizarPerfil, cerrarSesion } = useSesion();
   const { vaciar } = useCarrito();

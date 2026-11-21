@@ -1,11 +1,4 @@
 
-/**
- * API de gestión de pedidos de Intervallum.
- *
- * Estas funciones utilizan las rutas existentes
- * y conservan las validaciones de permisos del servidor.
- */
-
 export type EstadoOperativoPedido =
   | "PENDIENTE"
   | "EN_PREPARACION"
@@ -88,31 +81,16 @@ async function solicitar<T>(
   }
 }
 
-/**
- * Consulta todos los pedidos.
- *
- * Requiere rol Administrador o Encargado de pedidos.
- */
 export function apiListarPedidos() {
   return solicitar<PedidoGestion[]>("/api/pedidos");
 }
 
-/**
- * Consulta el detalle y el historial de un pedido.
- *
- * El backend verifica los permisos.
- */
 export function apiDetallePedido(idPedido: number) {
   return solicitar<DetallePedidoGestion>(
     `/api/pedidos/${idPedido}`
   );
 }
 
-/**
- * Actualiza el estado operativo de un pedido.
- *
- * Solo puede ejecutarlo el Encargado de pedidos.
- */
 export function apiCambiarEstadoPedido(
   idPedido: number,
   estadoNuevo: EstadoOperativoPedido

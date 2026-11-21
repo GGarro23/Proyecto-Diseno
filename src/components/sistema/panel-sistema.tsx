@@ -9,7 +9,6 @@ import { PermisosSistema } from "./permisos-sistema";
 
 const VISTAS = ["Cuentas", "Roles y permisos"] as const;
 
-// Panel del Administrador del sistema: cuentas, roles y permisos (Figura 40, RF-06 a RF-10)
 export function PanelSistema({ sesion }: { sesion: Sesion }) {
   const [vista, setVista] = useState<(typeof VISTAS)[number]>("Cuentas");
   const [aviso, setAviso] = useState<string | null>(null);

@@ -1,12 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
-// Cookie de sesión firmada (RF-02, RF-03). Guarda solo el idUsuario y la fecha de vencimiento;
-// los datos y roles se leen de la BD en cada solicitud, así un cambio de rol o una
-// desactivación (RF-08, RF-09) se aplica de inmediato.
-
 const NOMBRE = "intervallum-sesion";
-const DURACION_SEGUNDOS = 8 * 60 * 60; // 8 horas
+const DURACION_SEGUNDOS = 8 * 60 * 60;
 
 function secreto(): string {
   const valor = process.env.SESION_SECRETO;
@@ -19,7 +15,7 @@ const firmar = (contenido: string) => createHmac("sha256", secreto()).update(con
 export async function crearSesion(idUsuario: number) {
   const contenido = Buffer.from(JSON.stringify({ u: idUsuario, v: Date.now() + DURACION_SEGUNDOS * 1000 })).toString("base64url");
   (await cookies()).set(NOMBRE, `${contenido}.${firmar(contenido)}`, {
-    httpOnly: true, // el JavaScript del navegador no puede leerla
+    httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
@@ -31,7 +27,6 @@ export async function borrarSesion() {
   (await cookies()).delete(NOMBRE);
 }
 
-// idUsuario de la cookie si la firma es válida y no venció; si no, null
 export async function idUsuarioDeSesion(): Promise<number | null> {
   const valor = (await cookies()).get(NOMBRE)?.value;
   if (!valor) return null;

@@ -11,7 +11,7 @@ import { COLUMNAS_OBLIGATORIAS, COLUMNAS_OPCIONALES, PLANTILLA_CSV } from "@/mod
 import type { EjecucionETL } from "@/modules/etl/schema";
 import { useImportaciones } from "./importaciones";
 
-const TAMANO_MAXIMO = 10 * 1024 * 1024; // 10 MB (Figura 33)
+const TAMANO_MAXIMO = 10 * 1024 * 1024;
 
 const COLORES: Record<EjecucionETL["estado"], string> = {
   Exitosa: "border-borde text-cafe",
@@ -19,7 +19,6 @@ const COLORES: Record<EjecucionETL["estado"], string> = {
   Fallida: "border-naranja bg-naranja text-papel",
 };
 
-// Lee el archivo como UTF-8; si no lo es (CSV guardado por Excel), como Windows-1252
 async function leerTexto(archivo: File): Promise<string> {
   const bytes = await archivo.arrayBuffer();
   try {
@@ -29,7 +28,6 @@ async function leerTexto(archivo: File): Promise<string> {
   }
 }
 
-// Importación de productos e inventario desde CSV y su historial (Figura 33, RF-49, RF-50)
 export function ImportacionAdmin() {
   const { sesion } = useSesion();
   const { dato, cargando, error, recargar } = useImportaciones();

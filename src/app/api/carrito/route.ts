@@ -13,7 +13,6 @@ import {
   eliminarDelCarrito,
 } from "@/modules/ventas-pagos/service";
 
-// Validar que los datos recibidos sean enteros positivos.
 function enteroPositivo(valor: unknown): number {
   if (
     typeof valor !== "number" ||
@@ -29,8 +28,6 @@ function enteroPositivo(valor: unknown): number {
   return valor;
 }
 
-// GET /api/carrito
-// Consultar el carrito del usuario autenticado.
 export function GET() {
   return manejar(async () => {
     const carrito = await consultarCarrito();
@@ -38,8 +35,6 @@ export function GET() {
   });
 }
 
-// POST /api/carrito
-// Agregar un producto al carrito.
 export function POST(peticion: Request) {
   return manejar(async () => {
     const datos = await leerCuerpo<{
@@ -59,8 +54,6 @@ export function POST(peticion: Request) {
   });
 }
 
-// PATCH /api/carrito
-// Cambiar la cantidad de un producto del carrito.
 export function PATCH(peticion: Request) {
   return manejar(async () => {
     const datos = await leerCuerpo<{
@@ -80,8 +73,6 @@ export function PATCH(peticion: Request) {
   });
 }
 
-// DELETE /api/carrito
-// Eliminar un producto del carrito.
 export function DELETE(peticion: Request) {
   return manejar(async () => {
     const datos = await leerCuerpo<{

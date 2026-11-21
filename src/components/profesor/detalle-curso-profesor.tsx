@@ -13,7 +13,6 @@ import { useOferta } from "@/components/academia/oferta";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 import { RegistroAsistenciasProfesor } from "./registro-asistencias-profesor";
 
-// Curso asignado al Profesor (Figuras 25 y 26, RF-40, RF-41, RF-42, RF-43)
 export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; sesion: Sesion }) {
   const { cursos, horarios, cargando, error } = useOferta();
   const inscripciones = useInscripciones();
@@ -21,7 +20,6 @@ export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; ses
   const [pestana, setPestana] = useState("Resumen");
 
   const curso = cursos.find((c) => c.idCurso === idCurso);
-  // RF-40 y RF-41: solo cursos asignados al profesor autenticado
   if (cargando) return <p className="text-gris">Cargando curso desde PostgreSQL...</p>;
   if (error) return <p role="alert" className="text-red-700">{error}</p>;
   if (!curso || curso.idProfesor !== sesion.usuario.idUsuario) {
@@ -37,7 +35,6 @@ export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; ses
   const activas = inscripciones.filter((i) => i.idCurso === idCurso && i.estado === "Activa");
   const nombreDe = (idUsuario: number) => inscripciones.find((i) => i.idUsuario === idUsuario)?.nombreEstudiante ?? `Estudiante ${idUsuario}`;
 
-  // Porcentaje de asistencia de una inscripción
   const asistenciaDe = (idInscripcion: number) => {
     const propias = asistencias.filter((a) => a.idInscripcion === idInscripcion);
     if (propias.length === 0) return "Sin sesiones registradas";
@@ -105,7 +102,7 @@ export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; ses
             ))}
 
           {pestana === "Asistencias" && (
-            <RegistroAsistenciasProfesor idProfesor={sesion.usuario.idUsuario} idCurso={idCurso} inscripciones={activas} nombreDe={nombreDe} />
+            <RegistroAsistenciasProfesor idCurso={idCurso} inscripciones={activas} nombreDe={nombreDe} />
           )}
         </div>
       </div>

@@ -1,20 +1,15 @@
 import type { MovimientoInventario, Producto, TipoMovimiento } from "./schema";
 
-// Un producto activo con esta cantidad de existencias o menos tiene inventario bajo.
-// Lo usan el panel del Administrador (Figura 31) y el agente de reabastecimiento (RF-45).
 export const UMBRAL_INVENTARIO_BAJO = 3;
 
 export function tieneInventarioBajo(producto: Producto): boolean {
   return producto.activo && producto.existencias <= UMBRAL_INVENTARIO_BAJO;
 }
 
-// Cuánto cambia la existencia con un movimiento: Entrada y Ajuste positivo suman,
-// Ajuste negativo y Descuento restan (RF-18, RF-19, RF-25).
 export function cambioEnExistencias(tipo: TipoMovimiento, cantidad: number): number {
   return tipo === "Entrada" || tipo === "Ajuste positivo" ? cantidad : -cantidad;
 }
 
-// Estado que se muestra en el inventario (Figura 34)
 export type EstadoExistencias = "Disponible" | "Existencias bajas" | "Agotado" | "Inactivo";
 
 export function estadoExistencias(producto: Producto): EstadoExistencias {
@@ -24,9 +19,6 @@ export function estadoExistencias(producto: Producto): EstadoExistencias {
   return "Disponible";
 }
 
-// Reconstrucción de saldos a partir del saldo ACTUAL y el historial disponible.
-// No se presupone que el inventario inició en cero: los datos semilla pueden
-// contener existencias anteriores al primer movimiento registrado.
 export type MovimientoConSaldo = MovimientoInventario & {
   saldoAnterior: number | null;
   saldoNuevo: number | null;
@@ -50,8 +42,6 @@ export function calcularSaldos(
   const saldos = new Map<number, number>();
   for (const [idProducto, actual] of actuales) {
     const inicial = actual - (acumulados.get(idProducto) ?? 0);
-    // Si los movimientos disponibles no permiten reconstruir un saldo inicial
-    // no negativo, evitamos mostrar números falsos.
     if (Number.isFinite(inicial) && inicial >= 0) saldos.set(idProducto, inicial);
   }
 

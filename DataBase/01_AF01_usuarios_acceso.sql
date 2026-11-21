@@ -1,4 +1,3 @@
--- AF-01 | Usuarios y acceso (5 tablas). Sin cuentas de usuario de prueba.
 BEGIN;
 
 CREATE TABLE usuario (
@@ -38,7 +37,6 @@ CREATE TABLE rol_permiso (
 );
 CREATE INDEX idx_rol_permiso_permiso ON rol_permiso(id_permiso);
 
--- Catalogo fijo de los seis roles del documento. NO son usuarios ni cuentas.
 INSERT INTO rol(nombre, descripcion) VALUES
  ('Cliente','Usuario que realiza compras y puede solicitar inscripciones'),
  ('Estudiante','Cliente que ha confirmado al menos una inscripcion'),
@@ -47,6 +45,4 @@ INSERT INTO rol(nombre, descripcion) VALUES
  ('Administrador','Administra catalogo, academia, reportes, agente y ETL'),
  ('Administrador del sistema','Administra cuentas, roles y permisos');
 
--- Los permisos y su matriz rol_permiso se definen al implementar la autorizacion.
--- La BD no almacena sesiones hasta escoger el mecanismo de autenticacion.
 COMMIT;

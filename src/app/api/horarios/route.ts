@@ -32,7 +32,6 @@ function errorHorario(error: unknown): never {
   throw error;
 }
 
-// RF-32: PostgreSQL comprueba los solapamientos mediante trigger.
 export function POST(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("academia.administrar");
@@ -50,7 +49,6 @@ export function POST(peticion: Request) {
   });
 }
 
-// RF-33: conservar el horario anterior si la BD rechaza el nuevo.
 export function PUT(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("academia.administrar");

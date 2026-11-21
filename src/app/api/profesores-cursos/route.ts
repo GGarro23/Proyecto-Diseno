@@ -9,7 +9,6 @@ function id(valor: unknown) {
   return numero;
 }
 
-// RF-34: lista real de profesores activos, solo para administración académica.
 export function GET() {
   return manejar(async () => {
     await requerirPermiso("academia.administrar");
@@ -25,7 +24,6 @@ export function GET() {
   });
 }
 
-// Los triggers comprueban rol, cuenta activa y choques con horarios existentes.
 export function PUT(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("academia.administrar");

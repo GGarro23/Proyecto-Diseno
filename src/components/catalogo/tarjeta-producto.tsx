@@ -3,8 +3,6 @@ import { Foto } from "@/components/ui/foto";
 import { formatearColones } from "@/lib/formato";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 
-// Tarjeta de producto (Figuras 10 y 11). Muestra nombre, categoría, descripción,
-// precio y disponibilidad (RF-16, HU-06). Sin existencias se marca "Agotado".
 type Props = { producto: Producto; categoria?: Categoria; className?: string };
 
 export function TarjetaProducto({ producto, categoria, className = "" }: Props) {

@@ -6,10 +6,7 @@ import { ROLES_INTERNOS, validarMatriz, type MatrizPermisos } from "./permisos";
 import type { Cuenta, NombreRol, Sesion, UsuarioPublico } from "./schema";
 import { validarContrasena, validarDatosCuenta, validarRoles, type DatosCuenta } from "./validaciones";
 
-// Reglas de AF-01 (RF-01 a RF-05) y control de acceso que usan todos los módulos.
-// Las rutas de src/app/api llaman a estas funciones; nunca a repository.ts directamente.
-
-const COSTO_BCRYPT = 10; // RNF-01
+const COSTO_BCRYPT = 10;
 
 function limpiar(datos: DatosCuenta): DatosCuenta {
   return {
@@ -20,9 +17,6 @@ function limpiar(datos: DatosCuenta): DatosCuenta {
   };
 }
 
-// ---------- Sesión ----------
-
-// Sesión de la cookie con los datos y roles vigentes; null si no hay o la cuenta está desactivada
 export async function sesionActual(): Promise<Sesion | null> {
   const idUsuario = await idUsuarioDeSesion();
   if (idUsuario === null) return null;
@@ -31,25 +25,20 @@ export async function sesionActual(): Promise<Sesion | null> {
   return { usuario, roles: await repositorio.rolesDe(idUsuario) };
 }
 
-// RF-02 / CU-02
 export async function iniciarSesion(correo: string, contrasena: string): Promise<Sesion> {
   if (!correo?.trim() || !contrasena) throw new ErrorApi(400, "Completa el correo y la contraseña.");
   const credenciales = await repositorio.buscarCredenciales(correo);
   const valida = credenciales !== null && (await bcrypt.compare(contrasena, credenciales.contrasenaHash));
   if (!credenciales || !valida) throw new ErrorApi(401, "Correo o contraseña incorrectos.");
-  if (!credenciales.activo) throw new ErrorApi(403, "Esta cuenta está desactivada."); // RF-08
+  if (!credenciales.activo) throw new ErrorApi(403, "Esta cuenta está desactivada.");
   await crearSesion(credenciales.idUsuario);
   return (await sesionActual())!;
 }
 
-// RF-03 / CU-03
 export async function cerrarSesion() {
   await borrarSesion();
 }
 
-// ---------- Cuenta propia ----------
-
-// RF-01 / CU-01: la cuenta nueva siempre es Cliente
 export async function registrar(datos: DatosCuenta & { contrasena: string }): Promise<UsuarioPublico> {
   const limpios = limpiar(datos);
   const errores = validarDatosCuenta(limpios);
@@ -63,7 +52,6 @@ export async function registrar(datos: DatosCuenta & { contrasena: string }): Pr
   return repositorio.crearCliente(limpios, hash);
 }
 
-// RF-05: solo datos personales de la cuenta con sesión; roles y permisos no cambian aquí
 export async function actualizarPerfil(datos: DatosCuenta): Promise<UsuarioPublico> {
   const sesion = await requerirSesion();
   const limpios = limpiar(datos);
@@ -77,9 +65,6 @@ export async function actualizarPerfil(datos: DatosCuenta): Promise<UsuarioPubli
   return actualizado;
 }
 
-// ---------- Control de acceso para todos los módulos ----------
-// Uso en una ruta:   const sesion = await requerirPermiso("catalogo.administrar");
-
 export async function requerirSesion(): Promise<Sesion> {
   const sesion = await sesionActual();
   if (!sesion) throw new ErrorApi(401, "Inicia sesión para continuar.");
@@ -92,7 +77,6 @@ export async function requerirRol(...roles: NombreRol[]): Promise<Sesion> {
   return sesion;
 }
 
-// RF-10: revisa la matriz de permisos guardada en rol_permiso
 export async function requerirPermiso(codigo: string): Promise<Sesion> {
   const sesion = await requerirSesion();
   if (!(await repositorio.tienePermiso(sesion.usuario.idUsuario, codigo))) {
@@ -100,8 +84,6 @@ export async function requerirPermiso(codigo: string): Promise<Sesion> {
   }
   return sesion;
 }
-
-// ---------- Administración del sistema (RF-06 a RF-10). Solo el Administrador del sistema ----------
 
 const ADMIN_SISTEMA: NombreRol = "Administrador del sistema";
 
@@ -122,7 +104,6 @@ export async function listarCuentas(): Promise<Cuenta[]> {
   return repositorio.listarCuentas();
 }
 
-// RF-06
 export async function registrarCuentaInterna(datos: DatosCuentaInterna & { contrasena: string }): Promise<Cuenta> {
   await requerirRol(ADMIN_SISTEMA);
   const { roles, ...limpios } = validarCuentaInterna(datos);
@@ -135,7 +116,6 @@ export async function registrarCuentaInterna(datos: DatosCuentaInterna & { contr
   return { usuario: (await repositorio.buscarUsuario(idUsuario))!, roles: await repositorio.rolesDe(idUsuario) };
 }
 
-// RF-07 y RF-09
 export async function modificarCuenta(idUsuario: number, datos: DatosCuentaInterna): Promise<Cuenta> {
   const sesion = await requerirRol(ADMIN_SISTEMA);
   const { roles, ...limpios } = validarCuentaInterna(datos);
@@ -149,7 +129,6 @@ export async function modificarCuenta(idUsuario: number, datos: DatosCuentaInter
   return { usuario: (await repositorio.buscarUsuario(idUsuario))!, roles: await repositorio.rolesDe(idUsuario) };
 }
 
-// RF-08
 export async function desactivarCuenta(idUsuario: number): Promise<Cuenta> {
   const sesion = await requerirRol(ADMIN_SISTEMA);
   if (idUsuario === sesion.usuario.idUsuario) throw new ErrorApi(400, "No puedes desactivar tu propia cuenta.");
@@ -160,11 +139,9 @@ export async function desactivarCuenta(idUsuario: number): Promise<Cuenta> {
   return { usuario: { ...usuario, activo: false }, roles: await repositorio.rolesDe(idUsuario) };
 }
 
-// RF-10
 export async function consultarPermisos(): Promise<MatrizPermisos> {
   await requerirRol(ADMIN_SISTEMA);
   const guardada = await repositorio.leerMatriz();
-  // Solo los roles internos de la matriz (Figura 40)
   return Object.fromEntries(ROLES_INTERNOS.map((r) => [r, guardada[r] ?? []]));
 }
 

@@ -8,8 +8,6 @@ import { PanelProfesor } from "@/components/profesor/panel-profesor";
 import { PanelSistema } from "@/components/sistema/panel-sistema";
 import { BotonEnlace } from "@/components/ui/boton";
 
-// Mi panel: muestra el panel según el rol (Figuras 22, 23, 28, 31 y 40).
-// El Administrador tiene su propia sección en /admin.
 export default function Panel() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">

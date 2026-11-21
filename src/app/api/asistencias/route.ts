@@ -26,8 +26,6 @@ function fechaValida(valor: unknown): string {
   return valor;
 }
 
-// Lectura: estudiante ve su asistencia; profesor solo la de sus cursos.
-// Administrador puede consultar todos los registros.
 export function GET() {
   return manejar(async () => {
     const sesion = await requerirSesion();
@@ -55,8 +53,6 @@ export function GET() {
   });
 }
 
-// RF-42: registrar asistencia de una fecha solo al profesor asignado.
-// Toda la lista se valida y persiste atómicamente; no se permite duplicar fechas.
 export function POST(peticion: Request) {
   return manejar(async () => {
     const sesion = await requerirPermiso("asistencias.registrar");

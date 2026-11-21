@@ -1,5 +1,3 @@
--- Ajustes acordados en la Etapa 2 para que la BD coincida con el frontend.
--- Usuario: teléfono y provincia (opcionales) y fecha de registro (Figuras 20 y 21, RF-01, RF-05).
 BEGIN;
 
 ALTER TABLE usuario
