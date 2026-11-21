@@ -3,50 +3,70 @@
 
 import { useEffect, useState } from "react";
 
-import { useInscripciones } from "@/components/academia/inscripciones";
-import { usePedidos } from "@/components/pedidos/pedidos";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
-
 import { formatearColones } from "@/lib/formato";
 
 import {
   apiReporteVentas,
   apiReporteInventario,
+  apiReporteAcademia,
   type ReporteVentas,
   type ReporteInventario,
+  type ReporteAcademia,
 } from "@/lib/api-reportes";
 
-import { categorias } from "@/mocks/categorias";
-import { cursos } from "@/mocks/cursos";
-import { productos } from "@/mocks/productos";
-
 import {
-  tieneInventarioBajo,
-  UMBRAL_INVENTARIO_BAJO,
-} from "@/modules/catalogo-inventario/reglas";
+  apiListarPedidos,
+  apiDetallePedido,
+  type PedidoGestion,
+  type CambioEstadoPedido,
+} from "@/lib/api-pedidos";
 
-import { esEstadoFinal } from "@/modules/gestion-pedidos/transiciones";
+import { UMBRAL_INVENTARIO_BAJO } from "@/modules/catalogo-inventario/reglas";
+import { MESES } from "@/modules/reportes/reportes";
 
-import {
-  MESES,
-  ocupacionAcademia,
-  ocupacionCurso,
-  pedidosConfirmados,
-} from "@/modules/reportes/reportes";
+type EstadoCarga<T> = {
+  datos: T | null;
+  cargando: boolean;
+  error: string | null;
+};
 
-// Panel general y reportes del Administrador (Figura 31, RF-44).
+type DatosPedidos = {
+  pedidos: PedidoGestion[];
+  cambios: CambioEstadoPedido[];
+};
+
+function estadoInicial<T>(): EstadoCarga<T> {
+  return {
+    datos: null,
+    cargando: true,
+    error: null,
+  };
+}
+
+function valorCarga<T>(
+  estado: EstadoCarga<T>,
+  valor: string
+): string {
+  if (estado.cargando) return "Cargando...";
+  if (estado.error) return "No disponible";
+  return valor;
+}
+
+const ETIQUETAS_ESTADO: Record<string, string> = {
+  PENDIENTE: "Pendiente",
+  EN_PREPARACION: "En preparación",
+  EMPACADO: "Empacado",
+  ENVIADO: "Enviado",
+  LISTO_RETIRO: "Listo para retiro",
+  RETIRADO: "Retirado",
+};
+
+// RF-44: Panel del Administrador con información real.
 export function ResumenAdmin() {
-  // Datos simulados que todavía utilizan otras secciones.
-  const { pedidos, historial } = usePedidos();
-  const inscripciones = useInscripciones();
-
-  const confirmados = pedidosConfirmados(pedidos);
-
-  // -----------------------------------------
-  // REPORTE DE VENTAS REAL
-  // -----------------------------------------
-
   const anioActual = new Date().getFullYear();
+
+  const [anio, setAnio] = useState(anioActual);
 
   const anios = [
     anioActual,
@@ -54,219 +74,298 @@ export function ResumenAdmin() {
     anioActual - 2,
   ];
 
-  const [anio, setAnio] = useState(anioActual);
+  const [ventasEstado, setVentasEstado] = useState<
+    EstadoCarga<ReporteVentas> & { anio?: number }
+  >(estadoInicial<ReporteVentas>());
 
-  const [reporteVentas, setReporteVentas] = useState<{
-    anio: number;
-    datos: ReporteVentas;
-  } | null>(null);
+  const [inventarioEstado, setInventarioEstado] =
+    useState<EstadoCarga<ReporteInventario>>(
+      estadoInicial<ReporteInventario>()
+    );
 
-  const [cargandoVentas, setCargandoVentas] =
-    useState(true);
+  const [academiaEstado, setAcademiaEstado] =
+    useState<EstadoCarga<ReporteAcademia>>(
+      estadoInicial<ReporteAcademia>()
+    );
 
-  const [errorVentas, setErrorVentas] = useState<
-    string | null
-  >(null);
+  const [pedidosEstado, setPedidosEstado] =
+    useState<EstadoCarga<DatosPedidos>>(
+      estadoInicial<DatosPedidos>()
+    );
+
+  // ----------------------------------------
+  // CARGAR REPORTE REAL DE VENTAS
+  // ----------------------------------------
 
   useEffect(() => {
     let cancelado = false;
 
-    async function cargarReporte() {
+    async function cargarVentas() {
       await Promise.resolve();
 
       if (cancelado) return;
 
-      setCargandoVentas(true);
-      setErrorVentas(null);
-
-      const fechaInicio = `${anio}-01-01`;
-      const fechaFin = `${anio}-12-31`;
+      setVentasEstado({
+        datos: null,
+        cargando: true,
+        error: null,
+        anio,
+      });
 
       try {
         const resultado = await apiReporteVentas(
-          fechaInicio,
-          fechaFin
+          `${anio}-01-01`,
+          `${anio}-12-31`
         );
 
         if (cancelado) return;
 
-        if (!resultado.ok) {
-          setErrorVentas(resultado.error);
-          return;
-        }
-
-        setReporteVentas({
+        setVentasEstado({
+          datos: resultado.ok ? resultado.dato : null,
+          cargando: false,
+          error: resultado.ok ? null : resultado.error,
           anio,
-          datos: resultado.dato,
         });
       } catch {
-        if (!cancelado) {
-          setErrorVentas(
-            "No fue posible consultar el reporte de ventas."
-          );
-        }
-      } finally {
-        if (!cancelado) {
-          setCargandoVentas(false);
-        }
+        if (cancelado) return;
+
+        setVentasEstado({
+          datos: null,
+          cargando: false,
+          error: "No fue posible consultar las ventas.",
+          anio,
+        });
       }
     }
 
-    void cargarReporte();
+    void cargarVentas();
 
     return () => {
       cancelado = true;
     };
   }, [anio]);
 
-  // No mostrar datos de otro año durante la carga.
-  const ventas =
-    reporteVentas?.anio === anio
-      ? reporteVentas.datos
-      : null;
-
-  const meses = Array.from(
-    { length: 12 },
-    () => 0
-  );
-
-  if (ventas) {
-    for (const venta of ventas.ventas) {
-      const fecha = new Date(
-        venta.fechaConfirmacion
-      );
-
-      if (!Number.isNaN(fecha.getTime())) {
-        const mes = fecha.getUTCMonth();
-
-        meses[mes] += Number(
-          venta.subtotalLinea
-        );
-      }
-    }
-  }
-
-  const maximo = Math.max(...meses, 1);
-
-  const totalAnual =
-    ventas?.totalIngresos ?? 0;
-
-  const mesActual = new Date().getMonth();
-
-  const ventasMesActual =
-    anio === anioActual
-      ? meses[mesActual]
-      : 0;
-
-  // -----------------------------------------
-  // REPORTE DE INVENTARIO REAL
-  // -----------------------------------------
-
-  const [reporteInventario, setReporteInventario] =
-    useState<ReporteInventario | null>(null);
-
-  const [cargandoInventario, setCargandoInventario] =
-    useState(true);
-
-  const [errorInventario, setErrorInventario] =
-    useState<string | null>(null);
+  // ----------------------------------------
+  // CARGAR INVENTARIO, ACADEMIA Y PEDIDOS
+  // ----------------------------------------
 
   useEffect(() => {
     let cancelado = false;
 
-    async function cargarInventario() {
+    async function cargarDatos() {
       await Promise.resolve();
 
       if (cancelado) return;
 
-      setCargandoInventario(true);
-      setErrorInventario(null);
+      const [inventario, academia, pedidos] =
+        await Promise.all([
+          apiReporteInventario(),
+          apiReporteAcademia(),
+          apiListarPedidos(),
+        ]);
 
-      try {
-        const resultado =
-          await apiReporteInventario();
+      if (cancelado) return;
 
-        if (cancelado) return;
+      setInventarioEstado({
+        datos: inventario.ok ? inventario.dato : null,
+        cargando: false,
+        error: inventario.ok ? null : inventario.error,
+      });
 
-        if (!resultado.ok) {
-          setErrorInventario(resultado.error);
-          return;
-        }
+      setAcademiaEstado({
+        datos: academia.ok ? academia.dato : null,
+        cargando: false,
+        error: academia.ok ? null : academia.error,
+      });
 
-        setReporteInventario(resultado.dato);
-      } catch {
-        if (!cancelado) {
-          setErrorInventario(
-            "No fue posible consultar el inventario."
+      if (!pedidos.ok) {
+        setPedidosEstado({
+          datos: null,
+          cargando: false,
+          error: pedidos.error,
+        });
+
+        return;
+      }
+
+      // Solo pedidos con pago confirmado.
+      const confirmados = pedidos.dato.filter(
+        (pedido) => pedido.estadoPago === "CONFIRMADO"
+      );
+
+      // Recuperar el historial real de cada pedido.
+      const detalles = await Promise.all(
+        confirmados.map((pedido) =>
+          apiDetallePedido(pedido.idPedido)
+        )
+      );
+
+      if (cancelado) return;
+
+      const hayErrores = detalles.some(
+        (detalle) => !detalle.ok
+      );
+
+      if (hayErrores) {
+        setPedidosEstado({
+          datos: null,
+          cargando: false,
+          error:
+            "No fue posible consultar el historial de todos los pedidos.",
+        });
+
+        return;
+      }
+
+      const cambios = detalles.flatMap(
+        (detalle, indice) => {
+          if (!detalle.ok) return [];
+
+          return detalle.dato.historial.map(
+            (cambio) => ({
+              ...cambio,
+              idPedido: confirmados[indice].idPedido,
+            })
           );
         }
-      } finally {
-        if (!cancelado) {
-          setCargandoInventario(false);
-        }
-      }
+      );
+
+      setPedidosEstado({
+        datos: {
+          pedidos: confirmados,
+          cambios,
+        },
+        cargando: false,
+        error: null,
+      });
     }
 
-    void cargarInventario();
+    void cargarDatos();
 
     return () => {
       cancelado = true;
     };
   }, []);
 
-  const productosBajosReales =
-    reporteInventario?.productos.filter(
+  // ----------------------------------------
+  // CALCULAR INDICADORES DE VENTAS
+  // ----------------------------------------
+
+  const ventas =
+    ventasEstado.anio === anio
+      ? ventasEstado.datos
+      : null;
+
+  const meses = Array<number>(12).fill(0);
+
+  for (const venta of ventas?.ventas ?? []) {
+    const fecha = new Date(venta.fechaConfirmacion);
+
+    if (
+      !Number.isNaN(fecha.getTime()) &&
+      fecha.getUTCFullYear() === anio
+    ) {
+      meses[fecha.getUTCMonth()] += Number(
+        venta.subtotalLinea
+      );
+    }
+  }
+
+  const maximo = Math.max(...meses, 1);
+
+  const totalAnual = ventas?.totalIngresos ?? 0;
+
+  const ventasMesActual =
+    anio === anioActual
+      ? meses[new Date().getMonth()]
+      : 0;
+
+  // ----------------------------------------
+  // CALCULAR INDICADORES DE INVENTARIO
+  // ----------------------------------------
+
+  const inventario = inventarioEstado.datos;
+
+  const productosBajos =
+    inventario?.productos.filter(
       (producto) =>
         producto.activo &&
         Number(producto.existencias) <=
           UMBRAL_INVENTARIO_BAJO
     ) ?? [];
 
-  // -----------------------------------------
-  // DATOS PENDIENTES DE INTEGRACIÓN
-  // -----------------------------------------
+  // ----------------------------------------
+  // CALCULAR INDICADORES DE ACADEMIA
+  // ----------------------------------------
 
-  // Estas variables todavía utilizan pedidos simulados.
-  const activos = confirmados.filter(
-    (pedido) =>
-      !esEstadoFinal(
-        pedido.modalidadEntrega,
-        pedido.estadoOperativo
-      )
+  const academia = academiaEstado.datos;
+
+  const ocupacion = Number(
+    academia?.porcentajeOcupacion ?? 0
   );
+
+  // ----------------------------------------
+  // CALCULAR PEDIDOS ACTIVOS
+  // ----------------------------------------
+
+  const pedidos = pedidosEstado.datos?.pedidos ?? [];
+
+  const activos = pedidos.filter((pedido) => {
+    if (pedido.modalidadEntrega === "ENVIO") {
+      return pedido.estadoOperativo !== "ENVIADO";
+    }
+
+    return pedido.estadoOperativo !== "RETIRADO";
+  });
 
   const listos = activos.filter(
     (pedido) =>
-      pedido.estadoOperativo === "Listo para retiro"
+      pedido.estadoOperativo === "LISTO_RETIRO"
   ).length;
 
+  // ----------------------------------------
+  // CONSTRUIR ACTIVIDAD RECIENTE REAL
+  // ----------------------------------------
+
   const actividad = [
-    ...confirmados.map((pedido) => ({
-      fecha: pedido.fechaConfirmacion!,
-      texto: `Pedido N.º ${pedido.idPedido} confirmado`,
+    ...pedidos.map((pedido) => ({
+      fecha: pedido.fechaCreacion,
+      texto: `Pedido N.º ${pedido.idPedido} registrado`,
     })),
 
-    ...historial.map((cambio) => ({
-      fecha: cambio.fechaCambio,
-      texto: `Pedido N.º ${cambio.idPedido} pasó a ${cambio.estadoNuevo}`,
-    })),
+    ...(pedidosEstado.datos?.cambios ?? []).map(
+      (cambio) => ({
+        fecha: cambio.fechaCambio,
+        texto: `Pedido N.º ${cambio.idPedido} pasó a ${
+          ETIQUETAS_ESTADO[cambio.estadoNuevo] ??
+          cambio.estadoNuevo
+        }`,
+      })
+    ),
 
-    ...inscripciones.map((inscripcion) => ({
-      fecha: inscripcion.fechaInscripcion,
-      texto: `Nueva inscripción en ${
-        cursos.find(
-          (curso) =>
-            curso.idCurso === inscripcion.idCurso
-        )?.nombre ?? "un curso"
-      }`,
+    ...(ventas?.ventas ?? []).map((venta) => ({
+      fecha: venta.fechaConfirmacion,
+      texto: `Pedido N.º ${venta.idPedido} confirmado`,
     })),
   ]
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
+    .filter(
+      (elemento, indice, conjunto) =>
+        conjunto.findIndex(
+          (otro) =>
+            otro.texto === elemento.texto &&
+            otro.fecha === elemento.fecha
+        ) === indice
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.fecha).getTime() -
+        new Date(a.fecha).getTime()
+    )
     .slice(0, 5);
 
-  // -----------------------------------------
-  // INTERFAZ
-  // -----------------------------------------
+  // ----------------------------------------
+  // INTERFAZ DEL ADMINISTRADOR
+  // ----------------------------------------
 
   return (
     <div className="flex flex-col gap-8">
@@ -283,58 +382,62 @@ export function ResumenAdmin() {
         </h1>
 
         <p className="mt-2 text-gris">
-          Visión general de ventas, inventario y academia.
+          Visión general de ventas, inventario y academia
+          con información registrada.
         </p>
       </div>
 
-      {/* INDICADORES */}
+      {/* INDICADORES PRINCIPALES */}
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <Indicador
           titulo="Ventas del mes"
-          valor={
-            cargandoVentas || !ventas
-              ? errorVentas
-                ? "No disponible"
-                : "Cargando..."
-              : formatearColones(ventasMesActual)
-          }
+          valor={valorCarga(
+            ventasEstado,
+            formatearColones(ventasMesActual)
+          )}
           detalle={
-            errorVentas ??
+            ventasEstado.error ??
             "Ingresos por ventas confirmadas"
           }
         />
 
         <Indicador
           titulo="Pedidos activos"
-          valor={String(activos.length)}
-          detalle={`${listos} ${
-            listos === 1 ? "listo" : "listos"
-          } para retiro (datos de demostración)`}
+          valor={valorCarga(
+            pedidosEstado,
+            String(activos.length)
+          )}
+          detalle={
+            pedidosEstado.error ??
+            `${listos} ${
+              listos === 1 ? "listo" : "listos"
+            } para retiro`
+          }
         />
 
         <Indicador
           titulo="Inventario bajo"
-          valor={
-            cargandoInventario
-              ? "Cargando..."
-              : errorInventario
-                ? "No disponible"
-                : String(productosBajosReales.length)
-          }
+          valor={valorCarga(
+            inventarioEstado,
+            String(productosBajos.length)
+          )}
           detalle={
-            errorInventario ??
+            inventarioEstado.error ??
             `${UMBRAL_INVENTARIO_BAJO} unidades o menos`
           }
         />
 
         <Indicador
           titulo="Ocupación academia"
-          valor={`${ocupacionAcademia(
-            cursos,
-            inscripciones
-          )}%`}
-          detalle="Cursos abiertos (datos de demostración)"
+          valor={valorCarga(
+            academiaEstado,
+            `${ocupacion}%`
+          )}
+          detalle={
+            academiaEstado.error ??
+            "Ocupación de cursos registrados"
+          }
         />
       </div>
 
@@ -353,11 +456,10 @@ export function ResumenAdmin() {
               </h2>
 
               <p className="mt-2 font-serif text-3xl">
-                {cargandoVentas
-                  ? "Cargando..."
-                  : errorVentas
-                    ? "No disponible"
-                    : formatearColones(totalAnual)}
+                {valorCarga(
+                  ventasEstado,
+                  formatearColones(totalAnual)
+                )}
 
                 <span className="font-sans text-xs text-gris">
                   {" "}acumulado
@@ -384,12 +486,12 @@ export function ResumenAdmin() {
             </select>
           </div>
 
-          {errorVentas && (
+          {ventasEstado.error && (
             <p
               role="alert"
               className="mt-4 text-sm text-red-700"
             >
-              {errorVentas}
+              {ventasEstado.error}
             </p>
           )}
 
@@ -425,6 +527,8 @@ export function ResumenAdmin() {
           </div>
         </section>
 
+        {/* ACTIVIDAD RECIENTE */}
+
         <section className="border border-borde bg-papel p-7">
           <Sobretitulo>
             Actividad reciente
@@ -434,173 +538,246 @@ export function ResumenAdmin() {
             Últimos movimientos
           </h2>
 
-          <p className="mt-1 text-xs text-gris">
-            Datos de demostración
-          </p>
+          {pedidosEstado.cargando ? (
+            <p className="mt-4 text-sm text-gris">
+              Cargando...
+            </p>
+          ) : pedidosEstado.error ? (
+            <p
+              role="alert"
+              className="mt-4 text-sm text-red-700"
+            >
+              {pedidosEstado.error}
+            </p>
+          ) : actividad.length === 0 ? (
+            <p className="mt-4 text-sm text-gris">
+              Sin movimientos recientes.
+            </p>
+          ) : (
+            <ul className="mt-4">
+              {actividad.map((elemento, indice) => (
+                <li
+                  key={indice}
+                  className="flex gap-3 border-b border-borde py-3 text-sm"
+                >
+                  <span className="w-20 shrink-0 text-xs text-gris">
+                    {elemento.fecha.slice(0, 10)}
+                  </span>
 
-          <ul className="mt-4">
-            {actividad.map((elemento, indice) => (
-              <li
-                key={indice}
-                className="flex gap-3 border-b border-borde py-3 text-sm"
-              >
-                <span className="w-20 shrink-0 text-xs text-gris">
-                  {elemento.fecha.slice(0, 10)}
-                </span>
-
-                <span>
-                  {elemento.texto}
-                </span>
-              </li>
-            ))}
-          </ul>
+                  <span>
+                    {elemento.texto}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
 
       {/* REPORTES DE INVENTARIO Y ACADEMIA */}
 
       <div className="grid gap-6 xl:grid-cols-2">
+        {/* TABLA REAL DE INVENTARIO */}
+
         <section className="border border-borde bg-papel p-7">
           <Sobretitulo>
             Reporte de existencias
           </Sobretitulo>
 
-          <p className="mt-1 text-xs text-gris">
-            Tabla con datos de demostración
-          </p>
+          {inventarioEstado.cargando ? (
+            <p className="mt-4 text-sm text-gris">
+              Cargando...
+            </p>
+          ) : inventarioEstado.error ? (
+            <p
+              role="alert"
+              className="mt-4 text-sm text-red-700"
+            >
+              {inventarioEstado.error}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="mt-4 w-full text-sm">
+                <thead className="text-left text-xs uppercase tracking-wider text-gris">
+                  <tr>
+                    <th className="pb-2 font-medium">
+                      Producto
+                    </th>
 
-          <table className="mt-4 w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-gris">
-              <tr>
-                <th className="pb-2 font-medium">
-                  Producto
-                </th>
+                    <th className="pb-2 font-medium">
+                      Categoría
+                    </th>
 
-                <th className="pb-2 font-medium">
-                  Categoría
-                </th>
+                    <th className="pb-2 text-right font-medium">
+                      Existencias
+                    </th>
 
-                <th className="pb-2 text-right font-medium">
-                  Existencias
-                </th>
+                    <th className="pb-2 text-right font-medium">
+                      Estado
+                    </th>
+                  </tr>
+                </thead>
 
-                <th className="pb-2 text-right font-medium">
-                  Estado
-                </th>
-              </tr>
-            </thead>
+                <tbody>
+                  {(inventario?.productos ?? []).map(
+                    (producto) => (
+                      <tr
+                        key={producto.idProducto}
+                        className="border-t border-borde"
+                      >
+                        <td className="py-3">
+                          {producto.nombre}
+                        </td>
 
-            <tbody>
-              {productos.map((producto) => (
-                <tr
-                  key={producto.idProducto}
-                  className="border-t border-borde"
-                >
-                  <td className="py-3">
-                    {producto.nombre}
-                  </td>
+                        <td className="py-3 text-gris">
+                          {producto.categoria}
+                        </td>
 
-                  <td className="py-3 text-gris">
-                    {categorias.find(
-                      (categoria) =>
-                        categoria.idCategoria ===
-                        producto.idCategoria
-                    )?.nombre}
-                  </td>
+                        <td className="py-3 text-right">
+                          {producto.existencias}
+                        </td>
 
-                  <td className="py-3 text-right">
-                    {producto.existencias}
-                  </td>
+                        <td className="py-3 text-right">
+                          {!producto.activo ? (
+                            <Insignia>
+                              Inactivo
+                            </Insignia>
+                          ) : Number(
+                              producto.existencias
+                            ) === 0 ? (
+                            <Insignia>
+                              Agotado
+                            </Insignia>
+                          ) : Number(
+                              producto.existencias
+                            ) <=
+                            UMBRAL_INVENTARIO_BAJO ? (
+                            <Insignia>
+                              Bajo
+                            </Insignia>
+                          ) : (
+                            <span className="text-gris">
+                              Normal
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
 
-                  <td className="py-3 text-right">
-                    {!producto.activo ? (
-                      <Insignia>Inactivo</Insignia>
-                    ) : producto.existencias === 0 ? (
-                      <Insignia>Agotado</Insignia>
-                    ) : tieneInventarioBajo(producto) ? (
-                      <Insignia>Bajo</Insignia>
-                    ) : (
-                      <span className="text-gris">
-                        Normal
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              {inventario?.productos.length === 0 && (
+                <p className="mt-4 text-sm text-gris">
+                  No hay productos registrados.
+                </p>
+              )}
+            </div>
+          )}
         </section>
+
+        {/* TABLA REAL DE ACADEMIA */}
 
         <section className="border border-borde bg-papel p-7">
           <Sobretitulo>
             Reporte de academia
           </Sobretitulo>
 
-          <p className="mt-1 text-xs text-gris">
-            Datos de demostración
-          </p>
+          {academiaEstado.cargando ? (
+            <p className="mt-4 text-sm text-gris">
+              Cargando...
+            </p>
+          ) : academiaEstado.error ? (
+            <p
+              role="alert"
+              className="mt-4 text-sm text-red-700"
+            >
+              {academiaEstado.error}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="mt-4 w-full text-sm">
+                <thead className="text-left text-xs uppercase tracking-wider text-gris">
+                  <tr>
+                    <th className="pb-2 font-medium">
+                      Curso
+                    </th>
 
-          <table className="mt-4 w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-gris">
-              <tr>
-                <th className="pb-2 font-medium">
-                  Curso
-                </th>
+                    <th className="pb-2 font-medium">
+                      Estado
+                    </th>
 
-                <th className="pb-2 font-medium">
-                  Estado
-                </th>
+                    <th className="pb-2 text-right font-medium">
+                      Inscritos
+                    </th>
 
-                <th className="pb-2 text-right font-medium">
-                  Inscritos
-                </th>
-
-                <th className="pb-2 text-right font-medium">
-                  Ocupación
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {cursos.map((curso) => {
-                const {
-                  inscritos,
-                  porcentaje,
-                } = ocupacionCurso(
-                  curso,
-                  inscripciones
-                );
-
-                return (
-                  <tr
-                    key={curso.idCurso}
-                    className="border-t border-borde"
-                  >
-                    <td className="py-3">
-                      {curso.nombre}
-                    </td>
-
-                    <td className="py-3 text-gris">
-                      {curso.estado}
-                    </td>
-
-                    <td className="py-3 text-right">
-                      {inscritos} / {curso.cupoMaximo}
-                    </td>
-
-                    <td className="py-3 text-right">
-                      {porcentaje}%
-                    </td>
+                    <th className="pb-2 text-right font-medium">
+                      Ocupación
+                    </th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+
+                <tbody>
+                  {(academia?.cursos ?? []).map(
+                    (curso) => {
+                      const inscritos = Number(
+                        curso.inscritosConfirmados
+                      );
+
+                      const cupo = Number(
+                        curso.cupoMaximo
+                      );
+
+                      const porcentaje =
+                        cupo > 0
+                          ? Math.round(
+                              (inscritos / cupo) * 100
+                            )
+                          : 0;
+
+                      return (
+                        <tr
+                          key={curso.idCurso}
+                          className="border-t border-borde"
+                        >
+                          <td className="py-3">
+                            {curso.curso}
+                          </td>
+
+                          <td className="py-3 text-gris">
+                            {curso.estado}
+                          </td>
+
+                          <td className="py-3 text-right">
+                            {inscritos} / {cupo}
+                          </td>
+
+                          <td className="py-3 text-right">
+                            {porcentaje}%
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )}
+                </tbody>
+              </table>
+
+              {academia?.cursos.length === 0 && (
+                <p className="mt-4 text-sm text-gris">
+                  No hay cursos registrados.
+                </p>
+              )}
+            </div>
+          )}
         </section>
       </div>
     </div>
   );
 }
+
+// ----------------------------------------
+// COMPONENTE REUTILIZABLE DE INDICADORES
+// ----------------------------------------
 
 function Indicador({
   titulo,

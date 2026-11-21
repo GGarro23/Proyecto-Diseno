@@ -431,12 +431,51 @@ export async function prepararNotificacionEstadoPedido(
 }
 
 /**
- * Solicita el envío de una notificación y registra
- * el resultado devuelto por el servidor SMTP.
+ * Prepara la notificación de inscripción confirmada.
  *
- * ACEPTADA significa que el servidor aceptó el correo,
- * no que fue entregado en la bandeja del destinatario.
+ * Recupera los datos desde PostgreSQL y genera
+ * el mensaje en texto plano y HTML.
+ *
+ * Esta función no envía el correo directamente.
  */
+export async function prepararNotificacionInscripcion(
+  idInscripcion: number
+) {
+  validarId(idInscripcion);
+
+  const datos =
+    await repositorio.obtenerDestinatarioInscripcion(
+      idInscripcion
+    );
+
+  if (!datos) {
+    throw new ErrorApi(
+      404,
+      "No se encontró una inscripción confirmada."
+    );
+  }
+
+  const mensaje =
+    `Tu inscripción en el curso "${datos.nombreCurso}" ` +
+    "ha sido confirmada correctamente.";
+
+  return {
+    idUsuario: datos.idUsuario,
+    idInscripcion,
+    tipoEvento: "INSCRIPCION_CONFIRMADA" as const,
+    destinatario: datos.correo,
+    asunto: `Confirmación de inscripción - ${datos.nombreCurso}`,
+    mensaje,
+    html: plantillaCorreo({
+      titulo: "¡Inscripción confirmada!",
+      mensaje,
+      etiquetaDetalle: "Curso inscrito",
+      valorDetalle: datos.nombreCurso,
+      estado: "Inscripción confirmada",
+    }),
+  };
+}
+
 export async function enviarYRegistrarNotificacion(
   datos: {
     idUsuario: number;
