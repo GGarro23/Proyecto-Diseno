@@ -12,6 +12,9 @@ const trazos = {
   grafico: "M4 20h16M7 16v-5M12 16V8M17 16v-8",
   caja: "M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zm0 0v18M4 7.5l8 4.5 8-4.5",
   lista: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
+  libro: "M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5zm0 15a2 2 0 0 0 2 2h13v-4",
+  foco: "M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z",
+  subir: "M12 15V4M7 9l5-5 5 5M5 15v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4",
 };
 
 export type NombreIcono = keyof typeof trazos;

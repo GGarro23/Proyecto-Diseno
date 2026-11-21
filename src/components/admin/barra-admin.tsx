@@ -9,6 +9,9 @@ const SECCIONES: { href: string; texto: string; icono: NombreIcono }[] = [
   { href: "/admin", texto: "Resumen", icono: "grafico" },
   { href: "/admin/inventario", texto: "Inventario", icono: "caja" },
   { href: "/admin/pedidos", texto: "Pedidos", icono: "lista" },
+  { href: "/admin/academia", texto: "Academia", icono: "libro" },
+  { href: "/admin/recomendaciones", texto: "Recomendaciones", icono: "foco" },
+  { href: "/admin/etl", texto: "Importación ETL", icono: "subir" },
 ];
 
 // Barra lateral del Administrador (Figura 31)

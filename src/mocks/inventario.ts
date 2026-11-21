@@ -8,6 +8,7 @@ import {
   type DatosProducto,
   type ErroresProducto,
 } from "@/modules/catalogo-inventario/validaciones";
+import type { ErrorFila, FilaValida } from "@/modules/etl/reglas";
 import { categorias as categoriasIniciales } from "./categorias";
 import { productos as productosIniciales } from "./productos";
 
@@ -228,4 +229,51 @@ export function registrarAjuste(
   if (error) return { ok: false, error };
   const dato = aplicarMovimiento(inventario, producto, { tipo, cantidad: Number(cantidad), motivo: motivo.trim(), idResponsable });
   return { ok: true, dato };
+}
+
+// RF-49: carga de las filas válidas del ETL. Cada fila crea su producto y, si trae existencias,
+// su movimiento de entrada. En el backend cada fila va en su propia transacción.
+export function cargarProductosEtl(filas: FilaValida[], idEjecucion: number): { aceptadas: number; errores: ErrorFila[] } {
+  const inventario = leerInventario();
+  const errores: ErrorFila[] = [];
+  let aceptadas = 0;
+  for (const fila of filas) {
+    // Se verifica de nuevo que el código siga libre y la categoría exista
+    if (inventario.productos.some((p) => p.codigo.trim().toLowerCase() === fila.codigo.toLowerCase())) {
+      errores.push({ numeroFila: fila.numeroFila, campo: "código", motivo: `El código ${fila.codigo} ya está registrado.` });
+      continue;
+    }
+    if (!inventario.categorias.some((c) => c.idCategoria === fila.idCategoria)) {
+      errores.push({ numeroFila: fila.numeroFila, campo: "categoría", motivo: "La categoría ya no existe." });
+      continue;
+    }
+    const producto: Producto = {
+      idProducto: siguienteId(inventario.productos.map((p) => p.idProducto)),
+      idCategoria: fila.idCategoria,
+      codigo: fila.codigo,
+      nombre: fila.nombre,
+      descripcion: fila.descripcion,
+      precio: fila.precio,
+      activo: true,
+      existencias: fila.existencias,
+      imagenUrl: fila.imagenUrl,
+    };
+    inventario.productos.push(producto);
+    if (fila.existencias > 0) {
+      inventario.movimientos.push({
+        idMovimiento: siguienteId(inventario.movimientos.map((m) => m.idMovimiento)),
+        idProducto: producto.idProducto,
+        tipo: "Entrada",
+        cantidad: fila.existencias,
+        motivo: "Existencias iniciales por importación ETL",
+        fecha: new Date().toISOString(),
+        idResponsable: null,
+        idPedido: null,
+        idEjecucion,
+      });
+    }
+    aceptadas++;
+  }
+  if (aceptadas > 0) guardar({ productos: inventario.productos, movimientos: inventario.movimientos });
+  return { aceptadas, errores };
 }
