@@ -13,13 +13,17 @@ export function FormularioRegistro() {
   const [datos, setDatos] = useState({ nombre: "", correo: "", contrasena: "", telefono: "", provincia: "" });
   const [errores, setErrores] = useState<ErroresCuenta>({});
   const [registrado, setRegistrado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const cambiar = (campo: keyof typeof datos, valor: string) => setDatos({ ...datos, [campo]: valor });
 
-  const enviar = (e: FormEvent) => {
+  const enviar = async (e: FormEvent) => {
     e.preventDefault();
-    const resultado = registrar(datos);
-    if (!resultado.ok) return setErrores(resultado.errores ?? {});
+    const resultado = await registrar(datos);
+    if (!resultado.ok) {
+      setErrores(resultado.errores ?? {});
+      return setError(resultado.errores ? null : resultado.error);
+    }
     setRegistrado(true);
   };
 
@@ -55,6 +59,7 @@ export function FormularioRegistro() {
           ))}
         </Selector>
       </div>
+      {error && <p className="text-sm text-red-800">{error}</p>}
       <Boton type="submit">Crear cuenta</Boton>
     </form>
   );
