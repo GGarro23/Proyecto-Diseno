@@ -5,9 +5,10 @@ import { ControlSesion } from "@/components/cuenta/control-sesion";
 import { PanelEstudiante } from "@/components/panel/panel-estudiante";
 import { PanelEncargado } from "@/components/pedidos/panel-encargado";
 import { PanelProfesor } from "@/components/profesor/panel-profesor";
+import { PanelSistema } from "@/components/sistema/panel-sistema";
 import { BotonEnlace } from "@/components/ui/boton";
 
-// Mi panel: muestra el panel según el rol (Figuras 22, 23, 28 y 31).
+// Mi panel: muestra el panel según el rol (Figuras 22, 23, 28, 31 y 40).
 // El Administrador tiene su propia sección en /admin.
 export default function Panel() {
   return (
@@ -15,6 +16,7 @@ export default function Panel() {
       <ControlSesion volver="/panel">
         {(sesion) => {
           if (sesion.roles.includes("Administrador")) return <Redireccion a="/admin" />;
+          if (sesion.roles.includes("Administrador del sistema")) return <PanelSistema sesion={sesion} />;
           if (sesion.roles.includes("Encargado de pedidos")) return <PanelEncargado sesion={sesion} />;
           if (sesion.roles.includes("Profesor")) return <PanelProfesor sesion={sesion} />;
           if (sesion.roles.includes("Estudiante")) return <PanelEstudiante sesion={sesion} />;

@@ -6,7 +6,7 @@ export type Curso = {
   descripcion: string;
   cupoMaximo: number;
   estado: "Abierto" | "Cerrado"; // "sin cupos" se calcula con las inscripciones
-  idProfesor: number;
+  idProfesor: number | null; // se registra sin profesor y se asigna con RF-34
   imagenUrl: string; // no está en el modelo (Figuras 17 y 19)
 };
 

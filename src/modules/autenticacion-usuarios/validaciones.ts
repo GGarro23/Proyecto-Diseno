@@ -1,4 +1,5 @@
 import { PROVINCIAS } from "@/lib/provincias";
+import type { NombreRol } from "./schema";
 
 // Validaciones de datos de cuenta (RF-01, RF-05). Las usa el frontend y debe usarlas el backend.
 
@@ -30,4 +31,13 @@ export function validarDatosCuenta(datos: DatosCuenta): ErroresCuenta {
   }
   if (datos.provincia && !PROVINCIAS.includes(datos.provincia)) errores.provincia = "Selecciona una provincia válida.";
   return errores;
+}
+
+export const ROLES: NombreRol[] = ["Cliente", "Estudiante", "Profesor", "Encargado de pedidos", "Administrador", "Administrador del sistema"];
+
+// RF-09: al menos un rol y solo roles existentes
+export function validarRoles(roles: string[]): string | undefined {
+  if (roles.length === 0) return "Selecciona al menos un rol.";
+  const invalido = roles.find((r) => !ROLES.includes(r as NombreRol));
+  if (invalido) return `El rol ${invalido} no existe.`;
 }
