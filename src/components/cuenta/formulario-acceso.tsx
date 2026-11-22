@@ -15,11 +15,14 @@ export function FormularioAcceso() {
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
-  const enviar = (e: FormEvent) => {
+  const enviar = async (e: FormEvent) => {
     e.preventDefault();
     if (!correo.trim() || !contrasena) return setError("Completa el correo y la contraseña.");
-    const resultado = iniciarSesion(correo, contrasena);
+    setEnviando(true);
+    const resultado = await iniciarSesion(correo, contrasena);
+    setEnviando(false);
     if (!resultado.ok) return setError(resultado.error);
     router.push(volver.startsWith("/") ? volver : "/");
   };
@@ -29,7 +32,7 @@ export function FormularioAcceso() {
       <Campo etiqueta="Correo electrónico" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} autoComplete="email" />
       <Campo etiqueta="Contraseña" type="password" value={contrasena} onChange={(e) => setContrasena(e.target.value)} autoComplete="current-password" />
       {error && <p className="text-sm text-red-800">{error}</p>}
-      <Boton type="submit">Iniciar sesión</Boton>
+      <Boton type="submit" disabled={enviando}>{enviando ? "Ingresando…" : "Iniciar sesión"}</Boton>
       <p className="text-center text-sm text-gris">
         ¿No tienes cuenta?{" "}
         <Link href="/registro" className="font-medium text-naranja hover:underline">Regístrate</Link>

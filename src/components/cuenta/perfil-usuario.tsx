@@ -26,10 +26,13 @@ export function PerfilUsuario({ sesion }: { sesion: Sesion }) {
   const iniciales = usuario.nombre.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
   const cambiar = (campo: keyof typeof datos, valor: string) => setDatos({ ...datos, [campo]: valor });
 
-  const guardar = (e: FormEvent) => {
+  const guardar = async (e: FormEvent) => {
     e.preventDefault();
-    const resultado = actualizarPerfil(usuario.idUsuario, datos);
-    if (!resultado.ok) return setErrores(resultado.errores ?? {});
+    const resultado = await actualizarPerfil(datos);
+    if (!resultado.ok) {
+      setErrores(resultado.errores ?? {});
+      return setAviso(resultado.errores ? null : resultado.error);
+    }
     setErrores({});
     setEditando(false);
     setAviso("Los cambios se guardaron.");
@@ -41,9 +44,9 @@ export function PerfilUsuario({ sesion }: { sesion: Sesion }) {
     setEditando(false);
   };
 
-  const salir = () => {
+  const salir = async () => {
     vaciar();
-    cerrarSesion();
+    await cerrarSesion();
     router.push("/");
   };
 

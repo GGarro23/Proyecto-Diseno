@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import { Encabezado } from "@/components/layout/encabezado";
 import "./globals.css";
@@ -23,12 +24,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${cormorant.variable} ${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <ProveedorSesion>
-          <ProveedorCarrito>
-            <Encabezado />
-            <main className="flex-1">{children}</main>
-          </ProveedorCarrito>
-        </ProveedorSesion>
+        
+<ProveedorSesion>
+  <ProveedorCarrito>
+    <Suspense
+      fallback={
+        <header className="h-20 border-b border-borde bg-crema" />
+      }
+    >
+      <Encabezado />
+    </Suspense>
+
+    <main className="flex-1">{children}</main>
+  </ProveedorCarrito>
+</ProveedorSesion>
+
       </body>
     </html>
   );
