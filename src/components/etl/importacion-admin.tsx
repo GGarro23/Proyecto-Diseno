@@ -6,8 +6,7 @@ import { Aviso } from "@/components/ui/aviso";
 import { Boton } from "@/components/ui/boton";
 import { Icono } from "@/components/ui/icono";
 import { Sobretitulo } from "@/components/ui/textos";
-import { nombreDeUsuario } from "@/mocks/autenticacion";
-import { ejecutarImportacion } from "@/mocks/etl";
+import { llamarApi } from "@/lib/api";
 import { COLUMNAS_OBLIGATORIAS, COLUMNAS_OPCIONALES, PLANTILLA_CSV } from "@/modules/etl/reglas";
 import type { EjecucionETL } from "@/modules/etl/schema";
 import { useImportaciones } from "./importaciones";
@@ -33,7 +32,8 @@ async function leerTexto(archivo: File): Promise<string> {
 // Importación de productos e inventario desde CSV y su historial (Figura 33, RF-49, RF-50)
 export function ImportacionAdmin() {
   const { sesion } = useSesion();
-  const { ejecuciones, errores } = useImportaciones();
+  const { dato, cargando, error, recargar } = useImportaciones();
+  const { ejecuciones, errores } = dato;
   const [archivo, setArchivo] = useState<File | null>(null);
   const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
   const [arrastrando, setArrastrando] = useState(false);
@@ -67,9 +67,15 @@ export function ImportacionAdmin() {
   const importar = async () => {
     if (!archivo) return;
     setImportando(true);
-    const ejecucion = ejecutarImportacion(archivo.name, await leerTexto(archivo), sesion.usuario.idUsuario);
+    const resultado = await llamarApi<Pick<EjecucionETL, "idEjecucion" | "estado" | "filasAceptadas" | "filasRechazadas">>("/api/etl", "POST", {
+      nombreArchivo: archivo.name,
+      contenido: await leerTexto(archivo),
+    });
     setImportando(false);
+    if (!resultado.ok) return setErrorArchivo(resultado.error);
+    const ejecucion = resultado.dato;
     setArchivo(null);
+    recargar();
     setAbierta(ejecucion.filasRechazadas > 0 || ejecucion.estado === "Fallida" ? ejecucion.idEjecucion : null);
     setAviso(`Importación ${ejecucion.estado.toLowerCase()}: ${ejecucion.filasAceptadas} aceptadas, ${ejecucion.filasRechazadas} rechazadas`);
   };
@@ -140,7 +146,11 @@ export function ImportacionAdmin() {
 
       <section className="border border-borde bg-papel">
         <h2 className="border-b border-borde px-7 py-5 font-serif text-3xl">Historial de importaciones</h2>
-        {historial.length === 0 ? (
+        {cargando ? (
+          <p className="p-10 text-center text-sm text-gris">Cargando historial…</p>
+        ) : error ? (
+          <p className="p-10 text-center text-red-700">{error}</p>
+        ) : historial.length === 0 ? (
           <p className="p-10 text-center text-gris">Todavía no hay importaciones.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -167,7 +177,7 @@ export function ImportacionAdmin() {
                         <td className="px-5 py-4 text-gris">N.º {e.idEjecucion}</td>
                         <td className="px-5 py-4">{e.fechaEjecucion.slice(0, 16).replace("T", " ")}</td>
                         <td className="px-5 py-4 font-medium">{e.nombreArchivo}</td>
-                        <td className="px-5 py-4">{nombreDeUsuario(e.idAdministrador)}</td>
+                        <td className="px-5 py-4">{e.responsable}</td>
                         <td className="px-5 py-4">
                           <span className={`inline-block whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold ${COLORES[e.estado]}`}>
                             {e.estado}

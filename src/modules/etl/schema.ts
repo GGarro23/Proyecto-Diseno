@@ -17,3 +17,6 @@ export type ErrorETL = {
   campo: string | null;
   motivo: string;
 };
+
+// Lo que devuelve la API: la ejecución con el nombre del Administrador responsable
+export type EjecucionDetalle = EjecucionETL & { responsable: string };

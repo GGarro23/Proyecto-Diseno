@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
-import { leerEstadoRecomendaciones, recomendacionesDesde, suscribirRecomendaciones } from "@/mocks/recomendaciones";
+import { useConsultaApi } from "@/lib/consulta-api";
+import type { RecomendacionDetalle } from "@/modules/agente-apoyo/schema";
 
-// Recomendaciones del agente; se actualizan al generar o revisar
+// Recomendaciones del agente con su producto o curso y revisor (GET /api/recomendaciones)
 export function useRecomendaciones() {
-  const estado = useSyncExternalStore(suscribirRecomendaciones, leerEstadoRecomendaciones, () => "[]");
-  return useMemo(() => recomendacionesDesde(estado), [estado]);
+  return useConsultaApi<RecomendacionDetalle[]>("/api/recomendaciones", []);
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { useCarrito } from "@/components/carrito/proveedor-carrito";
 import { useSesion } from "@/components/sesion/proveedor-sesion";
 
@@ -41,6 +42,9 @@ export function Encabezado() {
   const { sesion } = useSesion();
   const tienePanel = !!sesion?.roles.some((r) => ROLES_CON_PANEL.includes(r));
   const { cantidadTotal } = useCarrito();
+  // false en el servidor y en el primer dibujo; true ya en el navegador.
+  // Evita que el número del carrito (guardado en el navegador) cause un error de hidratación.
+  const montado = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   const enlaces = sesion
     ? [
@@ -81,7 +85,7 @@ export function Encabezado() {
             <Link href={sesion ? "/perfil" : "/iniciar-sesion"} aria-label="Cuenta"><Icono d={iconos.usuario} /></Link>
             <Link href="/carrito" aria-label="Carrito" className="relative">
               <Icono d={iconos.bolsa} />
-              {cantidadTotal > 0 && (
+              {montado && cantidadTotal > 0 && (
                 <span className="absolute -right-2 -top-2 flex size-4 items-center justify-center rounded-full bg-naranja text-[10px] text-papel">
                   {cantidadTotal}
                 </span>
