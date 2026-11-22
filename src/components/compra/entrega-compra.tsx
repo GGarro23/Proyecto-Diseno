@@ -42,7 +42,6 @@ type Props = {
   alCambiar: (datos: DatosEntrega) => void;
 };
 
-// Paso 2: modalidad de entrega (Figura 14, RF-24).
 export function EntregaCompra({
   datos,
   errores,

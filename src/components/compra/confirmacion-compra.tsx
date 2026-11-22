@@ -2,7 +2,6 @@
 import { BotonEnlace } from "@/components/ui/boton";
 import { Sobretitulo } from "@/components/ui/textos";
 
-// Paso 4: pedido confirmado (Figura 16).
 export function ConfirmacionCompra({
   idPedido,
   correo,

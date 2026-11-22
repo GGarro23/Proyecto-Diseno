@@ -7,8 +7,6 @@ import { llamarApi } from "@/lib/api";
 import type { Cuenta, NombreRol } from "@/modules/autenticacion-usuarios/schema";
 import { ROLES, validarRoles, type ErroresCuenta } from "@/modules/autenticacion-usuarios/validaciones";
 
-// Registro de cuentas internas, modificación de cuentas y asignación de roles (RF-06, RF-07, RF-09).
-// Sin prototipo en el documento.
 export function FormularioCuentaSistema({
   cuenta,
   idSolicitante,

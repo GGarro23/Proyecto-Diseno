@@ -4,11 +4,6 @@ import type { Curso, Inscripcion } from "@/modules/academia/schema";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 import type { Recomendacion, RecomendacionDetalle } from "./schema";
 
-// Acceso a datos de AF-07 (tabla recomendacion). El agente lee productos, cursos e inscripciones
-// con su propio SQL y solo escribe en recomendacion (Restricción 5 del agente).
-// Los valores de la BD (REABASTECIMIENTO, PENDIENTE...) se traducen a los del frontend aquí.
-// Las fechas se devuelven en hora de Costa Rica como texto "AAAA-MM-DDTHH:MM:SS".
-
 const TIPO_A_BD: Record<Recomendacion["tipo"], string> = {
   Reabastecimiento: "REABASTECIMIENTO",
   "Promoción académica": "PROMOCION_ACADEMICA",
@@ -33,7 +28,6 @@ const DESDE = `
   LEFT JOIN curso c ON c.id_curso = r.id_curso
   LEFT JOIN usuario u ON u.id_usuario = r.id_revisor`;
 
-// RF-47
 export async function listar(): Promise<RecomendacionDetalle[]> {
   return consulta<RecomendacionDetalle>(`SELECT ${COLUMNAS} ${DESDE} ORDER BY r.fecha_generacion DESC, r.id_recomendacion DESC`);
 }
@@ -42,8 +36,6 @@ export async function buscar(idRecomendacion: number): Promise<RecomendacionDeta
   const filas = await consulta<RecomendacionDetalle>(`SELECT ${COLUMNAS} ${DESDE} WHERE r.id_recomendacion = $1`, [idRecomendacion]);
   return filas[0] ?? null;
 }
-
-// ---------- Datos que el agente evalúa (solo lectura) ----------
 
 export async function productos(): Promise<Producto[]> {
   return consulta<Producto>(
@@ -72,10 +64,6 @@ export async function inscripciones(): Promise<Inscripcion[]> {
   );
 }
 
-// ---------- Escritura ----------
-
-// RF-45 y RF-46: guarda las propuestas como Pendientes. ON CONFLICT respeta el índice único
-// de la BD que impide dos reabastecimientos pendientes del mismo producto.
 export async function registrar(
   cliente: PoolClient,
   tipo: Recomendacion["tipo"],
@@ -94,7 +82,6 @@ export async function registrar(
   return creadas;
 }
 
-// RF-48: solo pasa de PENDIENTE a REVISADA; devuelve false si ya estaba revisada o no existe
 export async function marcarRevisada(idRecomendacion: number, idRevisor: number): Promise<boolean> {
   const filas = await consulta(
     `UPDATE recomendacion SET estado = 'REVISADA', fecha_revision = NOW(), id_revisor = $2

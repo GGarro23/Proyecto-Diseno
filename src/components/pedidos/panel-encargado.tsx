@@ -132,8 +132,6 @@ export function PanelEncargado({
     "Encargado de pedidos"
   );
 
-  // Solamente los pedidos con pago confirmado
-  // pueden avanzar de estado operativo.
   const confirmados = pedidos.filter(
     (pedido) => pedido.estadoPago === "CONFIRMADO"
   );
@@ -180,7 +178,6 @@ export function PanelEncargado({
         `Pedido N.º ${pedido.idPedido} actualizado a ${nombreEstado(estadoNuevo)}.`
       );
 
-      // Recuperar los cambios desde PostgreSQL.
       await refrescar();
     } catch {
       setAviso(

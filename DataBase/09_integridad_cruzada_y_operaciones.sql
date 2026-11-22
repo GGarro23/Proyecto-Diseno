@@ -1,9 +1,5 @@
--- Restricciones y funciones que involucran varias AF.
--- Ejecutar SOLO despues de 01...08. Todas las funciones se ejecutan
--- dentro de la transaccion del llamador; el backend controla autorizacion.
 BEGIN;
 
--- RI-05, RI-11: FKs cruzadas diferidas hasta existir sus tablas de destino.
 ALTER TABLE movimiento_inventario ADD CONSTRAINT fk_movimiento_pedido
     FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido) ON DELETE RESTRICT;
 ALTER TABLE movimiento_inventario ADD CONSTRAINT fk_movimiento_ejecucion
@@ -11,8 +7,6 @@ ALTER TABLE movimiento_inventario ADD CONSTRAINT fk_movimiento_ejecucion
 ALTER TABLE notificacion_correo ADD CONSTRAINT fk_notificacion_inscripcion
     FOREIGN KEY (id_inscripcion) REFERENCES inscripcion(id_inscripcion) ON DELETE RESTRICT;
 
--- RI-07: comprobacion DIFERIDA al COMMIT: pedido con >=1 detalle y total exacto.
--- La creacion del pedido y sus detalles debe ocurrir dentro de UNA transaccion.
 CREATE FUNCTION comprobar_total_y_detalles_pedido() RETURNS TRIGGER AS $$
 DECLARE v_id BIGINT; v_total NUMERIC(14,2); v_suma NUMERIC(14,2); v_num BIGINT;
 BEGIN
@@ -45,7 +39,6 @@ CREATE CONSTRAINT TRIGGER ct_detalle_total
 AFTER INSERT OR UPDATE OR DELETE ON detalle_pedido DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW EXECUTE FUNCTION comprobar_total_y_detalles_pedido();
 
--- El historial comercial queda inmutable al confirmar el pedido.
 CREATE FUNCTION proteger_detalle_confirmado() RETURNS TRIGGER AS $$
 DECLARE v_id BIGINT;
 BEGIN
@@ -60,7 +53,6 @@ CREATE TRIGGER trg_proteger_detalle
 BEFORE INSERT OR UPDATE OR DELETE ON detalle_pedido
 FOR EACH ROW EXECUTE FUNCTION proteger_detalle_confirmado();
 
--- RI-08/09: no se puede revertir un pedido confirmado a pendiente.
 CREATE FUNCTION impedir_desconfirmar_pedido() RETURNS TRIGGER AS $$
 BEGIN
     IF OLD.estado_pago='CONFIRMADO' AND NEW.estado_pago<>'CONFIRMADO' THEN
@@ -72,8 +64,6 @@ CREATE TRIGGER trg_impedir_desconfirmar
 BEFORE UPDATE OF estado_pago ON pedido
 FOR EACH ROW EXECUTE FUNCTION impedir_desconfirmar_pedido();
 
--- RI-08/09: una confirmacion nueva debe producir un intento confirmado y
--- exactamente las salidas de inventario de sus productos. Chequeo diferido.
 CREATE FUNCTION comprobar_confirmacion_pedido() RETURNS TRIGGER AS $$
 BEGIN
     IF OLD.estado_pago='PENDIENTE' AND NEW.estado_pago='CONFIRMADO' THEN
@@ -98,8 +88,6 @@ CREATE CONSTRAINT TRIGGER ct_confirmacion_pedido
 AFTER UPDATE ON pedido DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW EXECUTE FUNCTION comprobar_confirmacion_pedido();
 
--- RF-23: pedido pendiente CON copia de precios historicos del carrito.
--- No descuenta existencias; las verifica nuevamente al confirmar el pago.
 CREATE FUNCTION crear_pedido_desde_carrito(
     p_usuario BIGINT, p_modalidad VARCHAR, p_direccion TEXT DEFAULT NULL
 ) RETURNS BIGINT AS $$
@@ -130,10 +118,6 @@ BEGIN
     RETURN v_pedido;
 END; $$ LANGUAGE plpgsql;
 
--- RF-25: codigo determinista elegido para este prototipo:
--- PAGO_OK => aprobado; PAGO_RECHAZADO => rechazado.
--- Ambos registran el intento; la simulacion aprobada puede fallar por stock.
--- Bloquea el pedido y los productos involucrados; impide doble descuento.
 CREATE FUNCTION simular_pago_pedido(
     p_usuario BIGINT, p_pedido BIGINT, p_codigo VARCHAR
 ) RETURNS TABLE(resultado_simulacion TEXT, resultado_confirmacion TEXT) AS $$
@@ -153,7 +137,6 @@ BEGIN
         RETURN QUERY SELECT 'RECHAZADO'::TEXT,'RECHAZADO_PAGO'::TEXT;
         RETURN;
     END IF;
-    -- Orden estable de bloqueos para reducir riesgo de interbloqueos.
     PERFORM pr.id_producto FROM producto pr
     JOIN detalle_pedido d ON d.id_producto=pr.id_producto
     WHERE d.id_pedido=p_pedido ORDER BY pr.id_producto FOR UPDATE OF pr;
@@ -181,7 +164,6 @@ BEGIN
     RETURN QUERY SELECT 'APROBADO'::TEXT,'CONFIRMADO'::TEXT;
 END; $$ LANGUAGE plpgsql;
 
--- RI-04: ajustes y entradas manuales atomicos.
 CREATE FUNCTION registrar_movimiento_manual(
     p_producto BIGINT,p_tipo VARCHAR,p_cantidad INTEGER,
     p_motivo TEXT,p_responsable BIGINT
@@ -207,7 +189,6 @@ BEGIN
     RETURN v_movimiento;
 END; $$ LANGUAGE plpgsql;
 
--- AF-04, HU-09: transiciones sin saltos y con historial en la misma transaccion.
 CREATE FUNCTION avanzar_estado_pedido(
     p_pedido BIGINT,p_responsable BIGINT,p_estado_nuevo VARCHAR
 ) RETURNS BIGINT AS $$
@@ -240,8 +221,6 @@ BEGIN
     RETURN v_cambio;
 END; $$ LANGUAGE plpgsql;
 
--- RF-37: inscripcion unica, cupos concurrentes y asignacion de rol mediante
--- triggers AF05; todo se confirma o se revierte junto.
 CREATE FUNCTION inscribir_en_curso(p_usuario BIGINT,p_curso BIGINT)
 RETURNS BIGINT AS $$
 DECLARE v_inscripcion BIGINT;
@@ -252,8 +231,6 @@ BEGIN
     RETURN v_inscripcion;
 END; $$ LANGUAGE plpgsql;
 
--- RF-49, HU-15: operacion atomica POR FILA para un producto nuevo de ETL.
--- Para permitir rechazo parcial del CSV, el backend usa SAVEPOINT por fila.
 CREATE FUNCTION cargar_producto_etl(
     p_ejecucion BIGINT,p_categoria BIGINT,p_codigo VARCHAR,
     p_nombre VARCHAR,p_precio NUMERIC,p_existencias INTEGER

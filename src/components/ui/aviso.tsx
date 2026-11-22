@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-// Mensaje temporal en la parte inferior de la pantalla (Figura 29)
 export function Aviso({ texto, alCerrar }: { texto: string | null; alCerrar: () => void }) {
   useEffect(() => {
     if (!texto) return;

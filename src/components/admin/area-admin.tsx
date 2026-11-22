@@ -5,7 +5,6 @@ import { ControlSesion } from "@/components/cuenta/control-sesion";
 import { BotonEnlace } from "@/components/ui/boton";
 import { BarraAdmin } from "./barra-admin";
 
-// Marco de las pantallas de administración: requiere sesión con rol Administrador (RF-44)
 export function AreaAdmin({ children }: { children: ReactNode }) {
   return (
     <ControlSesion volver="/admin">

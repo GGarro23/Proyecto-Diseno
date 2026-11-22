@@ -1,50 +1,61 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 
 import { useInscripciones } from "@/components/academia/inscripciones";
-import { usePedidos } from "@/components/pedidos/pedidos";
+import { usePedidosReales } from "@/components/pedidos/pedidos";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
 
 import { formatearColones } from "@/lib/formato";
 
 import {
-  apiReporteVentas,
+  apiReporteAcademia,
   apiReporteInventario,
-  type ReporteVentas,
+  apiReporteVentas,
+  type ReporteAcademia,
   type ReporteInventario,
+  type ReporteVentas,
 } from "@/lib/api-reportes";
 
-import { categorias } from "@/mocks/categorias";
-import { cursos } from "@/mocks/cursos";
-import { productos } from "@/mocks/productos";
+import { UMBRAL_INVENTARIO_BAJO } from "@/modules/catalogo-inventario/reglas";
 
-import {
-  tieneInventarioBajo,
-  UMBRAL_INVENTARIO_BAJO,
-} from "@/modules/catalogo-inventario/reglas";
+import { MESES } from "@/modules/reportes/reportes";
 
-import { esEstadoFinal } from "@/modules/gestion-pedidos/transiciones";
+const NOMBRES_ESTADO: Record<string, string> = {
+  PENDIENTE: "Pendiente",
+  EN_PREPARACION: "En preparación",
+  EMPACADO: "Empacado",
+  ENVIADO: "Enviado",
+  LISTO_RETIRO: "Listo para retiro",
+  RETIRADO: "Retirado",
+};
 
-import {
-  MESES,
-  ocupacionAcademia,
-  ocupacionCurso,
-  pedidosConfirmados,
-} from "@/modules/reportes/reportes";
+function instante(fecha: string): number {
+  const normalizada = fecha
+    .replace(" ", "T")
+    .replace(/([+-]\d{2})$/, "$1:00");
 
-// Panel general y reportes del Administrador (Figura 31, RF-44).
+  const valor = new Date(normalizada).getTime();
+
+  return Number.isNaN(valor) ? 0 : valor;
+}
+
+function fechaLocal(milisegundos: number): string {
+  const fecha = new Date(milisegundos);
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
+}
+
+function estadoCurso(estado: string): string {
+  return estado === "ABIERTO" ? "Abierto" : estado === "CERRADO" ? "Cerrado" : estado;
+}
+
 export function ResumenAdmin() {
-  // Datos simulados que todavía utilizan otras secciones.
-  const { pedidos, historial } = usePedidos();
+  const { pedidos, historial, cargando: cargandoPedidos, error: errorPedidos } =
+    usePedidosReales();
   const inscripciones = useInscripciones();
-
-  const confirmados = pedidosConfirmados(pedidos);
-
-  // -----------------------------------------
-  // REPORTE DE VENTAS REAL
-  // -----------------------------------------
 
   const anioActual = new Date().getFullYear();
 
@@ -58,58 +69,26 @@ export function ResumenAdmin() {
 
   const [reporteVentas, setReporteVentas] = useState<{
     anio: number;
-    datos: ReporteVentas;
+    datos: ReporteVentas | null;
+    error: string | null;
   } | null>(null);
-
-  const [cargandoVentas, setCargandoVentas] =
-    useState(true);
-
-  const [errorVentas, setErrorVentas] = useState<
-    string | null
-  >(null);
 
   useEffect(() => {
     let cancelado = false;
 
     async function cargarReporte() {
-      await Promise.resolve();
+      const resultado = await apiReporteVentas(
+        `${anio}-01-01`,
+        `${anio}-12-31`
+      );
 
       if (cancelado) return;
 
-      setCargandoVentas(true);
-      setErrorVentas(null);
-
-      const fechaInicio = `${anio}-01-01`;
-      const fechaFin = `${anio}-12-31`;
-
-      try {
-        const resultado = await apiReporteVentas(
-          fechaInicio,
-          fechaFin
-        );
-
-        if (cancelado) return;
-
-        if (!resultado.ok) {
-          setErrorVentas(resultado.error);
-          return;
-        }
-
-        setReporteVentas({
-          anio,
-          datos: resultado.dato,
-        });
-      } catch {
-        if (!cancelado) {
-          setErrorVentas(
-            "No fue posible consultar el reporte de ventas."
-          );
-        }
-      } finally {
-        if (!cancelado) {
-          setCargandoVentas(false);
-        }
-      }
+      setReporteVentas(
+        resultado.ok
+          ? { anio, datos: resultado.dato, error: null }
+          : { anio, datos: null, error: resultado.error }
+      );
     }
 
     void cargarReporte();
@@ -119,11 +98,9 @@ export function ResumenAdmin() {
     };
   }, [anio]);
 
-  // No mostrar datos de otro año durante la carga.
-  const ventas =
-    reporteVentas?.anio === anio
-      ? reporteVentas.datos
-      : null;
+  const cargandoVentas = reporteVentas?.anio !== anio;
+  const ventas = cargandoVentas ? null : reporteVentas.datos;
+  const errorVentas = cargandoVentas ? null : reporteVentas.error;
 
   const meses = Array.from(
     { length: 12 },
@@ -137,9 +114,7 @@ export function ResumenAdmin() {
       );
 
       if (!Number.isNaN(fecha.getTime())) {
-        const mes = fecha.getUTCMonth();
-
-        meses[mes] += Number(
+        meses[fecha.getMonth()] += Number(
           venta.subtotalLinea
         );
       }
@@ -158,115 +133,103 @@ export function ResumenAdmin() {
       ? meses[mesActual]
       : 0;
 
-  // -----------------------------------------
-  // REPORTE DE INVENTARIO REAL
-  // -----------------------------------------
-
-  const [reporteInventario, setReporteInventario] =
-    useState<ReporteInventario | null>(null);
-
-  const [cargandoInventario, setCargandoInventario] =
-    useState(true);
-
-  const [errorInventario, setErrorInventario] =
-    useState<string | null>(null);
+  const [reportes, setReportes] = useState<{
+    inventario: ReporteInventario | null;
+    errorInventario: string | null;
+    academia: ReporteAcademia | null;
+    errorAcademia: string | null;
+  } | null>(null);
 
   useEffect(() => {
     let cancelado = false;
 
-    async function cargarInventario() {
-      await Promise.resolve();
+    async function cargarReportes() {
+      const [inventario, academia] = await Promise.all([
+        apiReporteInventario(),
+        apiReporteAcademia(),
+      ]);
 
       if (cancelado) return;
 
-      setCargandoInventario(true);
-      setErrorInventario(null);
-
-      try {
-        const resultado =
-          await apiReporteInventario();
-
-        if (cancelado) return;
-
-        if (!resultado.ok) {
-          setErrorInventario(resultado.error);
-          return;
-        }
-
-        setReporteInventario(resultado.dato);
-      } catch {
-        if (!cancelado) {
-          setErrorInventario(
-            "No fue posible consultar el inventario."
-          );
-        }
-      } finally {
-        if (!cancelado) {
-          setCargandoInventario(false);
-        }
-      }
+      setReportes({
+        inventario: inventario.ok ? inventario.dato : null,
+        errorInventario: inventario.ok ? null : inventario.error,
+        academia: academia.ok ? academia.dato : null,
+        errorAcademia: academia.ok ? null : academia.error,
+      });
     }
 
-    void cargarInventario();
+    void cargarReportes();
 
     return () => {
       cancelado = true;
     };
   }, []);
 
-  const productosBajosReales =
-    reporteInventario?.productos.filter(
-      (producto) =>
-        producto.activo &&
-        Number(producto.existencias) <=
-          UMBRAL_INVENTARIO_BAJO
-    ) ?? [];
+  const cargandoReportes = reportes === null;
+  const productosReporte = reportes?.inventario?.productos ?? [];
+  const cursosReporte = reportes?.academia?.cursos ?? [];
 
-  // -----------------------------------------
-  // DATOS PENDIENTES DE INTEGRACIÓN
-  // -----------------------------------------
+  const productosBajos = productosReporte.filter(
+    (producto) =>
+      producto.activo &&
+      Number(producto.existencias) <=
+        UMBRAL_INVENTARIO_BAJO
+  );
 
-  // Estas variables todavía utilizan pedidos simulados.
-  const activos = confirmados.filter(
+  const cursosAbiertos = cursosReporte.filter(
+    (curso) => curso.estado === "ABIERTO"
+  );
+
+  const cuposAbiertos = cursosAbiertos.reduce(
+    (suma, curso) => suma + Number(curso.cupoMaximo),
+    0
+  );
+
+  const inscritosAbiertos = cursosAbiertos.reduce(
+    (suma, curso) => suma + Number(curso.inscritosConfirmados),
+    0
+  );
+
+  const ocupacionAcademia = cuposAbiertos
+    ? Math.round((inscritosAbiertos / cuposAbiertos) * 100)
+    : 0;
+
+  const activos = pedidos.filter(
     (pedido) =>
-      !esEstadoFinal(
-        pedido.modalidadEntrega,
-        pedido.estadoOperativo
-      )
+      pedido.estadoPago === "CONFIRMADO" &&
+      pedido.estadoOperativo !== "ENVIADO" &&
+      pedido.estadoOperativo !== "RETIRADO"
   );
 
   const listos = activos.filter(
     (pedido) =>
-      pedido.estadoOperativo === "Listo para retiro"
+      pedido.estadoOperativo === "LISTO_RETIRO"
   ).length;
 
+  const nombreCurso = (idCurso: number) =>
+    cursosReporte.find((curso) => curso.idCurso === idCurso)?.curso ?? "un curso";
+
   const actividad = [
-    ...confirmados.map((pedido) => ({
-      fecha: pedido.fechaConfirmacion!,
-      texto: `Pedido N.º ${pedido.idPedido} confirmado`,
+    ...pedidos.map((pedido) => ({
+      fecha: instante(pedido.fechaCreacion),
+      texto: `Pedido N.º ${pedido.idPedido} registrado`,
     })),
 
     ...historial.map((cambio) => ({
-      fecha: cambio.fechaCambio,
-      texto: `Pedido N.º ${cambio.idPedido} pasó a ${cambio.estadoNuevo}`,
+      fecha: instante(cambio.fechaCambio),
+      texto: `Pedido N.º ${cambio.idPedido} pasó a ${
+        NOMBRES_ESTADO[cambio.estadoNuevo] ?? cambio.estadoNuevo
+      }`,
     })),
 
     ...inscripciones.map((inscripcion) => ({
-      fecha: inscripcion.fechaInscripcion,
-      texto: `Nueva inscripción en ${
-        cursos.find(
-          (curso) =>
-            curso.idCurso === inscripcion.idCurso
-        )?.nombre ?? "un curso"
-      }`,
+      fecha: instante(inscripcion.fechaInscripcion),
+      texto: `Nueva inscripción en ${nombreCurso(inscripcion.idCurso)}`,
     })),
   ]
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
+    .sort((a, b) => b.fecha - a.fecha)
     .slice(0, 5);
-
-  // -----------------------------------------
-  // INTERFAZ
-  // -----------------------------------------
 
   return (
     <div className="flex flex-col gap-8">
@@ -287,17 +250,15 @@ export function ResumenAdmin() {
         </p>
       </div>
 
-      {/* INDICADORES */}
-
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <Indicador
           titulo="Ventas del mes"
           valor={
-            cargandoVentas || !ventas
-              ? errorVentas
+            cargandoVentas
+              ? "Cargando..."
+              : errorVentas
                 ? "No disponible"
-                : "Cargando..."
-              : formatearColones(ventasMesActual)
+                : formatearColones(ventasMesActual)
           }
           detalle={
             errorVentas ??
@@ -307,38 +268,49 @@ export function ResumenAdmin() {
 
         <Indicador
           titulo="Pedidos activos"
-          valor={String(activos.length)}
-          detalle={`${listos} ${
-            listos === 1 ? "listo" : "listos"
-          } para retiro (datos de demostración)`}
+          valor={
+            cargandoPedidos
+              ? "Cargando..."
+              : errorPedidos
+                ? "No disponible"
+                : String(activos.length)
+          }
+          detalle={
+            errorPedidos ??
+            `${listos} ${listos === 1 ? "listo" : "listos"} para retiro`
+          }
         />
 
         <Indicador
           titulo="Inventario bajo"
           valor={
-            cargandoInventario
+            cargandoReportes
               ? "Cargando..."
-              : errorInventario
+              : reportes.errorInventario
                 ? "No disponible"
-                : String(productosBajosReales.length)
+                : String(productosBajos.length)
           }
           detalle={
-            errorInventario ??
+            reportes?.errorInventario ??
             `${UMBRAL_INVENTARIO_BAJO} unidades o menos`
           }
         />
 
         <Indicador
           titulo="Ocupación academia"
-          valor={`${ocupacionAcademia(
-            cursos,
-            inscripciones
-          )}%`}
-          detalle="Cursos abiertos (datos de demostración)"
+          valor={
+            cargandoReportes
+              ? "Cargando..."
+              : reportes.errorAcademia
+                ? "No disponible"
+                : `${ocupacionAcademia}%`
+          }
+          detalle={
+            reportes?.errorAcademia ??
+            "Cursos abiertos"
+          }
         />
       </div>
-
-      {/* GRÁFICO DE VENTAS Y ACTIVIDAD */}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
         <section className="border border-borde bg-papel p-7">
@@ -434,30 +406,30 @@ export function ResumenAdmin() {
             Últimos movimientos
           </h2>
 
-          <p className="mt-1 text-xs text-gris">
-            Datos de demostración
-          </p>
+          {actividad.length === 0 ? (
+            <p className="mt-4 text-sm text-gris">
+              {cargandoPedidos ? "Cargando..." : "Sin actividad registrada."}
+            </p>
+          ) : (
+            <ul className="mt-4">
+              {actividad.map((elemento, indice) => (
+                <li
+                  key={indice}
+                  className="flex gap-3 border-b border-borde py-3 text-sm"
+                >
+                  <span className="w-20 shrink-0 text-xs text-gris">
+                    {fechaLocal(elemento.fecha)}
+                  </span>
 
-          <ul className="mt-4">
-            {actividad.map((elemento, indice) => (
-              <li
-                key={indice}
-                className="flex gap-3 border-b border-borde py-3 text-sm"
-              >
-                <span className="w-20 shrink-0 text-xs text-gris">
-                  {elemento.fecha.slice(0, 10)}
-                </span>
-
-                <span>
-                  {elemento.texto}
-                </span>
-              </li>
-            ))}
-          </ul>
+                  <span>
+                    {elemento.texto}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
-
-      {/* REPORTES DE INVENTARIO Y ACADEMIA */}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <section className="border border-borde bg-papel p-7">
@@ -465,9 +437,11 @@ export function ResumenAdmin() {
             Reporte de existencias
           </Sobretitulo>
 
-          <p className="mt-1 text-xs text-gris">
-            Tabla con datos de demostración
-          </p>
+          {reportes?.errorInventario && (
+            <p role="alert" className="mt-4 text-sm text-red-700">
+              {reportes.errorInventario}
+            </p>
+          )}
 
           <table className="mt-4 w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-gris">
@@ -491,7 +465,7 @@ export function ResumenAdmin() {
             </thead>
 
             <tbody>
-              {productos.map((producto) => (
+              {productosReporte.map((producto) => (
                 <tr
                   key={producto.idProducto}
                   className="border-t border-borde"
@@ -501,11 +475,7 @@ export function ResumenAdmin() {
                   </td>
 
                   <td className="py-3 text-gris">
-                    {categorias.find(
-                      (categoria) =>
-                        categoria.idCategoria ===
-                        producto.idCategoria
-                    )?.nombre}
+                    {producto.categoria}
                   </td>
 
                   <td className="py-3 text-right">
@@ -515,9 +485,9 @@ export function ResumenAdmin() {
                   <td className="py-3 text-right">
                     {!producto.activo ? (
                       <Insignia>Inactivo</Insignia>
-                    ) : producto.existencias === 0 ? (
+                    ) : Number(producto.existencias) === 0 ? (
                       <Insignia>Agotado</Insignia>
-                    ) : tieneInventarioBajo(producto) ? (
+                    ) : Number(producto.existencias) <= UMBRAL_INVENTARIO_BAJO ? (
                       <Insignia>Bajo</Insignia>
                     ) : (
                       <span className="text-gris">
@@ -536,9 +506,11 @@ export function ResumenAdmin() {
             Reporte de academia
           </Sobretitulo>
 
-          <p className="mt-1 text-xs text-gris">
-            Datos de demostración
-          </p>
+          {reportes?.errorAcademia && (
+            <p role="alert" className="mt-4 text-sm text-red-700">
+              {reportes.errorAcademia}
+            </p>
+          )}
 
           <table className="mt-4 w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-gris">
@@ -562,38 +534,30 @@ export function ResumenAdmin() {
             </thead>
 
             <tbody>
-              {cursos.map((curso) => {
-                const {
-                  inscritos,
-                  porcentaje,
-                } = ocupacionCurso(
-                  curso,
-                  inscripciones
-                );
+              {cursosReporte.map((curso) => (
+                <tr
+                  key={curso.idCurso}
+                  className="border-t border-borde"
+                >
+                  <td className="py-3">
+                    {curso.curso}
+                  </td>
 
-                return (
-                  <tr
-                    key={curso.idCurso}
-                    className="border-t border-borde"
-                  >
-                    <td className="py-3">
-                      {curso.nombre}
-                    </td>
+                  <td className="py-3 text-gris">
+                    {estadoCurso(curso.estado)}
+                  </td>
 
-                    <td className="py-3 text-gris">
-                      {curso.estado}
-                    </td>
+                  <td className="py-3 text-right">
+                    {curso.inscritosConfirmados} / {curso.cupoMaximo}
+                  </td>
 
-                    <td className="py-3 text-right">
-                      {inscritos} / {curso.cupoMaximo}
-                    </td>
-
-                    <td className="py-3 text-right">
-                      {porcentaje}%
-                    </td>
-                  </tr>
-                );
-              })}
+                  <td className="py-3 text-right">
+                    {curso.cupoMaximo
+                      ? Math.round((Number(curso.inscritosConfirmados) / Number(curso.cupoMaximo)) * 100)
+                      : 0}%
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </section>

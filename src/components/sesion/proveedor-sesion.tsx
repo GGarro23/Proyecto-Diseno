@@ -5,11 +5,9 @@ import { llamarApi, type Resultado } from "@/lib/api";
 import type { Sesion, UsuarioPublico } from "@/modules/autenticacion-usuarios/schema";
 import type { DatosCuenta } from "@/modules/autenticacion-usuarios/validaciones";
 
-// Punto único de acceso a la sesión en el frontend. Habla con /api/autenticacion.
-
 type ContextoSesion = {
   sesion: Sesion | null;
-  cargando: boolean; // true mientras se consulta la sesión al abrir la página
+  cargando: boolean;
   iniciarSesion: (correo: string, contrasena: string) => Promise<Resultado<Sesion>>;
   cerrarSesion: () => Promise<void>;
   registrar: (datos: DatosCuenta & { contrasena: string }) => Promise<Resultado<UsuarioPublico>>;

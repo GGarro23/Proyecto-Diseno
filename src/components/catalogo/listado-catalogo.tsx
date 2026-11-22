@@ -6,7 +6,6 @@ import { Icono } from "@/components/ui/icono";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 import { TarjetaProducto } from "./tarjeta-producto";
 
-// Búsqueda por nombre y filtro por categoría (HU-06, criterios 3 y 4)
 export function ListadoCatalogo({ productos, categorias }: { productos: Producto[]; categorias: Categoria[] }) {
   const parametros = useSearchParams();
   const [busqueda, setBusqueda] = useState("");

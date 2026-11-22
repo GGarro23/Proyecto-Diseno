@@ -67,8 +67,6 @@ export function FlujoCompra() {
     null
   );
 
-  // Copia temporal de los productos del pedido.
-  // Se conserva mientras el usuario realiza el pago.
   const [lineasPedido, setLineasPedido] = useState<
     typeof lineas
   >([]);
@@ -80,15 +78,8 @@ export function FlujoCompra() {
   const [recuperandoPedido, setRecuperandoPedido] =
     useState(true);
 
-  // Impide operaciones simultáneas dentro de este componente.
   const operacionEnCurso = useRef(false);
 
-  /**
-   * Recupera un pedido guardado en sessionStorage.
-   *
-   * El backend verifica que el pedido pertenezca
-   * al usuario autenticado.
-   */
   useEffect(() => {
     if (cargandoSesion) return;
 
@@ -205,10 +196,6 @@ export function FlujoCompra() {
     };
   }, [idUsuario, cargandoSesion]);
 
-  /**
-   * Permite seleccionar un pedido pendiente desde
-   * la lista de pedidos del usuario.
-   */
   const continuarPedidoPendiente = async (
     pedidoSeleccionado: number
   ) => {
@@ -242,7 +229,6 @@ export function FlujoCompra() {
         return;
       }
 
-      // Utilizar los precios históricos del pedido.
       setLineasPedido(
         pedido.productos.map((producto) => ({
           idProducto: producto.idProducto,
@@ -288,11 +274,6 @@ export function FlujoCompra() {
     }
   };
 
-  /**
-   * Valida la entrega y crea un pedido pendiente.
-   *
-   * La creación del pedido ocurre en PostgreSQL.
-   */
   const continuarEntrega = async () => {
     if (
       !sesion ||
@@ -329,7 +310,6 @@ export function FlujoCompra() {
       return;
     }
 
-    // No crear otro pedido si ya existe uno seleccionado.
     if (idPedido !== null) {
       setPaso(3);
       return;
@@ -361,7 +341,6 @@ export function FlujoCompra() {
         return;
       }
 
-      // Guardar el resumen antes de sincronizar el carrito.
       setLineasPedido(
         lineas.map((linea) => ({ ...linea }))
       );
@@ -380,8 +359,6 @@ export function FlujoCompra() {
       setErrorPago(undefined);
       setPaso(3);
 
-      // Actualizar el carrito desde PostgreSQL.
-      // Una falla de sincronización no debe crear otro pedido.
       try {
         await refrescar();
       } catch (error) {
@@ -407,11 +384,6 @@ export function FlujoCompra() {
     }
   };
 
-  /**
-   * Realiza el pago simulado de un pedido existente.
-   *
-   * No crea un pedido nuevo.
-   */
   const pagar = async () => {
     if (
       !sesion ||
@@ -458,7 +430,6 @@ export function FlujoCompra() {
         return;
       }
 
-      // HTTP 200 no garantiza que el pago fue confirmado.
       if (
         resultado.dato.resultadoConfirmacion !==
         "CONFIRMADO"
@@ -470,16 +441,12 @@ export function FlujoCompra() {
         return;
       }
 
-      // El pago quedó confirmado por PostgreSQL.
       sessionStorage.removeItem(
         clavePedidoPendiente(
           sesion.usuario.idUsuario
         )
       );
 
-      // No vaciamos el carrito aquí.
-      // Podría contener productos agregados después
-      // de crear este pedido.
       setPaso(4);
     } catch (error) {
       console.error(
@@ -513,7 +480,6 @@ export function FlujoCompra() {
     </div>
   );
 
-  // Evitar mostrar información de una sesión anterior.
   if (cargandoSesion || recuperandoPedido) {
     return (
       <Mensaje
@@ -540,8 +506,6 @@ export function FlujoCompra() {
     );
   }
 
-  // Confirmación visible únicamente después de
-  // comprobar que el pedido fue confirmado.
   if (paso === 4 && idPedido !== null) {
     return (
       <div>
@@ -570,7 +534,6 @@ export function FlujoCompra() {
     );
   }
 
-  // Carrito vacío: permitir recuperar pedidos pendientes.
   if (lineas.length === 0 && idPedido === null) {
     return (
       <div>
@@ -610,7 +573,6 @@ export function FlujoCompra() {
     <div>
       {encabezado}
 
-      {/* Permitir recuperar pedidos sin crear otro. */}
       {paso === 1 && (
         <div className="mb-8">
           <SelectorPedidosPendientes

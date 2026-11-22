@@ -12,7 +12,6 @@ import { avisarInscripcionesActualizadas, useInscripciones } from "./inscripcion
 
 type Props = { curso: Curso; horarios: Horario[]; cuposDisponibles: number };
 
-// Inscripción a un curso con confirmación (Figuras 18 y 19, RF-37, CU-14)
 export function InscripcionCurso({ curso, horarios, cuposDisponibles }: Props) {
   const { sesion } = useSesion();
   const inscripciones = useInscripciones();

@@ -11,7 +11,6 @@ import {
 
 import * as repositorio from "./repository";
 
-// Validar identificadores.
 function validarIdPedido(idPedido: number) {
   if (!Number.isSafeInteger(idPedido) || idPedido <= 0) {
     throw new ErrorApi(
@@ -21,20 +20,12 @@ function validarIdPedido(idPedido: number) {
   }
 }
 
-// Consultar todos los pedidos.
-// Solo Encargado de pedidos y Administrador.
 export async function consultarPedidos() {
   await requerirRol("Encargado de pedidos", "Administrador");
 
   return repositorio.listarPedidos();
 }
 
-/**
- * Consulta los pedidos del usuario autenticado.
- *
- * El identificador se obtiene de la sesión,
- * no de un parámetro enviado por el cliente.
- */
 export async function consultarMisPedidos() {
   const sesion = await requerirSesion();
 
@@ -43,7 +34,6 @@ export async function consultarMisPedidos() {
   );
 }
 
-// Consultar un pedido y sus productos.
 export async function consultarDetallePedido(idPedido: number) {
   const sesion = await requerirSesion();
 
@@ -61,7 +51,6 @@ export async function consultarDetallePedido(idPedido: number) {
       rol === "Administrador"
   );
 
-  // Un cliente solamente puede consultar sus pedidos.
   if (
     !puedeConsultarTodos &&
     Number(pedido.idUsuario) !== sesion.usuario.idUsuario
@@ -84,8 +73,6 @@ export async function consultarDetallePedido(idPedido: number) {
   };
 }
 
-// Actualizar el estado operativo de un pedido.
-// Solamente puede hacerlo el Encargado de pedidos.
 export async function cambiarEstadoPedido(
   idPedido: number,
   estadoNuevo: string
@@ -147,24 +134,18 @@ export async function cambiarEstadoPedido(
     );
   }
 
-  // PostgreSQL vuelve a validar la transición y
-  // registra el cambio de forma atómica.
   const idCambio = await repositorio.avanzarEstadoPedido(
     idPedido,
     sesion.usuario.idUsuario,
     estadoNuevo
   );
 
-  // Enviar la notificación únicamente después de
-  // actualizar correctamente el estado del pedido.
   try {
     const notificacion =
       await prepararNotificacionEstadoPedido(idPedido);
 
     await enviarYRegistrarNotificacion(notificacion);
   } catch (error) {
-    // El estado del pedido ya fue actualizado.
-    // Una falla del correo no debe revertir el cambio.
     console.error(
       "No se pudo procesar la notificación del pedido:",
       error

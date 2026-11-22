@@ -14,7 +14,6 @@ const ORDENES = ["Nombre", "Menos existencias", "Más existencias"] as const;
 
 const filtro = "border border-borde bg-white px-3 py-3 text-sm text-tinta outline-none focus:border-cafe";
 
-// Existencias por producto con búsqueda, filtros y acciones (Figuras 34 y 35, RF-17)
 export function TablaExistenciasAdmin({
   productos,
   categorias,
@@ -45,7 +44,6 @@ export function TablaExistenciasAdmin({
           : b.existencias - a.existencias
     );
 
-  // Fecha del último movimiento de cada producto
   const ultimaActualizacion = (idProducto: number) =>
     movimientos
       .filter((m) => m.idProducto === idProducto)
@@ -126,7 +124,6 @@ export function TablaExistenciasAdmin({
                     <button
                       aria-label={`Acciones de ${p.nombre}`}
                       onClick={(e) => {
-                        // El menú se abre hacia arriba si no cabe debajo del botón
                         const r = e.currentTarget.getBoundingClientRect();
                         const cabeAbajo = r.bottom + 240 < window.innerHeight;
                         setMenu({

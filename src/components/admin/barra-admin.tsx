@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icono, type NombreIcono } from "@/components/ui/icono";
 
-// Secciones de administración. Se agregan aquí a medida que existan.
 const SECCIONES: { href: string; texto: string; icono: NombreIcono }[] = [
   { href: "/admin", texto: "Resumen", icono: "grafico" },
   { href: "/admin/inventario", texto: "Inventario", icono: "caja" },
@@ -14,7 +13,6 @@ const SECCIONES: { href: string; texto: string; icono: NombreIcono }[] = [
   { href: "/admin/etl", texto: "Importación ETL", icono: "subir" },
 ];
 
-// Barra lateral del Administrador (Figura 31)
 export function BarraAdmin() {
   const ruta = usePathname();
   return (

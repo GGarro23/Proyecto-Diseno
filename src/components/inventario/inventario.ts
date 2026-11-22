@@ -24,7 +24,39 @@ const ESTADO_INICIAL: EstadoInventario = {
   movimientos: [],
 };
 
-// Hook conectado a la API real de PostgreSQL.
+type ResultadoInventario =
+  | { ok: true; dato: EstadoInventario }
+  | { ok: false; error: string };
+
+async function pedirInventario(): Promise<ResultadoInventario> {
+  try {
+    const respuesta = await fetch("/api/inventario", {
+      cache: "no-store",
+    });
+
+    const resultado = await respuesta.json();
+
+    if (!respuesta.ok || !resultado.ok) {
+      return {
+        ok: false,
+        error:
+          resultado.error ??
+          "No se pudo consultar el inventario.",
+      };
+    }
+
+    return { ok: true, dato: resultado.dato };
+  } catch (e) {
+    return {
+      ok: false,
+      error:
+        e instanceof Error
+          ? e.message
+          : "Error inesperado al cargar inventario.",
+    };
+  }
+}
+
 export function useInventario() {
   const [inventario, setInventario] =
     useState<EstadoInventario>(ESTADO_INICIAL);
@@ -32,39 +64,33 @@ export function useInventario() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const recargar = useCallback(async () => {
-    setCargando(true);
-
-    try {
-      const respuesta = await fetch("/api/inventario", {
-        cache: "no-store",
-      });
-
-      const resultado = await respuesta.json();
-
-      if (!respuesta.ok || !resultado.ok) {
-        throw new Error(
-          resultado.error ??
-            "No se pudo consultar el inventario."
-        );
-      }
-
+  const aplicar = useCallback((resultado: ResultadoInventario) => {
+    if (resultado.ok) {
       setInventario(resultado.dato);
       setError(null);
-    } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Error inesperado al cargar inventario."
-      );
-    } finally {
-      setCargando(false);
+    } else {
+      setError(resultado.error);
     }
+
+    setCargando(false);
   }, []);
 
+  const recargar = useCallback(async () => {
+    setCargando(true);
+    aplicar(await pedirInventario());
+  }, [aplicar]);
+
   useEffect(() => {
-    void recargar();
-  }, [recargar]);
+    let vigente = true;
+
+    pedirInventario().then((resultado) => {
+      if (vigente) aplicar(resultado);
+    });
+
+    return () => {
+      vigente = false;
+    };
+  }, [aplicar]);
 
   return {
     ...inventario,

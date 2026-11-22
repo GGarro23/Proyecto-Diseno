@@ -15,12 +15,6 @@ type Contexto = {
   }>;
 };
 
-/**
- * GET /api/pedidos/[idPedido]/notificaciones
- *
- * Consulta las notificaciones relacionadas
- * con un pedido específico.
- */
 export function GET(
   _peticion: Request,
   contexto: Contexto

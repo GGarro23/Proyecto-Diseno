@@ -44,7 +44,6 @@ function manejarErrorBD(error: unknown): never {
   throw error;
 }
 
-// RF-11 y RF-12: consultar categorías reales
 export function GET() {
   return manejar(async () => {
     const categorias = await consulta<{
@@ -67,7 +66,6 @@ export function GET() {
   });
 }
 
-// RF-11: registrar categoría
 export function POST(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");
@@ -105,7 +103,6 @@ export function POST(peticion: Request) {
   });
 }
 
-// RF-12: modificar categoría
 export function PUT(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");

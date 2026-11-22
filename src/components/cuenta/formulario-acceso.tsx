@@ -7,7 +7,6 @@ import { useSesion } from "@/components/sesion/proveedor-sesion";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 
-// Formulario de inicio de sesión (RF-02, CU-02)
 export function FormularioAcceso() {
   const { iniciarSesion } = useSesion();
   const router = useRouter();

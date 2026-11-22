@@ -8,7 +8,6 @@ const COLORES = {
   Inactivo: "border-borde bg-crema text-gris",
 };
 
-// Estado del producto en el inventario (Figura 34)
 export function EstadoProductoAdmin({ producto }: { producto: Producto }) {
   const estado = estadoExistencias(producto);
   return (

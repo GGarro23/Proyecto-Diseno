@@ -10,8 +10,6 @@ import {
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 
-// Categorías obtenidas desde PostgreSQL.
-// totalProductos lo calcula la API.
 type CategoriaReal = {
   idCategoria: number;
   nombre: string;
@@ -30,8 +28,6 @@ function mensajeError(error: unknown): string {
     : "Ocurrió un error inesperado.";
 }
 
-// Todas las peticiones se hacen al backend real.
-// Ya no utilizamos mocks ni localStorage.
 async function solicitarCategorias<T>(
   metodo: "GET" | "POST" | "PUT",
   datos?: object
@@ -57,8 +53,6 @@ async function solicitarCategorias<T>(
   return resultado.dato as T;
 }
 
-// RF-11: Registrar categoría
-// RF-12: Modificar categoría
 export function CategoriasAdmin({
   alTerminar,
 }: {
@@ -84,7 +78,6 @@ export function CategoriasAdmin({
     string | null
   >(null);
 
-  // Consultar las categorías reales de Supabase.
   const recargar = useCallback(async () => {
     const datos =
       await solicitarCategorias<CategoriaReal[]>("GET");
@@ -93,7 +86,6 @@ export function CategoriasAdmin({
     setErrorCarga(null);
   }, []);
 
-  // Cargar las categorías al abrir el componente.
   useEffect(() => {
     void recargar()
       .catch((error) => {
@@ -104,7 +96,6 @@ export function CategoriasAdmin({
       });
   }, [recargar]);
 
-  // Registrar una categoría nueva.
   const registrar = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -134,7 +125,6 @@ export function CategoriasAdmin({
     }
   };
 
-  // Guardar los cambios de una categoría existente.
   const guardar = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -175,7 +165,6 @@ export function CategoriasAdmin({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
-      {/* Listado de categorías */}
       <section className="border border-borde bg-papel">
         {errorCarga && (
           <div
@@ -333,7 +322,6 @@ export function CategoriasAdmin({
         </table>
       </section>
 
-      {/* Formulario de nueva categoría */}
       <form
         onSubmit={registrar}
         noValidate

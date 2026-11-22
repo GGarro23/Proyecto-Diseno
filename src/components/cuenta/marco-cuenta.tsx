@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Sobretitulo } from "@/components/ui/textos";
 
-// Marco común de las pantallas de acceso y registro
 export function MarcoCuenta({ titulo, destacado, children }: { titulo: string; destacado: string; children: ReactNode }) {
   return (
     <div className="mx-auto max-w-md px-6 py-14">

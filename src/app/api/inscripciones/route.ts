@@ -32,13 +32,11 @@ const CAMPOS = `SELECT i.id_inscripcion AS "idInscripcion",
  CASE WHEN i.estado = 'CONFIRMADA' THEN 'Activa' ELSE 'Finalizada' END AS estado
  FROM inscripcion i JOIN usuario u ON u.id_usuario = i.id_usuario`;
 
-// La sesión determina qué registros se pueden consultar; nunca el idUsuario enviado por el cliente.
 export function GET() {
   return manejar(async () => {
     const sesion = await requerirSesion();
     const idUsuario = sesion.usuario.idUsuario;
     let condicion = "WHERE i.id_usuario = $1";
-    // Administradores: ver la ocupación general; profesores: solo sus cursos.
     if (sesion.roles.includes("Administrador") || sesion.roles.includes("Administrador del sistema")) {
       condicion = "WHERE $1::bigint > 0";
     } else if (sesion.roles.includes("Profesor")) {
@@ -53,7 +51,6 @@ export function GET() {
   });
 }
 
-// RF-37: la BD bloquea el curso, valida cupos/estado, evita duplicados y asigna rol Estudiante.
 export function POST(peticion: Request) {
   return manejar(async () => {
     const sesion = await requerirSesion();

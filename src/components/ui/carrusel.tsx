@@ -3,7 +3,6 @@
 import { useRef, type ReactNode } from "react";
 import { Icono } from "./icono";
 
-// Fila deslizable con flechas y contador "01 —— 05" (Figuras 09 y 10)
 export function Carrusel({ total, children }: { total: number; children: ReactNode }) {
   const fila = useRef<HTMLDivElement>(null);
 

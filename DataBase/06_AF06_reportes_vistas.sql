@@ -1,4 +1,3 @@
--- AF-06 | No se crean tablas nuevas: solo vistas derivadas (RF-44).
 BEGIN;
 CREATE VIEW vw_reporte_ventas_confirmadas AS
 SELECT p.id_pedido, p.id_usuario, p.fecha_confirmacion, p.modalidad_entrega,
@@ -22,5 +21,4 @@ SELECT c.id_curso, c.nombre AS curso, c.estado, c.cupo_maximo,
 FROM curso c LEFT JOIN inscripcion i
   ON i.id_curso=c.id_curso AND i.estado='CONFIRMADA'
 GROUP BY c.id_curso, c.nombre, c.estado, c.cupo_maximo;
--- El backend debe restringir estas vistas a Administrador (RNF-02).
 COMMIT;

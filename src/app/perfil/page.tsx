@@ -3,7 +3,6 @@
 import { PerfilUsuario } from "@/components/cuenta/perfil-usuario";
 import { ControlSesion } from "@/components/cuenta/control-sesion";
 
-// Mi perfil (Figuras 20 y 21)
 export default function Perfil() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">

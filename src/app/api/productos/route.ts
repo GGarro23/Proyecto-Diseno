@@ -6,7 +6,6 @@ import { obtenerCategorias, obtenerProductos } from "@/modules/catalogo-inventar
 import { validarProducto, type DatosProducto } from "@/modules/catalogo-inventario/validaciones";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 
-// El GET público conserva el formato usado por la tienda.
 export async function GET() {
   try {
     const productos = await consulta(`
@@ -34,7 +33,6 @@ function datosValidos(valor: unknown): DatosProducto {
   for (const campo of campos) {
     const dato = objeto[campo];
     if (typeof dato !== "string") {
-      // idCategoria y precio pueden llegar como números en integraciones externas.
       if ((campo === "idCategoria" || campo === "precio") && typeof dato === "number" && Number.isFinite(dato)) {
         datos[campo] = String(dato);
       } else if ((campo === "descripcion" || campo === "imagenUrl") && (dato == null)) {
@@ -72,7 +70,6 @@ function errorBaseDatos(error: unknown): never {
 async function comprobar(datos: DatosProducto, idProducto?: number) {
   const [productos, categorias] = await Promise.all([obtenerProductos(), obtenerCategorias()]);
   const errores = validarProducto(datos, productos, categorias, idProducto);
-  // El esquema SQL permite descripción opcional; evitamos exigirla solo en la API.
   delete errores.descripcion;
   if (Object.keys(errores).length) throw new ErrorApi(400, "Revisa los datos marcados.", errores);
   if (!Number.isSafeInteger(Number(datos.idCategoria)) || Number(datos.idCategoria) <= 0) {
@@ -80,7 +77,6 @@ async function comprobar(datos: DatosProducto, idProducto?: number) {
   }
 }
 
-// RF-13: registrar producto con cero existencias, sin crear movimientos.
 export function POST(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");
@@ -100,7 +96,6 @@ export function POST(peticion: Request) {
   });
 }
 
-// RF-14: editar datos descriptivos; no modificar existencias ni historial.
 export function PUT(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");
@@ -127,7 +122,6 @@ export function PUT(peticion: Request) {
   });
 }
 
-// RF-15: baja lógica; conserva historial y pedidos.
 export function PATCH(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");

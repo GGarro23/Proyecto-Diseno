@@ -2,7 +2,6 @@ import Link from "next/link";
 import { FormularioRegistro } from "@/components/cuenta/formulario-registro";
 import { MarcoCuenta } from "@/components/cuenta/marco-cuenta";
 
-// Registro de Cliente (RF-01, CU-01). Sin prototipo: sigue el estilo de las demás pantallas.
 export default function Registro() {
   return (
     <MarcoCuenta titulo="Crea tu" destacado="cuenta">

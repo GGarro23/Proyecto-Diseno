@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Icono } from "@/components/ui/icono";
 import { Insignia } from "@/components/ui/textos";
-import { nombreDeUsuario } from "@/mocks/autenticacion";
 import { calcularSaldos, cambioEnExistencias, type MovimientoConSaldo } from "@/modules/catalogo-inventario/reglas";
 import type { MovimientoInventario, Producto, TipoMovimiento } from "@/modules/catalogo-inventario/schema";
 
@@ -12,9 +11,8 @@ const ORDENES = ["Más recientes", "Más antiguos"] as const;
 
 const filtro = "border border-borde bg-white px-3 py-3 text-sm text-tinta outline-none focus:border-cafe";
 
-// Quién originó el movimiento (RI-05): una persona, un pedido o una carga ETL
 export function origenMovimiento(m: MovimientoInventario): string {
-  if (m.idResponsable !== null) return nombreDeUsuario(m.idResponsable);
+  if (m.idResponsable !== null) return m.responsable ?? `Usuario N.º ${m.idResponsable}`;
   if (m.idPedido !== null) return `Pedido N.º ${m.idPedido}`;
   if (m.idEjecucion !== null) return `Carga ETL N.º ${m.idEjecucion}`;
   return "—";
@@ -25,7 +23,6 @@ export function cantidadConSigno(m: MovimientoInventario): string {
   return cambio > 0 ? `+${cambio}` : `−${Math.abs(cambio)}`;
 }
 
-// Historial de movimientos de inventario (Figura 39, RF-17 a RF-19)
 export function HistorialMovimientosAdmin({ productos, movimientos }: { productos: Producto[]; movimientos: MovimientoInventario[] }) {
   const [busqueda, setBusqueda] = useState("");
   const [tipo, setTipo] = useState("Todos");

@@ -13,7 +13,6 @@ import { ProfesorCursoAdmin } from "./profesor-curso-admin";
 
 type Panel = { clase: "curso" | "horarios" | "profesor"; idCurso: number | null };
 
-// Administración de cursos, horarios y profesores (RF-30 a RF-34). Sin prototipo en el documento.
 export function OfertaAdmin() {
   const { cursos, horarios, cuposDisponibles, nombresProfesores, cargando, error, recargar } = useOferta();
   const [panel, setPanel] = useState<Panel | null>(null);

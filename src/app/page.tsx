@@ -9,7 +9,6 @@ import { Sobretitulo } from "@/components/ui/textos";
 import { obtenerCategorias, obtenerProductos } from "@/modules/catalogo-inventario/consultas";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 
-// Textos de las tarjetas de categoría (Figura 09). No forman parte del modelo de datos.
 const detalleCategoria: Record<string, { nota: string; texto: string }> = {
   Cuerdas: { nota: "♪", texto: "Violines, violas y guitarras" },
   Teclados: { nota: "♩", texto: "Pianos digitales y acústicos" },
@@ -44,7 +43,6 @@ function Presentacion() {
           <li><span className="text-naranja">•</span> Entrega en todo el país</li>
           <li><span className="text-naranja">•</span> Profesores activos</li>
         </ul>
-        {/* Pentagrama decorativo */}
         <div className="relative -ml-16 h-8" aria-hidden>
           <span className="absolute -top-3 left-14 font-serif text-5xl text-borde">𝄞</span>
           <div className="flex h-full flex-col justify-between">

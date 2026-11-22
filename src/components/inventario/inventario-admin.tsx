@@ -20,7 +20,6 @@ const VISTAS = ["Existencias", "Historial de movimientos", "Categorías"] as con
 
 type Panel = { clase: "ficha" | "entrada" | "ajuste" | "producto"; idProducto: number | null };
 
-// Gestión de inventario, productos y categorías (Figuras 34 a 39, RF-11 a RF-19)
 export function InventarioAdmin() {
   const { sesion } = useSesion();
   const { productos, categorias, movimientos, cargando, error, recargar } = useInventario();
@@ -154,7 +153,6 @@ export function InventarioAdmin() {
             clase={panel.clase}
             productos={productos}
             idProductoInicial={panel.idProducto}
-            idResponsable={sesion.usuario.idUsuario}
             alTerminar={terminar}
             alCancelar={() => setPanel(null)}
           />

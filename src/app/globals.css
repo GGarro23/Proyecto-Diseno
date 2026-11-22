@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/* Relación 60 / 30 / 10
-   60 %: fondos claros (crema, papel)
-   30 %: café para superficies y elementos secundarios
-   10 %: naranja para acciones principales y acentos */
 @theme {
   --color-crema: #fbf9f6;
   --color-papel: #ffffff;

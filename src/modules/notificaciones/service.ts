@@ -9,7 +9,6 @@ import type {
   EstadoSolicitudCorreo,
 } from "./repository";
 
-// Validar identificadores.
 function validarId(id: number): void {
   if (!Number.isSafeInteger(id) || id <= 0) {
     throw new ErrorApi(
@@ -19,8 +18,6 @@ function validarId(id: number): void {
   }
 }
 
-// Escapar texto dinámico para insertarlo de forma
-// segura dentro del HTML del correo.
 function escaparHtml(valor: string): string {
   return valor.replace(/[&<>"']/g, (caracter) => {
     const reemplazos: Record<string, string> = {
@@ -35,13 +32,6 @@ function escaparHtml(valor: string): string {
   });
 }
 
-/**
- * Plantilla visual reutilizable para las notificaciones
- * por correo de Intervallum.
- *
- * Se utilizan estilos en línea para mejorar la
- * compatibilidad con Gmail y otros clientes de correo.
- */
 function plantillaCorreo(params: {
   titulo: string;
   mensaje: string;
@@ -226,9 +216,6 @@ function plantillaCorreo(params: {
   `;
 }
 
-/**
- * Consultar las notificaciones del usuario autenticado.
- */
 export async function consultarMisNotificaciones() {
   const sesion = await requerirSesion();
 
@@ -237,13 +224,6 @@ export async function consultarMisNotificaciones() {
   );
 }
 
-/**
- * Registrar internamente una solicitud de notificación.
- *
- * Esta función no envía un correo por sí misma.
- * No debe exponerse como una API pública que permita
- * registrar notificaciones arbitrarias.
- */
 export async function registrarEventoNotificacion(
   idUsuario: number,
   tipoEvento: TipoEventoCorreo,
@@ -302,12 +282,6 @@ export async function registrarEventoNotificacion(
   );
 }
 
-/**
- * Consultar las notificaciones relacionadas con un pedido.
- *
- * Verifica primero que el usuario tenga permiso
- * para consultar ese pedido.
- */
 export async function consultarNotificacionesPedido(
   idPedido: number
 ) {
@@ -322,12 +296,6 @@ export async function consultarNotificacionesPedido(
   return repositorio.obtenerNotificacionesPedido(idPedido);
 }
 
-/**
- * Preparar una notificación de compra confirmada.
- *
- * Devuelve tanto el contenido de texto plano como
- * su representación HTML.
- */
 export async function prepararNotificacionCompra(
   idPedido: number
 ) {
@@ -364,10 +332,6 @@ export async function prepararNotificacionCompra(
   };
 }
 
-/**
- * Preparar una notificación cuando cambia
- * el estado operativo de un pedido.
- */
 export async function prepararNotificacionEstadoPedido(
   idPedido: number
 ) {
@@ -430,13 +394,6 @@ export async function prepararNotificacionEstadoPedido(
   };
 }
 
-/**
- * Solicita el envío de una notificación y registra
- * el resultado devuelto por el servidor SMTP.
- *
- * ACEPTADA significa que el servidor aceptó el correo,
- * no que fue entregado en la bandeja del destinatario.
- */
 export async function enviarYRegistrarNotificacion(
   datos: {
     idUsuario: number;

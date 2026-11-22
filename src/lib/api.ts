@@ -1,6 +1,3 @@
-// Llamadas del frontend a la API (src/app/api). Devuelve el mismo formato que respondió el servidor,
-// así las pantallas manejan igual los errores de validación y los de conexión.
-
 export type Resultado<T> = { ok: true; dato: T } | { ok: false; error: string; errores?: Record<string, string> };
 
 type Metodo = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

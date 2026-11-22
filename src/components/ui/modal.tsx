@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { Icono } from "./icono";
 
-// Ventana emergente sobre la pantalla (Figura 18)
 export function Modal({ abierto, alCerrar, children }: { abierto: boolean; alCerrar: () => void; children: ReactNode }) {
   if (!abierto) return null;
   return (

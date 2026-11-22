@@ -1,13 +1,4 @@
 
--- INTERVALLUM
--- Migración 14: vaciar el carrito al crear un pedido.
---
--- Los productos se copian a detalle_pedido antes de
--- eliminarse del carrito.
---
--- Toda la operación se ejecuta en una sola transacción.
--- Si ocurre un error, se revierten todos los cambios.
-
 BEGIN;
 
 CREATE OR REPLACE FUNCTION crear_pedido_desde_carrito(
@@ -32,8 +23,6 @@ BEGIN
         RAISE EXCEPTION 'Usuario inexistente o inactivo';
     END IF;
 
-    -- Bloquear el carrito para evitar modificaciones
-    -- concurrentes durante la creación del pedido.
     SELECT id_carrito
     INTO v_carrito
     FROM carrito
@@ -78,7 +67,6 @@ BEGIN
       ON pr.id_producto = l.id_producto
     WHERE l.id_carrito = v_carrito;
 
-    -- Crear el pedido pendiente de pago.
     INSERT INTO pedido (
         id_usuario,
         total,
@@ -93,7 +81,6 @@ BEGIN
     )
     RETURNING id_pedido INTO v_pedido;
 
-    -- Guardar productos, cantidades y precios históricos.
     INSERT INTO detalle_pedido (
         id_pedido,
         id_producto,
@@ -110,8 +97,6 @@ BEGIN
       ON pr.id_producto = l.id_producto
     WHERE l.id_carrito = v_carrito;
 
-    -- Vaciar únicamente las líneas de este carrito,
-    -- después de copiarlas correctamente al pedido.
     DELETE FROM linea_carrito
     WHERE id_carrito = v_carrito;
 

@@ -14,14 +14,11 @@ type Contexto = {
   }>;
 };
 
-// POST /api/pedidos/[idPedido]/pago
-// Ejecuta la simulación del pago de un pedido.
 export function POST(
   peticion: Request,
   contexto: Contexto
 ) {
   return manejar(async () => {
-    // Obtener el identificador del pedido desde la URL.
     const { idPedido: parametroId } = await contexto.params;
 
     const idPedido = Number(parametroId);
@@ -36,7 +33,6 @@ export function POST(
       );
     }
 
-    // Leer el escenario de pago.
     const datos = await leerCuerpo<{
       codigoEscenario?: unknown;
     }>(peticion);
@@ -52,7 +48,6 @@ export function POST(
       );
     }
 
-    // Ejecutar el servicio de pago simulado.
     const resultado = await simularPago(
       idPedido,
       datos.codigoEscenario

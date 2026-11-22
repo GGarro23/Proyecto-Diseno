@@ -3,8 +3,6 @@ import { ErrorApi } from "@/lib/respuesta";
 import { requerirRol } from "@/modules/autenticacion-usuarios/service";
 import * as repositorio from "./repository";
 
-// Verificar que una fecha tenga formato YYYY-MM-DD
-// y corresponda a una fecha válida.
 function validarFecha(fecha: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return false;
@@ -18,10 +16,6 @@ function validarFecha(fecha: string): boolean {
   );
 }
 
-/**
- * Reporte de ventas confirmadas.
- * Solo disponible para Administrador.
- */
 export async function consultarReporteVentas(
   fechaInicio: string,
   fechaFin: string
@@ -71,10 +65,6 @@ export async function consultarReporteVentas(
   };
 }
 
-/**
- * Reporte de inventario.
- * Solo disponible para Administrador.
- */
 export async function consultarReporteInventario() {
   await requerirRol("Administrador");
 
@@ -92,10 +82,6 @@ export async function consultarReporteInventario() {
   };
 }
 
-/**
- * Reporte de ocupación académica.
- * Solo disponible para Administrador.
- */
 export async function consultarReporteAcademia() {
   await requerirRol("Administrador");
 

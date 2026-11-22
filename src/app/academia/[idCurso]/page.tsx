@@ -19,7 +19,6 @@ async function ContenidoCurso({
 }) {
   const { idCurso } = await params;
 
-  // Validar que recibimos un identificador válido.
   if (!/^[1-9]\d*$/.test(idCurso)) {
     notFound();
   }

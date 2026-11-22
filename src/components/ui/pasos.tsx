@@ -1,4 +1,3 @@
-// Indicador de pasos de la compra (Figuras 13–16)
 const PASOS = ["Revisar", "Entrega", "Pago", "Confirmación"];
 
 export function Pasos({ actual }: { actual: 1 | 2 | 3 | 4 }) {

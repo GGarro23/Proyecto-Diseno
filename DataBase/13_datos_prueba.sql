@@ -1,13 +1,5 @@
--- Datos de prueba para la Etapa 2 (se ejecuta después de 10, 11 y 12).
--- Crea cuentas, roles, permisos, profesores asignados, inscripciones, asistencias,
--- pedidos con pago simulado y cambios de estado. Usa las funciones de 09 para
--- respetar las mismas reglas que el backend.
---
--- TODAS las cuentas usan la contraseña de prueba: Intervallum1 (hash bcrypt, costo 10).
--- Los idUsuario coinciden con los datos de prueba del frontend.
 BEGIN;
 
--- ---------- Usuarios (14) ----------
 INSERT INTO usuario (id_usuario, nombre, correo, contrasena_hash, activo, telefono, provincia, fecha_registro) VALUES
  (1,    'Ana Mora',          'ana@intervallum.cr',     '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '+506 8888 1840', 'San José', '2023-02-14'),
  (2,    'Carlos Rojas',      'carlos@intervallum.cr',  '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  NULL,             NULL,       '2024-05-03'),
@@ -25,10 +17,8 @@ INSERT INTO usuario (id_usuario, nombre, correo, contrasena_hash, activo, telefo
  (1004, 'Camila Vargas',     'camila@correo.cr',       '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  NULL,             'Puntarenas','2025-07-21')
 ON CONFLICT DO NOTHING;
 
--- Los id se dieron a mano: la secuencia sigue desde el mayor
 SELECT setval(pg_get_serial_sequence('usuario', 'id_usuario'), (SELECT max(id_usuario) FROM usuario));
 
--- ---------- Roles de cada cuenta ----------
 INSERT INTO usuario_rol (id_usuario, id_rol)
 SELECT v.id_usuario, r.id_rol
 FROM (VALUES
@@ -42,7 +32,6 @@ FROM (VALUES
 JOIN rol r ON r.nombre = v.rol
 ON CONFLICT DO NOTHING;
 
--- ---------- Permisos (8) y matriz inicial (RF-10, Figura 40) ----------
 INSERT INTO permiso (codigo, descripcion) VALUES
  ('catalogo.administrar',  'Administrar productos, categorías e inventario'),
  ('pedidos.consultar',     'Consultar pedidos de la tienda'),
@@ -71,12 +60,10 @@ JOIN rol r ON r.nombre = v.rol
 JOIN permiso p ON p.codigo = v.codigo
 ON CONFLICT DO NOTHING;
 
--- ---------- Profesores asignados a los cursos de 10 (RF-34) ----------
 UPDATE curso SET id_profesor = 10 WHERE nombre IN ('Piano para principiantes', 'Ensambles avanzados') AND id_profesor IS NULL;
 UPDATE curso SET id_profesor = 11 WHERE nombre = 'Violin inicial' AND id_profesor IS NULL;
 UPDATE curso SET id_profesor = 12 WHERE nombre = 'Teoria musical I' AND id_profesor IS NULL;
 
--- ---------- Inscripciones (RF-37). El trigger agrega el rol Estudiante ----------
 SELECT inscribir_en_curso(v.id_usuario, c.id_curso)
 FROM (VALUES
  (1, 'Piano para principiantes'),
@@ -87,7 +74,6 @@ FROM (VALUES
 JOIN curso c ON c.nombre = v.nombre
 WHERE NOT EXISTS (SELECT 1 FROM inscripcion i WHERE i.id_usuario = v.id_usuario AND i.id_curso = c.id_curso);
 
--- ---------- Asistencias de Ana en Piano para principiantes (RF-40): 6 sesiones ----------
 INSERT INTO asistencia (id_inscripcion, fecha, estado_asistencia)
 SELECT i.id_inscripcion, v.fecha::DATE, v.estado
 FROM (VALUES
@@ -98,9 +84,6 @@ JOIN curso c ON c.nombre = 'Piano para principiantes'
 JOIN inscripcion i ON i.id_usuario = 1 AND i.id_curso = c.id_curso
 ON CONFLICT DO NOTHING;
 
--- ---------- Pedidos (RF-23 a RF-28) ----------
--- Cada pedido se arma con el carrito, se crea con crear_pedido_desde_carrito y se paga con
--- simular_pago_pedido, que descuenta inventario. Después se vacía el carrito.
 CREATE TEMP TABLE compra_prueba (orden INT, id_usuario BIGINT, codigo TEXT, cantidad INT, modalidad TEXT, direccion TEXT, pago TEXT, avances TEXT[]);
 INSERT INTO compra_prueba VALUES
  (1, 1,    'ARCO-EBANO',   1, 'ENVIO',  'San José, Montes de Oca. 100 m norte del parque', 'PAGO_OK', ARRAY[]::TEXT[]),
@@ -118,7 +101,6 @@ DECLARE
   v_estado TEXT;
 BEGIN
   FOR c IN SELECT * FROM compra_prueba ORDER BY orden LOOP
-    -- Si ya existe un pedido de prueba de este usuario, no se repite
     CONTINUE WHEN EXISTS (SELECT 1 FROM pedido WHERE id_usuario = c.id_usuario);
     INSERT INTO carrito (id_usuario) VALUES (c.id_usuario) ON CONFLICT DO NOTHING;
     SELECT id_carrito INTO v_carrito FROM carrito WHERE id_usuario = c.id_usuario;
@@ -136,13 +118,11 @@ END $$;
 
 DROP TABLE compra_prueba;
 
--- ---------- Recomendación revisada, para ver los dos estados (RF-47, RF-48) ----------
 UPDATE recomendacion SET estado = 'REVISADA', fecha_revision = NOW(), id_revisor = 30
 WHERE tipo = 'PROMOCION_ACADEMICA' AND estado = 'PENDIENTE';
 
 COMMIT;
 
--- Conteo rápido de filas de prueba
 SELECT 'usuario' AS tabla, count(*) FROM usuario
 UNION ALL SELECT 'usuario_rol', count(*) FROM usuario_rol
 UNION ALL SELECT 'permiso', count(*) FROM permiso

@@ -60,7 +60,6 @@ export function ProveedorCarrito({
   const [lineas, setLineas] = useState<Linea[]>([]);
   const [cargando, setCargando] = useState(true);
 
-  // Evita aplicar resultados de una sesión anterior.
   const sesionActual = useRef(idUsuario);
 
 useEffect(() => {
@@ -97,7 +96,6 @@ useEffect(() => {
   let cancelado = false;
 
   async function sincronizarCarrito() {
-    // Ejecutar la sincronización de forma asíncrona.
     await Promise.resolve();
 
     if (cancelado) return;
@@ -221,8 +219,6 @@ const cambiarCantidad = async (
     }
   };
 
-  // Solo limpia la visualización local.
-  // El vaciado persistente debe implementarse en el backend.
   const vaciar = () => {
     setLineas([]);
   };

@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
 
-// Formato común de las respuestas de la API. El frontend recibe siempre:
-//   { ok: true, dato }                      si la operación funcionó
-//   { ok: false, error, errores? }          si no (errores = mensajes por campo del formulario)
-
 export class ErrorApi extends Error {
   constructor(
     public estado: number,
@@ -22,8 +18,6 @@ export function fallo(estado: number, error: string, errores?: Record<string, st
   return NextResponse.json({ ok: false, error, ...(errores ? { errores } : {}) }, { status: estado });
 }
 
-// Envuelve el código de una ruta: los ErrorApi se devuelven tal cual y cualquier otro error
-// se registra en la consola del servidor y se responde con un mensaje general (RNF de errores).
 export async function manejar(trabajo: () => Promise<Response>): Promise<Response> {
   try {
     return await trabajo();
@@ -34,7 +28,6 @@ export async function manejar(trabajo: () => Promise<Response>): Promise<Respons
   }
 }
 
-// Lee el cuerpo JSON de la petición; si no es JSON válido responde 400
 export async function leerCuerpo<T>(peticion: Request): Promise<T> {
   try {
     return (await peticion.json()) as T;

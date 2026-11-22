@@ -1,4 +1,3 @@
-// Íconos de línea usados en los prototipos
 const trazos = {
   flecha: "M5 12h14M13 6l6 6-6 6",
   flechaIzquierda: "M19 12H5M11 6l-6 6 6 6",

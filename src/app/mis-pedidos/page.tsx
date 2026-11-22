@@ -4,7 +4,6 @@ import { ListaPedidosCliente } from "@/components/cuenta/lista-pedidos-cliente";
 import { ControlSesion } from "@/components/cuenta/control-sesion";
 import { Sobretitulo } from "@/components/ui/textos";
 
-// Mis pedidos (RF-26, HU-08). Sin prototipo: sigue el estilo de las demás pantallas.
 export default function MisPedidos() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">

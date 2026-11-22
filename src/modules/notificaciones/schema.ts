@@ -1,5 +1,3 @@
-// RF-29 Notificaciones (la entidad está en AF-04 del modelo)
-
 export type TipoEvento =
   | "Compra confirmada"
   | "Cambio de estado de pedido"

@@ -1,13 +1,10 @@
 
 import { llamarApi } from "@/lib/api";
 
-// Modalidades aceptadas por el backend.
 export type ModalidadEntrega = "ENVIO" | "RETIRO";
 
-// Escenarios de pago simulado.
 export type EscenarioPago = "PAGO_OK" | "PAGO_RECHAZADO";
 
-// Producto dentro del carrito.
 export type ProductoCarrito = {
   idProducto: number;
   nombre: string;
@@ -17,14 +14,12 @@ export type ProductoCarrito = {
   existencias: number;
 };
 
-// Respuesta de consulta del carrito.
 export type CarritoApi = {
   idCarrito: number | null;
   productos: ProductoCarrito[];
   total: number;
 };
 
-// Respuesta de creación de pedidos.
 export type PedidoCreado = {
   idPedido: number;
   modalidadEntrega: ModalidadEntrega;
@@ -32,7 +27,6 @@ export type PedidoCreado = {
   mensaje: string;
 };
 
-// Respuesta de pago simulado.
 export type ResultadoPago = {
   idPedido: number;
   resultadoSimulacion: string;
@@ -40,12 +34,10 @@ export type ResultadoPago = {
   mensaje: string;
 };
 
-// Consultar carrito.
 export function apiConsultarCarrito() {
   return llamarApi<CarritoApi>("/api/carrito");
 }
 
-// Agregar producto.
 export function apiAgregarCarrito(
   idProducto: number,
   cantidad: number
@@ -57,7 +49,6 @@ export function apiAgregarCarrito(
   );
 }
 
-// Actualizar cantidad.
 export function apiActualizarCarrito(
   idProducto: number,
   cantidad: number
@@ -69,7 +60,6 @@ export function apiActualizarCarrito(
   );
 }
 
-// Eliminar producto.
 export function apiEliminarCarrito(idProducto: number) {
   return llamarApi(
     "/api/carrito",
@@ -78,7 +68,6 @@ export function apiEliminarCarrito(idProducto: number) {
   );
 }
 
-// Crear pedido desde el carrito.
 export function apiCrearPedido(
   modalidadEntrega: ModalidadEntrega,
   direccionEntrega: string | null
@@ -90,7 +79,6 @@ export function apiCrearPedido(
   );
 }
 
-// Simular pago.
 export function apiSimularPago(
   idPedido: number,
   codigoEscenario: EscenarioPago
@@ -119,12 +107,6 @@ export type PedidoDetalle = {
   }[];
 };
 
-/**
- * Consulta un pedido existente y sus productos.
- *
- * El backend verifica que el usuario tenga permiso
- * para consultar el pedido solicitado.
- */
 export async function apiConsultarPedido(
   idPedido: number
 ) {
@@ -147,12 +129,6 @@ export type PedidoResumen = {
   estadoOperativo: string;
 };
 
-/**
- * Consulta únicamente los pedidos del usuario autenticado.
- *
- * El backend obtiene el identificador del usuario
- * desde la sesión y filtra sus pedidos en PostgreSQL.
- */
 export async function apiConsultarMisPedidos() {
   return llamarApi<PedidoResumen[]>(
     "/api/pedidos?mios=true"

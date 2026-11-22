@@ -1,30 +1,16 @@
-"use client";
-
-import { cuposDisponibles as calcularCuposMock }
-  from "@/mocks/academia";
 import type { Curso } from "@/modules/academia/schema";
-import { useInscripciones } from "./inscripciones";
 
 type Props = {
   curso: Curso;
   claro?: boolean;
-  cuposDisponibles?: number;
+  cuposDisponibles: number;
 };
 
 export function EstadoCurso({
   curso,
   claro = false,
-  cuposDisponibles: cuposBD,
+  cuposDisponibles: cupos,
 }: Props) {
-  // Compatibilidad temporal con las pantallas
-  // que todavía utilizan inscripciones simuladas.
-  const inscripciones = useInscripciones();
-
-  // Priorizar siempre los datos reales de PostgreSQL.
-const cupos =
-  cuposBD ??
-  calcularCuposMock(curso.idCurso, inscripciones);
-
   const disponible =
     curso.estado === "Abierto" && cupos > 0;
 

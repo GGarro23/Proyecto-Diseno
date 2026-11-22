@@ -7,7 +7,6 @@ import { PERMISOS, ROLES_INTERNOS, type MatrizPermisos } from "@/modules/autenti
 import type { NombreRol } from "@/modules/autenticacion-usuarios/schema";
 import { usePermisos } from "./permisos";
 
-// Matriz de permisos por rol (Figura 40, RF-10)
 export function PermisosSistema({ alAvisar }: { alAvisar: (texto: string) => void }) {
   const { dato: guardada, cargando, error, recargar } = usePermisos();
   const [guardando, setGuardando] = useState(false);

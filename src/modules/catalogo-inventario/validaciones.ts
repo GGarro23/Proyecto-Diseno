@@ -1,11 +1,8 @@
 import { cambioEnExistencias } from "./reglas";
 import type { Categoria, Producto, TipoMovimiento } from "./schema";
 
-// Validaciones de catálogo e inventario (RF-11 a RF-19). Las usa el frontend y debe usarlas el backend.
-
 const mismoTexto = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
-// RF-11 y RF-12: nombre no vacío y único. idCategoria se omite al registrar.
 export function validarCategoria(nombre: string, categorias: Categoria[], idCategoria?: number): string | undefined {
   if (!nombre.trim()) return "Indica el nombre de la categoría.";
   if (categorias.some((c) => c.idCategoria !== idCategoria && mismoTexto(c.nombre, nombre))) {
@@ -24,8 +21,6 @@ export type DatosProducto = {
 
 export type ErroresProducto = Partial<Record<keyof DatosProducto, string>>;
 
-// RF-13 y RF-14: código único, categoría existente, precio válido y datos completos.
-// idProducto se omite al registrar.
 export function validarProducto(
   datos: DatosProducto,
   productos: Producto[],
@@ -45,13 +40,11 @@ export function validarProducto(
   return errores;
 }
 
-// RF-18 y RF-19: cantidad entera positiva
 export function validarCantidad(cantidad: string): string | undefined {
   const n = Number(cantidad);
   if (!cantidad.trim() || !Number.isInteger(n) || n <= 0) return "Indica una cantidad entera mayor que cero.";
 }
 
-// RF-19: el ajuste lleva motivo y una disminución no deja existencias negativas
 export function validarAjuste(
   existencias: number,
   tipo: Extract<TipoMovimiento, "Ajuste positivo" | "Ajuste negativo">,

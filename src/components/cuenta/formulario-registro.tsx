@@ -7,7 +7,6 @@ import { Campo, Selector } from "@/components/ui/campo";
 import { PROVINCIAS } from "@/lib/provincias";
 import type { ErroresCuenta } from "@/modules/autenticacion-usuarios/validaciones";
 
-// Formulario de registro de Cliente (RF-01, CU-01)
 export function FormularioRegistro() {
   const { registrar } = useSesion();
   const [datos, setDatos] = useState({ nombre: "", correo: "", contrasena: "", telefono: "", provincia: "" });

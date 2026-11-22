@@ -10,7 +10,6 @@ import { DIAS, proximoHorario, textoProximaClase } from "@/lib/horarios";
 import { useOferta } from "@/components/academia/oferta";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 
-// Panel académico del Estudiante (Figura 22, RF-36, RF-38, RF-43)
 export function PanelEstudiante({ sesion }: { sesion: Sesion }) {
   const { cursos, horarios, nombresProfesores, cargando, error } = useOferta();
   const inscripciones = useInscripciones().filter((i) => i.idUsuario === sesion.usuario.idUsuario);
@@ -20,7 +19,6 @@ export function PanelEstudiante({ sesion }: { sesion: Sesion }) {
 
   const proxima = proximoHorario(horariosActivos);
 
-  // Asistencia propia (RF-43): presentes sobre sesiones registradas
   const propias = asistencias.filter((a) => inscripciones.some((i) => i.idInscripcion === a.idInscripcion));
   const presentes = propias.filter((a) => a.estadoAsistencia === "Presente").length;
 

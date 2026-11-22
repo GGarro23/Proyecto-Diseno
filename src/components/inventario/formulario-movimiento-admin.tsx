@@ -10,19 +10,16 @@ import { validarAjuste, validarCantidad } from "@/modules/catalogo-inventario/va
 
 type TipoAjuste = "Ajuste positivo" | "Ajuste negativo";
 
-// Registro de entradas y ajustes de inventario (Figuras 37 y 38, RF-18, RF-19)
 export function FormularioMovimientoAdmin({
   clase,
   productos,
   idProductoInicial,
-  idResponsable,
   alTerminar,
   alCancelar,
 }: {
   clase: "entrada" | "ajuste";
   productos: Producto[];
   idProductoInicial: number | null;
-  idResponsable: number;
   alTerminar: (texto: string) => void;
   alCancelar: () => void;
 }) {

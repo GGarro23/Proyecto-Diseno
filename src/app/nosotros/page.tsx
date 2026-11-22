@@ -3,7 +3,6 @@ import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { Sobretitulo } from "@/components/ui/textos";
 
-// Textos tomados del documento de visión (Problema, Contexto y Usuarios). Sin prototipo en el documento.
 const SERVICIOS = [
   {
     titulo: "Tienda",

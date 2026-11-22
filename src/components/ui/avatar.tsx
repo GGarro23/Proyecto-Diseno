@@ -1,4 +1,3 @@
-// Círculo con las iniciales del nombre (Figuras 20 y 24 a 26)
 export function Avatar({ nombre, grande = false }: { nombre: string; grande?: boolean }) {
   const iniciales = nombre.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
   return (

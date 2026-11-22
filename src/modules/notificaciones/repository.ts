@@ -10,7 +10,6 @@ export type EstadoSolicitudCorreo =
   | "ACEPTADA"
   | "RECHAZADA";
 
-// Registrar el resultado de una solicitud de notificación.
 export async function registrarNotificacion(
   idUsuario: number,
   tipoEvento: TipoEventoCorreo,
@@ -48,7 +47,6 @@ export async function registrarNotificacion(
   return filas[0].idNotificacion;
 }
 
-// Consultar las notificaciones de un usuario.
 export async function obtenerNotificacionesUsuario(
   idUsuario: number
 ) {
@@ -78,7 +76,6 @@ export async function obtenerNotificacionesUsuario(
   );
 }
 
-// Consultar notificaciones asociadas a un pedido.
 export async function obtenerNotificacionesPedido(
   idPedido: number
 ) {
@@ -107,12 +104,6 @@ export async function obtenerNotificacionesPedido(
 }
 
 
-/**
- * Obtiene el usuario y el correo asociados
- * a un pedido registrado.
- *
- * No envía correos ni modifica información.
- */
 export async function obtenerDestinatarioPedido(
   idPedido: number
 ) {

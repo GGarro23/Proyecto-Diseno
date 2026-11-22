@@ -12,7 +12,6 @@ import { useRecomendaciones } from "./recomendaciones";
 
 const FILTROS = ["Pendientes", "Revisadas", "Todas"] as const;
 
-// Recomendaciones del agente de apoyo (Figura 32, RF-45 a RF-48)
 export function RecomendacionesAdmin() {
   const { sesion } = useSesion();
   const { dato: recomendaciones, cargando, error, recargar } = useRecomendaciones();

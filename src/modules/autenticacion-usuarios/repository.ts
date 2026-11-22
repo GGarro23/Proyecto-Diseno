@@ -3,10 +3,6 @@ import { consulta, transaccion } from "@/lib/db";
 import type { MatrizPermisos } from "./permisos";
 import type { Cuenta, NombreRol, UsuarioPublico } from "./schema";
 
-// Acceso a datos de AF-01 (tablas usuario, rol, usuario_rol, rol_permiso, permiso).
-// Solo SQL: las reglas y validaciones están en service.ts.
-// Los alias entre comillas ("idUsuario") convierten snake_case de la BD a camelCase del frontend.
-
 const COLUMNAS_USUARIO = `
   u.id_usuario AS "idUsuario",
   u.nombre,
@@ -48,7 +44,6 @@ export async function correoRegistrado(correo: string, excluirIdUsuario?: number
 
 type DatosNuevoUsuario = { nombre: string; correo: string; telefono: string; provincia: string };
 
-// RF-01: la cuenta y su rol Cliente se crean juntos
 export async function crearCliente(datos: DatosNuevoUsuario, contrasenaHash: string): Promise<UsuarioPublico> {
   return transaccion(async (cliente) => {
     const { rows } = await cliente.query<{ idUsuario: number }>(
@@ -64,7 +59,6 @@ export async function crearCliente(datos: DatosNuevoUsuario, contrasenaHash: str
   });
 }
 
-// RF-05: solo datos personales
 export async function actualizarPerfil(idUsuario: number, datos: DatosNuevoUsuario): Promise<UsuarioPublico | null> {
   const filas = await consulta<UsuarioPublico>(
     `UPDATE usuario u SET nombre = $2, correo = $3, telefono = NULLIF($4, ''), provincia = NULLIF($5, '')
@@ -75,7 +69,6 @@ export async function actualizarPerfil(idUsuario: number, datos: DatosNuevoUsuar
   return filas[0] ?? null;
 }
 
-// RF-10: permisos efectivos según los roles de la cuenta
 export async function tienePermiso(idUsuario: number, codigo: string): Promise<boolean> {
   const filas = await consulta(
     `SELECT 1 FROM usuario_rol ur
@@ -87,8 +80,6 @@ export async function tienePermiso(idUsuario: number, codigo: string): Promise<b
   );
   return filas.length > 0;
 }
-
-// ---------- Administración del sistema: cuentas, roles y permisos (RF-06 a RF-10) ----------
 
 export async function listarCuentas(): Promise<Cuenta[]> {
   const filas = await consulta<UsuarioPublico & { roles: NombreRol[] | null }>(
@@ -111,7 +102,6 @@ async function reemplazarRoles(cliente: PoolClient, idUsuario: number, roles: No
   ]);
 }
 
-// RF-06: cuenta interna y sus roles en una sola transacción
 export async function crearCuentaInterna(datos: { nombre: string; correo: string }, contrasenaHash: string, roles: NombreRol[]) {
   return transaccion(async (cliente) => {
     const { rows } = await cliente.query<{ idUsuario: number }>(
@@ -123,7 +113,6 @@ export async function crearCuentaInterna(datos: { nombre: string; correo: string
   });
 }
 
-// RF-07 y RF-09: nombre, correo y roles se guardan juntos o no se guarda nada
 export async function modificarCuenta(idUsuario: number, datos: { nombre: string; correo: string }, roles: NombreRol[]) {
   return transaccion(async (cliente) => {
     const { rowCount } = await cliente.query(`UPDATE usuario SET nombre = $2, correo = $3 WHERE id_usuario = $1`, [
@@ -137,13 +126,11 @@ export async function modificarCuenta(idUsuario: number, datos: { nombre: string
   });
 }
 
-// RF-08: la cuenta queda inactiva; pedidos, inscripciones e historial no se tocan
 export async function desactivarCuenta(idUsuario: number): Promise<boolean> {
   const filas = await consulta(`UPDATE usuario SET activo = FALSE WHERE id_usuario = $1 AND activo RETURNING id_usuario`, [idUsuario]);
   return filas.length > 0;
 }
 
-// RF-10: matriz rol -> códigos de permiso
 export async function leerMatriz(): Promise<MatrizPermisos> {
   const filas = await consulta<{ rol: NombreRol; codigo: string }>(
     `SELECT r.nombre AS rol, p.codigo FROM rol_permiso rp
@@ -156,7 +143,6 @@ export async function leerMatriz(): Promise<MatrizPermisos> {
   return matriz;
 }
 
-// Reemplaza los permisos solo de los roles recibidos; no toca cuentas ni datos personales
 export async function guardarMatriz(matriz: MatrizPermisos) {
   await transaccion(async (cliente) => {
     for (const [rol, codigos] of Object.entries(matriz)) {

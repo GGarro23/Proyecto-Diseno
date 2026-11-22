@@ -17,7 +17,6 @@ type Contexto = {
   }>;
 };
 
-// Validar el identificador recibido en la URL.
 async function obtenerIdPedido(contexto: Contexto) {
   const { idPedido: parametro } = await contexto.params;
   const idPedido = Number(parametro);
@@ -35,12 +34,6 @@ async function obtenerIdPedido(contexto: Contexto) {
   return idPedido;
 }
 
-/**
- * GET /api/pedidos/[idPedido]
- *
- * Consultar un pedido, sus productos
- * y el historial de estados.
- */
 export function GET(
   _peticion: Request,
   contexto: Contexto
@@ -54,12 +47,6 @@ export function GET(
   });
 }
 
-/**
- * PATCH /api/pedidos/[idPedido]
- *
- * Actualizar el estado operativo de un pedido.
- * Solo para Encargado de pedidos.
- */
 export function PATCH(
   peticion: Request,
   contexto: Contexto

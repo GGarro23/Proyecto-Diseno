@@ -1,9 +1,6 @@
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 import type { EjecucionETL, ErrorETL } from "./schema";
 
-// Extracción, transformación y validación del CSV de productos (RF-49).
-// Las usa el frontend y debe usarlas el backend. La carga la hace quien guarda los datos.
-
 export const COLUMNAS_OBLIGATORIAS = ["código", "nombre", "categoría", "precio", "existencias"] as const;
 export const COLUMNAS_OPCIONALES = ["descripción", "imagen"] as const;
 type Columna = (typeof COLUMNAS_OBLIGATORIAS)[number] | (typeof COLUMNAS_OPCIONALES)[number];
@@ -21,11 +18,9 @@ export type FilaValida = {
   imagenUrl: string;
 };
 
-// Sin tildes, sin mayúsculas y sin espacios al inicio y al final
 const normalizar = (texto: string) =>
   texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
-// Separa el texto en filas y celdas. Detecta si el separador es ";" o "," y respeta comillas.
 export function leerCsv(texto: string): string[][] {
   const limpio = texto.replace(/^\uFEFF/, "");
   const primera = limpio.split(/\r?\n/, 1)[0];
@@ -61,7 +56,6 @@ export function leerCsv(texto: string): string[][] {
   return filas;
 }
 
-// Acepta 1234.50, 1234,50, 1.234,50 y 1,234.50
 export function interpretarPrecio(valor: string): number {
   let v = valor.replace(/\s|₡/g, "");
   const coma = v.lastIndexOf(",");
@@ -75,7 +69,6 @@ export type Analisis =
   | { estructuraValida: false; errores: ErrorFila[] }
   | { estructuraValida: true; validas: FilaValida[]; errores: ErrorFila[]; filasRechazadas: number };
 
-// Revisa la estructura del archivo y valida cada fila. No modifica nada.
 export function analizarCsv(texto: string, productos: Producto[], categorias: Categoria[]): Analisis {
   const filas = leerCsv(texto);
   const encabezado = (filas[0] ?? []).map(normalizar);
@@ -128,7 +121,7 @@ export function analizarCsv(texto: string, productos: Producto[], categorias: Ca
 
     if (codigo) codigosDelArchivo.add(normalizar(codigo));
     if (erroresFila.length > 0) {
-      filasRechazadas++; // una fila con varios errores cuenta una sola vez
+      filasRechazadas++;
       errores.push(...erroresFila);
     } else {
       validas.push({
@@ -151,5 +144,4 @@ export function estadoEjecucion(filasAceptadas: number, filasRechazadas: number)
   return filasRechazadas === 0 ? "Exitosa" : "Parcialmente Exitosa";
 }
 
-// Contenido de la plantilla descargable (Figura 33)
 export const PLANTILLA_CSV = "\uFEFF" + [...COLUMNAS_OBLIGATORIAS, ...COLUMNAS_OPCIONALES].join(",") + "\r\n";

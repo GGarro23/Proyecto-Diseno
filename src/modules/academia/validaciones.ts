@@ -1,8 +1,5 @@
 import type { Curso, DiaSemana, Horario } from "./schema";
 
-// Validaciones de cursos, horarios y asignación de profesores (RF-30 a RF-34).
-// Las usa el frontend y debe usarlas el backend.
-
 export type DatosCurso = {
   nombre: string;
   descripcion: string;
@@ -13,8 +10,6 @@ export type DatosCurso = {
 
 export type ErroresCurso = Partial<Record<keyof DatosCurso, string>>;
 
-// RF-30 y RF-31: nombre, descripción y cupo entero positivo. Al modificar, el cupo
-// no puede quedar por debajo de las inscripciones vigentes.
 export function validarCurso(datos: DatosCurso, inscritosVigentes = 0): ErroresCurso {
   const errores: ErroresCurso = {};
   if (!datos.nombre.trim()) errores.nombre = "Indica el nombre del curso.";
@@ -36,7 +31,6 @@ const seCruzan = (a: DatosHorario, b: DatosHorario) =>
 
 const textoHorario = (h: DatosHorario) => `${h.diaSemana} ${h.horaInicio}–${h.horaFin}`;
 
-// Primer horario de otro curso del mismo profesor que choca con alguno de los dados
 function choqueConProfesor(
   idProfesor: number | null,
   idCurso: number,
@@ -52,8 +46,6 @@ function choqueConProfesor(
   }
 }
 
-// RF-32 y RF-33: inicio antes del fin y sin choques con el mismo curso ni con otros cursos
-// del profesor asignado. idHorario se omite al registrar.
 export function validarHorario(
   datos: DatosHorario,
   idCurso: number,
@@ -71,7 +63,6 @@ export function validarHorario(
   return choqueConProfesor(curso.idProfesor, idCurso, [datos], cursos, resto);
 }
 
-// RF-34: el profesor no puede tener otro curso con horarios que se crucen con este
 export function validarAsignacion(idCurso: number, idProfesor: number, cursos: Curso[], horarios: Horario[]): string | undefined {
   if (!cursos.some((c) => c.idCurso === idCurso)) return "El curso no existe.";
   const propios = horarios.filter((h) => h.idCurso === idCurso);

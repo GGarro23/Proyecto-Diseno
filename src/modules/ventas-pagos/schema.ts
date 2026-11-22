@@ -1,5 +1,3 @@
-// AF-03 Ventas en línea
-
 export type Carrito = {
   idCarrito: number;
   idUsuario: number;
@@ -15,9 +13,6 @@ export type ModalidadEntrega = "Envío a domicilio" | "Retiro presencial";
 
 export type EstadoPago = "Pendiente" | "Aprobado" | "Rechazado";
 
-// Transiciones permitidas (HU-09):
-// Envío:  Pendiente → En preparación → Empacado → Enviado
-// Retiro: Pendiente → En preparación → Listo para retiro → Retirado
 export type EstadoOperativo =
   | "Pendiente"
   | "En preparación"
@@ -31,9 +26,9 @@ export type Pedido = {
   idUsuario: number;
   fechaCreacion: string;
   total: number;
-  costoEntrega: number; // no está en el modelo (Figuras 13–15)
+  costoEntrega: number;
   modalidadEntrega: ModalidadEntrega;
-  direccionEntrega: string | null; // solo para envío a domicilio
+  direccionEntrega: string | null;
   estadoPago: EstadoPago;
   estadoOperativo: EstadoOperativo;
   fechaConfirmacion: string | null;
@@ -46,7 +41,6 @@ export type DetallePedido = {
   precioUnitario: number;
 };
 
-// Códigos de la Figura 15
 export type CodigoEscenario = "APROBADO" | "RECHAZADO";
 
 export type IntentoPagoSimulado = {

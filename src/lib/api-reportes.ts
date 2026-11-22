@@ -1,11 +1,4 @@
 
-/**
- * Consultas a los reportes reales de Intervallum.
- *
- * Todas las rutas requieren el rol Administrador
- * y validan los permisos desde el backend.
- */
-
 export type VentaReporte = {
   idPedido: number;
   idUsuario: number;
@@ -98,11 +91,6 @@ async function consultarReporte<T>(
   }
 }
 
-/**
- * Consulta ventas confirmadas en un rango de fechas.
- *
- * Las fechas deben utilizar YYYY-MM-DD.
- */
 export function apiReporteVentas(
   fechaInicio: string,
   fechaFin: string
@@ -117,18 +105,12 @@ export function apiReporteVentas(
   );
 }
 
-/**
- * Consulta productos y existencias reales.
- */
 export function apiReporteInventario() {
   return consultarReporte<ReporteInventario>(
     "/api/reportes/inventario"
   );
 }
 
-/**
- * Consulta cupos y ocupación académica.
- */
 export function apiReporteAcademia() {
   return consultarReporte<ReporteAcademia>(
     "/api/reportes/academia"
