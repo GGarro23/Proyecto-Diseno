@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -7,17 +8,53 @@ import { Icono } from "@/components/ui/icono";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 import { useCarrito } from "./proveedor-carrito";
 
-// Botones de la tarjeta de producto: "Ver producto" y agregar 1 unidad al carrito
-export function AccionesProducto({ producto }: { producto: Producto }) {
+// Botones de la tarjeta de producto.
+export function AccionesProducto({
+  producto,
+}: {
+  producto: Producto;
+}) {
   const { agregar, sesionActiva } = useCarrito();
   const router = useRouter();
-  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
+
+  const [mensaje, setMensaje] = useState<{
+    texto: string;
+    error: boolean;
+  } | null>(null);
+
+  const [agregando, setAgregando] = useState(false);
+
   const agotado = producto.existencias === 0;
 
-  const alAgregar = () => {
-    if (!sesionActiva) return router.push(`/iniciar-sesion?volver=/catalogo/${producto.idProducto}`);
-    const error = agregar(producto, 1);
-    setMensaje(error ? { texto: error, error: true } : { texto: "Agregado al carrito.", error: false });
+  const alAgregar = async () => {
+    if (!sesionActiva) {
+      router.push(
+        `/iniciar-sesion?volver=/catalogo/${producto.idProducto}`
+      );
+      return;
+    }
+
+    if (agregando) return;
+
+    setAgregando(true);
+    setMensaje(null);
+
+    try {
+      const error = await agregar(producto, 1);
+
+      setMensaje(
+        error
+          ? { texto: error, error: true }
+          : { texto: "Agregado al carrito.", error: false }
+      );
+    } catch {
+      setMensaje({
+        texto: "No se pudo agregar el producto al carrito.",
+        error: true,
+      });
+    } finally {
+      setAgregando(false);
+    }
   };
 
   return (
@@ -29,17 +66,25 @@ export function AccionesProducto({ producto }: { producto: Producto }) {
         >
           Ver producto
         </Link>
+
         <button
           onClick={alAgregar}
-          disabled={agotado}
+          disabled={agotado || agregando}
           aria-label="Agregar al carrito"
           className="bg-naranja px-4 text-papel hover:bg-naranja-oscuro disabled:bg-borde"
         >
           <Icono nombre="bolsa" />
         </button>
       </div>
+
       {mensaje && (
-        <p className={`text-xs ${mensaje.error ? "text-red-800" : "text-gris"}`}>{mensaje.texto}</p>
+        <p
+          className={`text-xs ${
+            mensaje.error ? "text-red-800" : "text-gris"
+          }`}
+        >
+          {mensaje.texto}
+        </p>
       )}
     </div>
   );
