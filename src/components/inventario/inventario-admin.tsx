@@ -7,7 +7,6 @@ import { Boton } from "@/components/ui/boton";
 import { Modal } from "@/components/ui/modal";
 import { PanelLateral } from "@/components/ui/panel-lateral";
 import { Sobretitulo } from "@/components/ui/textos";
-import { desactivarProducto } from "@/mocks/inventario";
 import { estadoExistencias, UMBRAL_INVENTARIO_BAJO } from "@/modules/catalogo-inventario/reglas";
 import { CategoriasAdmin } from "./categorias-admin";
 import { FichaExistenciasAdmin } from "./ficha-existencias-admin";
@@ -24,10 +23,11 @@ type Panel = { clase: "ficha" | "entrada" | "ajuste" | "producto"; idProducto: n
 // Gestión de inventario, productos y categorías (Figuras 34 a 39, RF-11 a RF-19)
 export function InventarioAdmin() {
   const { sesion } = useSesion();
-  const { productos, categorias, movimientos, cargando, error } = useInventario();
+  const { productos, categorias, movimientos, cargando, error, recargar } = useInventario();
   const [vista, setVista] = useState<(typeof VISTAS)[number]>("Existencias");
   const [panel, setPanel] = useState<Panel | null>(null);
   const [idDesactivar, setIdDesactivar] = useState<number | null>(null);
+  const [desactivando, setDesactivando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const cerrarAviso = useCallback(() => setAviso(null), []);
 
@@ -49,13 +49,31 @@ export function InventarioAdmin() {
   const terminar = (texto: string) => {
     setPanel(null);
     setAviso(texto);
+    void recargar();
   };
 
-  const confirmarDesactivar = () => {
-    if (idDesactivar === null) return;
-    const resultado = desactivarProducto(idDesactivar);
-    setIdDesactivar(null);
-    setAviso(resultado.ok ? `Producto desactivado: ${resultado.dato.nombre}` : resultado.error);
+  const confirmarDesactivar = async () => {
+    if (idDesactivar === null || desactivando) return;
+    setDesactivando(true);
+    try {
+      const respuesta = await fetch("/api/productos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idProducto: idDesactivar }),
+      });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) {
+        setAviso(resultado.error ?? "No se pudo desactivar el producto.");
+        return;
+      }
+      setIdDesactivar(null);
+      setAviso(`Producto desactivado: ${resultado.dato.nombre}`);
+      await recargar();
+    } catch {
+      setAviso("No se pudo conectar con el servidor.");
+    } finally {
+      setDesactivando(false);
+    }
   };
 
   const titulos: Record<Panel["clase"], [string, string]> = {
@@ -114,7 +132,7 @@ export function InventarioAdmin() {
         <TablaExistenciasAdmin productos={productos} categorias={categorias} movimientos={movimientos} alElegir={elegir} />
       )}
       {vista === "Historial de movimientos" && <HistorialMovimientosAdmin productos={productos} movimientos={movimientos} />}
-      {vista === "Categorías" && <CategoriasAdmin alTerminar={setAviso} />}
+      {vista === "Categorías" && <CategoriasAdmin alTerminar={(texto) => { setAviso(texto); void recargar(); }} />}
 
       <PanelLateral
         abierto={panel !== null}
@@ -153,7 +171,7 @@ export function InventarioAdmin() {
         </p>
         <div className="mt-8 flex justify-end gap-3">
           <Boton variante="secundario" onClick={() => setIdDesactivar(null)}>Cancelar</Boton>
-          <Boton onClick={confirmarDesactivar}>Desactivar</Boton>
+          <Boton onClick={confirmarDesactivar} disabled={desactivando}>{desactivando ? "Desactivando..." : "Desactivar"}</Boton>
         </div>
       </Modal>
 
