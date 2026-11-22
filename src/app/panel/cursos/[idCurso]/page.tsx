@@ -1,17 +1,22 @@
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { CursoAsignadoProfesor } from "@/components/profesor/curso-asignado-profesor";
-import { cursos } from "@/mocks/cursos";
 
-// Mientras los datos vengan de mocks, las páginas se generan de antemano
-export function generateStaticParams() {
-  return cursos.map((c) => ({ idCurso: String(c.idCurso) }));
-}
-
-// Curso asignado al Profesor (Figuras 25 y 26)
-export default async function PaginaCursoAsignado({ params }: PageProps<"/panel/cursos/[idCurso]">) {
+async function Contenido({ params }: { params: Promise<{ idCurso: string }> }) {
   const { idCurso } = await params;
+  const id = Number(idCurso);
+  if (!/^[1-9]\d*$/.test(idCurso) || !Number.isSafeInteger(id)) notFound();
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <CursoAsignadoProfesor idCurso={Number(idCurso)} />
+      <CursoAsignadoProfesor idCurso={id} />
     </div>
+  );
+}
+
+export default function PaginaCursoAsignado({ params }: PageProps<"/panel/cursos/[idCurso]">) {
+  return (
+    <Suspense fallback={<p className="mx-auto max-w-6xl px-6 py-10 text-gris">Cargando curso...</p>}>
+      <Contenido params={params} />
+    </Suspense>
   );
 }
