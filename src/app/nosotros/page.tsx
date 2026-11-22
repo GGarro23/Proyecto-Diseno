@@ -44,7 +44,7 @@ export default function Nosotros() {
         </div>
         <div className="relative">
           <div className="absolute -bottom-4 -right-4 left-4 top-4 border border-borde" aria-hidden />
-          <Foto src="/img/nosotros/tienda.jpg" alt="Instrumentos en la tienda Intervallum" className="relative h-[380px]" />
+          <Foto src="/img/nosotros/tienda.jpg" alt="Instrumentos en la tienda Intervallum" className="relative h-95" />
         </div>
       </section>
 

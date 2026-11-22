@@ -49,3 +49,9 @@ export type RolPermiso = {
   idRol: number;
   idPermiso: number;
 };
+
+// Cuenta vista por el Administrador del sistema (RF-06 a RF-09)
+export type Cuenta = {
+  usuario: UsuarioPublico;
+  roles: NombreRol[];
+};

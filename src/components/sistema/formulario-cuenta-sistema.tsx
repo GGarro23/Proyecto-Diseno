@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
-import { asignarRoles, modificarCuenta, registrarCuentaInterna, type Cuenta } from "@/mocks/autenticacion";
-import type { NombreRol } from "@/modules/autenticacion-usuarios/schema";
+import { llamarApi } from "@/lib/api";
+import type { Cuenta, NombreRol } from "@/modules/autenticacion-usuarios/schema";
 import { ROLES, validarRoles, type ErroresCuenta } from "@/modules/autenticacion-usuarios/validaciones";
 
 // Registro de cuentas internas, modificación de cuentas y asignación de roles (RF-06, RF-07, RF-09).
@@ -26,36 +26,29 @@ export function FormularioCuentaSistema({
   const [roles, setRoles] = useState<NombreRol[]>(cuenta?.roles ?? []);
   const [errores, setErrores] = useState<ErroresCuenta>({});
   const [error, setError] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
   const alternarRol = (rol: NombreRol) =>
     setRoles((actuales) => (actuales.includes(rol) ? actuales.filter((r) => r !== rol) : [...actuales, rol]));
 
-  const enviar = (e: FormEvent) => {
+  const enviar = async (e: FormEvent) => {
     e.preventDefault();
     const errorRoles = validarRoles(roles);
     if (errorRoles) return setError(errorRoles);
-
-    if (!cuenta) {
-      const resultado = registrarCuentaInterna({ nombre, correo, contrasena, roles });
-      if (!resultado.ok) {
-        setErrores(resultado.errores ?? {});
-        return setError(resultado.error);
-      }
-      return alTerminar(`Cuenta registrada: ${resultado.dato.usuario.nombre}`);
-    }
-
-    // Los roles se validan antes para no guardar los datos a medias
-    if (cuenta.usuario.idUsuario === idSolicitante && !roles.includes("Administrador del sistema")) {
+    if (cuenta && cuenta.usuario.idUsuario === idSolicitante && !roles.includes("Administrador del sistema")) {
       return setError("No puedes quitarte el rol Administrador del sistema.");
     }
-    const datos = modificarCuenta(cuenta.usuario.idUsuario, { nombre, correo });
-    if (!datos.ok) {
-      setErrores(datos.errores ?? {});
-      return setError(datos.error);
+
+    setEnviando(true);
+    const resultado = cuenta
+      ? await llamarApi<Cuenta>(`/api/cuentas/${cuenta.usuario.idUsuario}`, "PUT", { nombre, correo, roles })
+      : await llamarApi<Cuenta>("/api/cuentas", "POST", { nombre, correo, contrasena, roles });
+    setEnviando(false);
+    if (!resultado.ok) {
+      setErrores(resultado.errores ?? {});
+      return setError(resultado.error);
     }
-    const asignacion = asignarRoles(cuenta.usuario.idUsuario, roles, idSolicitante);
-    if (!asignacion.ok) return setError(asignacion.error);
-    alTerminar(`Cuenta actualizada: ${datos.dato.usuario.nombre}`);
+    alTerminar(cuenta ? `Cuenta actualizada: ${resultado.dato.usuario.nombre}` : `Cuenta registrada: ${resultado.dato.usuario.nombre}`);
   };
 
   return (
@@ -86,7 +79,7 @@ export function FormularioCuentaSistema({
 
       <div className="flex justify-end gap-3">
         <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>
-        <Boton type="submit">{cuenta ? "Guardar cambios" : "Registrar cuenta"}</Boton>
+        <Boton type="submit" disabled={enviando}>{cuenta ? "Guardar cambios" : "Registrar cuenta"}</Boton>
       </div>
     </form>
   );
