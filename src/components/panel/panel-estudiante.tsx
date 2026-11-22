@@ -7,12 +7,12 @@ import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
 import { DIAS, proximoHorario, textoProximaClase } from "@/lib/horarios";
-import { cursos, horarios } from "@/mocks/cursos";
-import { profesores } from "@/mocks/usuarios";
+import { useOferta } from "@/components/academia/oferta";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 
 // Panel académico del Estudiante (Figura 22, RF-36, RF-38, RF-43)
 export function PanelEstudiante({ sesion }: { sesion: Sesion }) {
+  const { cursos, horarios, nombresProfesores, cargando, error } = useOferta();
   const inscripciones = useInscripciones().filter((i) => i.idUsuario === sesion.usuario.idUsuario);
   const asistencias = useAsistencias();
   const activas = inscripciones.filter((i) => i.estado === "Activa");
@@ -36,6 +36,8 @@ export function PanelEstudiante({ sesion }: { sesion: Sesion }) {
         <p className="mt-2 text-gris">Hola, {sesion.usuario.nombre.split(" ")[0]}. Tu semana musical, en un solo lugar.</p>
       </div>
 
+      {cargando && <p className="text-sm text-gris">Cargando tus cursos...</p>}
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       <div className="grid gap-5 md:grid-cols-3">
         <Indicador titulo="Cursos activos" valor={String(activas.length)} detalle={`${inscripciones.length} ${inscripciones.length === 1 ? "inscripción" : "inscripciones"} en total`} />
         <Indicador
@@ -89,7 +91,7 @@ export function PanelEstudiante({ sesion }: { sesion: Sesion }) {
                       <Insignia>{i.estado}</Insignia>
                     </div>
                     <h3 className="font-serif text-2xl">{curso.nombre}</h3>
-                    <p className="text-sm text-gris">con {profesores.find((p) => p.idUsuario === curso.idProfesor)?.nombre}</p>
+                    <p className="text-sm text-gris">con {curso.idProfesor === null ? "Sin asignar" : nombresProfesores[curso.idProfesor] ?? "Profesor"}</p>
                     <p className="text-xs text-gris">Inscrito el {i.fechaInscripcion.slice(0, 10)}</p>
                     <Link href={`/academia/${curso.idCurso}`} className="mt-auto flex items-center gap-2 pt-2 text-sm font-medium hover:text-naranja">
                       Ver curso <Icono nombre="flecha" />
