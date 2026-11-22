@@ -129,7 +129,7 @@ export function OfertaAdmin() {
           <FormularioCursoAdmin curso={cursoPanel} alTerminar={terminar} alCancelar={() => setPanel(null)} />
         )}
         {panel?.clase === "horarios" && cursoPanel && (
-          <HorariosCursoAdmin idCurso={cursoPanel.idCurso} horarios={horarios} alAvisar={setAviso} />
+          <HorariosCursoAdmin idCurso={cursoPanel.idCurso} horarios={horarios} alAvisar={setAviso} alActualizar={recargar} />
         )}
         {panel?.clase === "profesor" && cursoPanel && (
           <ProfesorCursoAdmin curso={cursoPanel} alTerminar={terminar} alCancelar={() => setPanel(null)} />
