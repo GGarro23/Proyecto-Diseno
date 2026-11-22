@@ -3,7 +3,7 @@ import { ErrorApi, exito, leerCuerpo, manejar } from "@/lib/respuesta";
 import { requerirPermiso } from "@/modules/autenticacion-usuarios/service";
 
 type Datos = { idCurso?: unknown; idHorario?: unknown; diaSemana?: unknown; horaInicio?: unknown; horaFin?: unknown };
-const HORA = /^([01]\\d|2[0-3]):[0-5]\\d$/;
+const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 function id(valor: unknown) {
