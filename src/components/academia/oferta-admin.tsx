@@ -6,11 +6,8 @@ import { Boton } from "@/components/ui/boton";
 import { PanelLateral } from "@/components/ui/panel-lateral";
 import { Sobretitulo } from "@/components/ui/textos";
 import { DIAS } from "@/lib/horarios";
-import { profesores } from "@/mocks/usuarios";
-import { ocupacionCurso } from "@/modules/reportes/reportes";
 import { FormularioCursoAdmin } from "./formulario-curso-admin";
 import { HorariosCursoAdmin } from "./horarios-curso-admin";
-import { useInscripciones } from "./inscripciones";
 import { useOferta } from "./oferta";
 import { ProfesorCursoAdmin } from "./profesor-curso-admin";
 
@@ -18,8 +15,7 @@ type Panel = { clase: "curso" | "horarios" | "profesor"; idCurso: number | null 
 
 // Administración de cursos, horarios y profesores (RF-30 a RF-34). Sin prototipo en el documento.
 export function OfertaAdmin() {
-  const { cursos, horarios } = useOferta();
-  const inscripciones = useInscripciones();
+  const { cursos, horarios, cuposDisponibles, nombresProfesores, cargando, error, recargar } = useOferta();
   const [panel, setPanel] = useState<Panel | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const cerrarAviso = useCallback(() => setAviso(null), []);
@@ -31,6 +27,7 @@ export function OfertaAdmin() {
   const terminar = (texto: string) => {
     setPanel(null);
     setAviso(texto);
+    void recargar();
   };
 
   const titulos: Record<Panel["clase"], string> = {
@@ -55,6 +52,9 @@ export function OfertaAdmin() {
         <Boton onClick={() => setPanel({ clase: "curso", idCurso: null })}>Registrar curso</Boton>
       </div>
 
+      {cargando && <p className="text-sm text-gris">Cargando cursos desde PostgreSQL...</p>}
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+
       <section className="overflow-x-auto border border-borde bg-papel">
         <table className="w-full text-sm">
           <thead className="bg-crema text-left text-xs uppercase tracking-wider text-gris">
@@ -69,18 +69,18 @@ export function OfertaAdmin() {
           </thead>
           <tbody>
             {cursos.map((c) => {
-              const { inscritos } = ocupacionCurso(c, inscripciones);
+              const inscritos = c.cupoMaximo - (cuposDisponibles[c.idCurso] ?? c.cupoMaximo);
               const propios = horarios
                 .filter((h) => h.idCurso === c.idCurso)
                 .sort((a, b) => DIAS.indexOf(a.diaSemana) - DIAS.indexOf(b.diaSemana) || a.horaInicio.localeCompare(b.horaInicio));
-              const profesor = profesores.find((p) => p.idUsuario === c.idProfesor);
+              const nombreProfesor = c.idProfesor === null ? null : nombresProfesores[c.idProfesor];
               return (
                 <tr key={c.idCurso} className={`border-t border-borde align-top ${c.estado === "Cerrado" ? "text-gris" : ""}`}>
                   <td className="px-5 py-4">
                     <p className="font-serif text-lg">{c.nombre}</p>
                     <p className="mt-1 max-w-xs text-xs text-gris">{c.descripcion}</p>
                   </td>
-                  <td className="px-5 py-4">{profesor?.nombre ?? <span className="text-naranja">Sin asignar</span>}</td>
+                  <td className="px-5 py-4">{nombreProfesor ?? <span className="text-naranja">Sin asignar</span>}</td>
                   <td className="px-5 py-4">
                     {propios.length === 0 ? (
                       <span className="text-naranja">Sin horarios</span>
