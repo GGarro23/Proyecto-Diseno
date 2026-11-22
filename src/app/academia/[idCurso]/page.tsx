@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EstadoCurso } from "@/components/academia/estado-curso";
+import { InscripcionCurso } from "@/components/academia/inscripcion-curso";
 import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { Sobretitulo } from "@/components/ui/textos";
@@ -41,10 +42,6 @@ async function ContenidoCurso({
     profesor,
     cuposDisponibles,
   } = datos;
-
-  const puedeInscribirse =
-    curso.estado === "Abierto" &&
-    cuposDisponibles > 0;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -117,19 +114,7 @@ async function ContenidoCurso({
             />
           </div>
 
-          {/* La matrícula real se implementará
-              después de la autenticación. */}
-          <button
-            type="button"
-            disabled
-            className="self-start cursor-not-allowed bg-papel/20 px-6 py-3 text-sm font-medium text-papel/80"
-          >
-            {!puedeInscribirse
-              ? curso.estado === "Cerrado"
-                ? "Curso cerrado"
-                : "Sin cupos disponibles"
-              : "Inscripciones próximamente"}
-          </button>
+          <InscripcionCurso curso={curso} horarios={horarios} cuposDisponibles={cuposDisponibles} />
         </div>
       </div>
 
