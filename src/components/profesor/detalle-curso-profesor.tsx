@@ -9,19 +9,21 @@ import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { Pestanias } from "@/components/ui/pestanias";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
-import { cursos, horarios } from "@/mocks/cursos";
-import { estudiantes } from "@/mocks/usuarios";
+import { useOferta } from "@/components/academia/oferta";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 import { RegistroAsistenciasProfesor } from "./registro-asistencias-profesor";
 
 // Curso asignado al Profesor (Figuras 25 y 26, RF-40, RF-41, RF-42, RF-43)
 export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; sesion: Sesion }) {
+  const { cursos, horarios, cargando, error } = useOferta();
   const inscripciones = useInscripciones();
   const asistencias = useAsistencias();
   const [pestana, setPestana] = useState("Resumen");
 
   const curso = cursos.find((c) => c.idCurso === idCurso);
   // RF-40 y RF-41: solo cursos asignados al profesor autenticado
+  if (cargando) return <p className="text-gris">Cargando curso desde PostgreSQL...</p>;
+  if (error) return <p role="alert" className="text-red-700">{error}</p>;
   if (!curso || curso.idProfesor !== sesion.usuario.idUsuario) {
     return (
       <div className="mx-auto flex max-w-xl flex-col items-center gap-4 border border-borde bg-papel p-12 text-center">
@@ -33,7 +35,7 @@ export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; ses
 
   const horariosCurso = horarios.filter((h) => h.idCurso === idCurso);
   const activas = inscripciones.filter((i) => i.idCurso === idCurso && i.estado === "Activa");
-  const nombreDe = (idUsuario: number) => estudiantes.find((e) => e.idUsuario === idUsuario)?.nombre ?? `Estudiante ${idUsuario}`;
+  const nombreDe = (idUsuario: number) => inscripciones.find((i) => i.idUsuario === idUsuario)?.nombreEstudiante ?? `Estudiante ${idUsuario}`;
 
   // Porcentaje de asistencia de una inscripción
   const asistenciaDe = (idInscripcion: number) => {

@@ -6,12 +6,13 @@ import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { Insignia, Sobretitulo } from "@/components/ui/textos";
 import { proximoHorario, textoProximaClase } from "@/lib/horarios";
-import { cursos, horarios } from "@/mocks/cursos";
+import { useOferta } from "@/components/academia/oferta";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
 
 // Panel académico del Profesor (Figura 23, RF-40)
 export function PanelProfesor({ sesion }: { sesion: Sesion }) {
   const inscripciones = useInscripciones();
+  const { cursos, horarios, cargando, error } = useOferta();
   const asignados = cursos.filter((c) => c.idProfesor === sesion.usuario.idUsuario);
   const horariosAsignados = horarios.filter((h) => asignados.some((c) => c.idCurso === h.idCurso));
   const estudiantesDe = (idCurso: number) =>
@@ -30,6 +31,8 @@ export function PanelProfesor({ sesion }: { sesion: Sesion }) {
         <p className="mt-2 text-gris">Organiza tus clases y acompaña el progreso de tus estudiantes.</p>
       </div>
 
+      {cargando && <p className="text-sm text-gris">Cargando cursos asignados...</p>}
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       <div className="grid gap-5 md:grid-cols-3">
         <Indicador titulo="Cursos asignados" valor={String(asignados.length)} detalle={`${abiertos} ${abiertos === 1 ? "abierto" : "abiertos"}`} />
         <Indicador titulo="Estudiantes" valor={String(totalEstudiantes)} detalle="Con inscripción activa" />

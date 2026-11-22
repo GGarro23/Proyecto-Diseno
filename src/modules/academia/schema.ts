@@ -29,6 +29,7 @@ export type Horario = {
 
 export type Inscripcion = {
   idInscripcion: number;
+  nombreEstudiante?: string;
   idUsuario: number;
   idCurso: number;
   fechaInscripcion: string;

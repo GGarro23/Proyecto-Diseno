@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo } from "@/components/ui/campo";
 import { Icono } from "@/components/ui/icono";
-import { registrarAjuste, registrarEntrada } from "@/mocks/inventario";
 import { cambioEnExistencias } from "@/modules/catalogo-inventario/reglas";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
 import { validarAjuste, validarCantidad } from "@/modules/catalogo-inventario/validaciones";
@@ -28,6 +27,7 @@ export function FormularioMovimientoAdmin({
   alCancelar: () => void;
 }) {
   const [busqueda, setBusqueda] = useState("");
+  const [procesando, setProcesando] = useState(false);
   const [idProducto, setIdProducto] = useState(String(idProductoInicial ?? productos[0]?.idProducto ?? ""));
   const [tipo, setTipo] = useState<TipoAjuste>("Ajuste positivo");
   const [cantidad, setCantidad] = useState("");
@@ -45,19 +45,84 @@ export function FormularioMovimientoAdmin({
   const cambio = !validarCantidad(cantidad) ? cambioEnExistencias(tipoMovimiento, numero) : 0;
   const resultante = (producto?.existencias ?? 0) + cambio;
 
-  const enviar = (e: FormEvent) => {
-    e.preventDefault();
-    if (!producto) return setErrores({ general: "Selecciona un producto." });
-    const nuevos = clase === "entrada" ? { cantidad: validarCantidad(cantidad) } : validarAjuste(producto.existencias, tipo, cantidad, motivo);
-    if (nuevos.cantidad || ("motivo" in nuevos && nuevos.motivo)) return setErrores(nuevos);
 
-    const resultado =
-      clase === "entrada"
-        ? registrarEntrada(producto.idProducto, cantidad, idResponsable)
-        : registrarAjuste(producto.idProducto, tipo, cantidad, motivo, idResponsable);
-    if (!resultado.ok) return setErrores({ general: resultado.error });
-    alTerminar(`${clase === "entrada" ? "Entrada registrada" : "Ajuste registrado"}: ${producto.nombre} quedó con ${resultante} unidades`);
-  };
+const enviar = async (e: FormEvent) => {
+  e.preventDefault();
+
+  if (procesando) return;
+
+  if (!producto) {
+    setErrores({
+      general: "Selecciona un producto.",
+    });
+    return;
+  }
+
+  const nuevos =
+    clase === "entrada"
+      ? { cantidad: validarCantidad(cantidad) }
+      : validarAjuste(
+          producto.existencias,
+          tipo,
+          cantidad,
+          motivo
+        );
+
+  if (
+    nuevos.cantidad ||
+    ("motivo" in nuevos && nuevos.motivo)
+  ) {
+    setErrores(nuevos);
+    return;
+  }
+
+  setProcesando(true);
+  setErrores({});
+
+  try {
+    const respuesta = await fetch("/api/inventario", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        idProducto: producto.idProducto,
+        tipo: clase === "entrada" ? "Entrada" : tipo,
+        cantidad,
+        motivo,
+      }),
+    });
+
+    const resultado = await respuesta.json();
+
+    if (!respuesta.ok || !resultado.ok) {
+      setErrores({
+        general:
+          resultado.error ??
+          "No fue posible registrar el movimiento.",
+      });
+      return;
+    }
+
+    alTerminar(
+      `${
+        clase === "entrada"
+          ? "Entrada registrada"
+          : "Ajuste registrado"
+      }: ${producto.nombre} quedó con ${
+        resultado.dato.existencias
+      } unidades`
+    );
+  } catch (error) {
+    console.error("Error al registrar movimiento:", error);
+
+    setErrores({
+      general: "No fue posible conectar con el servidor.",
+    });
+  } finally {
+    setProcesando(false);
+  }
+};
 
   return (
     <form onSubmit={enviar} noValidate className="flex flex-col gap-6">
@@ -150,7 +215,7 @@ export function FormularioMovimientoAdmin({
 
       <div className="flex justify-end gap-3">
         <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>
-        <Boton type="submit">{clase === "entrada" ? "Confirmar entrada" : "Confirmar ajuste"}</Boton>
+        <Boton type="submit" disabled={procesando}>{procesando ? "Guardando..." : clase === "entrada" ? "Confirmar entrada" : "Confirmar ajuste"}</Boton>
       </div>
     </form>
   );

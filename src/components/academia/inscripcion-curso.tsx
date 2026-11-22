@@ -7,24 +7,25 @@ import { Icono } from "@/components/ui/icono";
 import { Modal } from "@/components/ui/modal";
 import { useSesion } from "@/components/sesion/proveedor-sesion";
 import { Sobretitulo } from "@/components/ui/textos";
-import { cuposDisponibles, inscribir } from "@/mocks/academia";
 import type { Curso, Horario } from "@/modules/academia/schema";
-import { useInscripciones } from "./inscripciones";
+import { avisarInscripcionesActualizadas, useInscripciones } from "./inscripciones";
 
-type Props = { curso: Curso; horarios: Horario[] };
+type Props = { curso: Curso; horarios: Horario[]; cuposDisponibles: number };
 
 // Inscripción a un curso con confirmación (Figuras 18 y 19, RF-37, CU-14)
-export function InscripcionCurso({ curso, horarios }: Props) {
+export function InscripcionCurso({ curso, horarios, cuposDisponibles }: Props) {
   const { sesion } = useSesion();
   const inscripciones = useInscripciones();
   const [abierto, setAbierto] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [procesando, setProcesando] = useState(false);
+  const [confirmado, setConfirmado] = useState(false);
 
   if (!sesion) {
     return <BotonEnlace href={`/iniciar-sesion?volver=/academia/${curso.idCurso}`} className="self-start">Inicia sesión para inscribirte</BotonEnlace>;
   }
 
-  const inscrito = inscripciones.some(
+  const inscrito = confirmado || inscripciones.some(
     (i) => i.idUsuario === sesion.usuario.idUsuario && i.idCurso === curso.idCurso && i.estado === "Activa"
   );
   if (inscrito) {
@@ -38,8 +39,7 @@ export function InscripcionCurso({ curso, horarios }: Props) {
     );
   }
 
-  const cupos = cuposDisponibles(curso.idCurso, inscripciones);
-  if (curso.estado === "Cerrado" || cupos === 0) {
+  if (curso.estado === "Cerrado" || cuposDisponibles === 0) {
     return (
       <Boton disabled className="self-start">
         {curso.estado === "Cerrado" ? "Curso cerrado" : "Sin cupos disponibles"}
@@ -47,10 +47,29 @@ export function InscripcionCurso({ curso, horarios }: Props) {
     );
   }
 
-  const confirmar = () => {
-    const resultado = inscribir(sesion.usuario.idUsuario, curso.idCurso);
-    if (!resultado.ok) return setError(resultado.error);
-    setAbierto(false);
+  const confirmar = async () => {
+    if (procesando) return;
+    setProcesando(true);
+    setError(null);
+    try {
+      const respuesta = await fetch("/api/inscripciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idCurso: curso.idCurso }),
+      });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) {
+        setError(resultado.error ?? "No se pudo completar la inscripción.");
+        return;
+      }
+      setConfirmado(true);
+      setAbierto(false);
+      avisarInscripcionesActualizadas();
+    } catch {
+      setError("No se pudo conectar con el servidor.");
+    } finally {
+      setProcesando(false);
+    }
   };
 
   return (
@@ -76,7 +95,7 @@ export function InscripcionCurso({ curso, horarios }: Props) {
           </div>
           {error && <p className="text-sm text-red-800">{error}</p>}
           <div className="flex gap-3">
-            <Boton onClick={confirmar}>Confirmar inscripción</Boton>
+            <Boton onClick={confirmar} disabled={procesando}>{procesando ? "Inscribiendo..." : "Confirmar inscripción"}</Boton>
             <Boton variante="secundario" onClick={() => setAbierto(false)}>Cancelar</Boton>
           </div>
         </div>
