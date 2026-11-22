@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from "react";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Selector } from "@/components/ui/campo";
-import { modificarProducto, registrarProducto } from "@/mocks/inventario";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
 import type { DatosProducto, ErroresProducto } from "@/modules/catalogo-inventario/validaciones";
 
@@ -29,19 +28,37 @@ export function FormularioProductoAdmin({
   });
   const [errores, setErrores] = useState<ErroresProducto>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+  const [procesando, setProcesando] = useState(false);
 
   const cambiar = (campo: keyof DatosProducto) => (e: { target: { value: string } }) =>
     setDatos((d) => ({ ...d, [campo]: e.target.value }));
 
-  const enviar = (e: FormEvent) => {
+  const enviar = async (e: FormEvent) => {
     e.preventDefault();
-    const resultado = producto ? modificarProducto(producto.idProducto, datos) : registrarProducto(datos);
-    if (!resultado.ok) {
-      setErrores(resultado.errores);
-      setErrorGeneral(resultado.error ?? null);
-      return;
+    if (procesando) return;
+    setProcesando(true);
+    setErrores({});
+    setErrorGeneral(null);
+    try {
+      const respuesta = await fetch("/api/productos", {
+        method: producto ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...datos, ...(producto ? { idProducto: producto.idProducto } : {}) }),
+      });
+      const resultado = await respuesta.json();
+      if (!respuesta.ok || !resultado.ok) {
+        setErrores(resultado.errores ?? {});
+        setErrorGeneral(resultado.error ?? "No se pudo guardar el producto.");
+        return;
+      }
+      alTerminar(producto
+        ? `Producto actualizado: ${resultado.dato.nombre}`
+        : `Producto registrado: ${resultado.dato.nombre}`);
+    } catch {
+      setErrorGeneral("No fue posible conectar con el servidor.");
+    } finally {
+      setProcesando(false);
     }
-    alTerminar(producto ? `Producto actualizado: ${resultado.dato.nombre}` : `Producto registrado: ${resultado.dato.nombre}`);
   };
 
   return (
@@ -75,7 +92,7 @@ export function FormularioProductoAdmin({
 
       <div className="flex justify-end gap-3">
         <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>
-        <Boton type="submit">{producto ? "Guardar cambios" : "Registrar producto"}</Boton>
+        <Boton type="submit" disabled={procesando}>{procesando ? "Guardando..." : producto ? "Guardar cambios" : "Registrar producto"}</Boton>
       </div>
     </form>
   );
