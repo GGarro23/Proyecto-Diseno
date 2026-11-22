@@ -3,6 +3,7 @@ import { TarjetaProducto } from "@/components/catalogo/tarjeta-producto";
 import { BotonEnlace } from "@/components/ui/boton";
 import { Carrusel } from "@/components/ui/carrusel";
 import { Foto } from "@/components/ui/foto";
+import { Suspense } from "react";
 import { Icono } from "@/components/ui/icono";
 import { Sobretitulo } from "@/components/ui/textos";
 import { obtenerCategorias, obtenerProductos } from "@/modules/catalogo-inventario/consultas";
@@ -157,13 +158,40 @@ function Academia() {
   );
 }
 
-export default async function Inicio() {
-  const [productos, categorias] = await Promise.all([obtenerProductos(), obtenerCategorias()]);
+async function CatalogoInicio() {
+  const [productos, categorias] = await Promise.all([
+    obtenerProductos(),
+    obtenerCategorias(),
+  ]);
+
+  return (
+    <>
+      <Categorias categorias={categorias} />
+      <Destacados
+        productos={productos}
+        categorias={categorias}
+      />
+    </>
+  );
+}
+
+export default function Inicio() {
   return (
     <>
       <Presentacion />
-      <Categorias categorias={categorias} />
-      <Destacados productos={productos} categorias={categorias} />
+
+      <Suspense
+        fallback={
+          <div className="mx-auto max-w-6xl px-6 py-12">
+            <p className="text-center text-gris">
+              Cargando catálogo de instrumentos...
+            </p>
+          </div>
+        }
+      >
+        <CatalogoInicio />
+      </Suspense>
+
       <Academia />
     </>
   );

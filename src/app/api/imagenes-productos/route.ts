@@ -5,7 +5,6 @@ import { randomUUID } from "node:crypto";
 import { ErrorApi, exito, manejar } from "@/lib/respuesta";
 import { requerirPermiso } from "@/modules/autenticacion-usuarios/service";
 
-export const runtime = "nodejs";
 const carpeta = path.join(process.cwd(), "public", "imagenes", "productos");
 const base = "/imagenes/productos/";
 const extensiones: Record<string, string> = {
