@@ -5,6 +5,7 @@ import { requerirSesion } from "@/modules/autenticacion-usuarios/service";
 type Solicitud = { idCurso?: unknown };
 type FilaInscripcion = {
   idInscripcion: number;
+  nombreEstudiante: string;
   idUsuario: number;
   idCurso: number;
   fechaInscripcion: string;
@@ -25,10 +26,11 @@ function traducirError(error: unknown): never {
 }
 
 const CAMPOS = `SELECT i.id_inscripcion AS "idInscripcion",
+ u.nombre AS "nombreEstudiante",
  i.id_usuario AS "idUsuario", i.id_curso AS "idCurso",
  i.fecha_inscripcion::text AS "fechaInscripcion",
  CASE WHEN i.estado = 'CONFIRMADA' THEN 'Activa' ELSE 'Finalizada' END AS estado
- FROM inscripcion i`;
+ FROM inscripcion i JOIN usuario u ON u.id_usuario = i.id_usuario`;
 
 // La sesión determina qué registros se pueden consultar; nunca el idUsuario enviado por el cliente.
 export function GET() {
