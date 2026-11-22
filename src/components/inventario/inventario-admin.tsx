@@ -24,7 +24,7 @@ type Panel = { clase: "ficha" | "entrada" | "ajuste" | "producto"; idProducto: n
 // Gestión de inventario, productos y categorías (Figuras 34 a 39, RF-11 a RF-19)
 export function InventarioAdmin() {
   const { sesion } = useSesion();
-  const { productos, categorias, movimientos } = useInventario();
+  const { productos, categorias, movimientos, cargando, error } = useInventario();
   const [vista, setVista] = useState<(typeof VISTAS)[number]>("Existencias");
   const [panel, setPanel] = useState<Panel | null>(null);
   const [idDesactivar, setIdDesactivar] = useState<number | null>(null);
@@ -74,7 +74,17 @@ export function InventarioAdmin() {
         </h1>
         <p className="mt-2 text-gris">Controla las existencias y movimientos de tus productos musicales.</p>
       </div>
+    {cargando && (
+      <p className="text-sm text-gris">
+        Cargando inventario desde PostgreSQL...
+      </p>
+    )}
 
+    {error && (
+      <p role="alert" className="text-sm text-red-700">
+        {error}
+      </p>
+    )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">
           {VISTAS.map((v) => (
@@ -104,7 +114,7 @@ export function InventarioAdmin() {
         <TablaExistenciasAdmin productos={productos} categorias={categorias} movimientos={movimientos} alElegir={elegir} />
       )}
       {vista === "Historial de movimientos" && <HistorialMovimientosAdmin productos={productos} movimientos={movimientos} />}
-      {vista === "Categorías" && <CategoriasAdmin categorias={categorias} productos={productos} alTerminar={setAviso} />}
+      {vista === "Categorías" && <CategoriasAdmin alTerminar={setAviso} />}
 
       <PanelLateral
         abierto={panel !== null}
