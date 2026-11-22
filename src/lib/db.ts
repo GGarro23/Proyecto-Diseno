@@ -44,3 +44,14 @@ export async function transaccion<T>(trabajo: (cliente: PoolClient) => Promise<T
     cliente.release();
   }
 }
+
+// Compatibilidad con los módulos de Catálogo y Academia.
+// Ambas interfaces comparten el mismo pool PostgreSQL.
+export const db = {
+  query<T extends QueryResultRow>(
+    sql: string,
+    parametros: unknown[] = []
+  ) {
+    return pool().query<T>(sql, parametros);
+  },
+};

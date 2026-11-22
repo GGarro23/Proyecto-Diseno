@@ -1,77 +1,184 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
 import { EstadoCurso } from "@/components/academia/estado-curso";
-import { InscripcionCurso } from "@/components/academia/inscripcion-curso";
 import { Foto } from "@/components/ui/foto";
 import { Icono } from "@/components/ui/icono";
 import { Sobretitulo } from "@/components/ui/textos";
-import { cursos, horarios } from "@/mocks/cursos";
-import { profesores } from "@/mocks/usuarios";
 
-// Mientras los datos vengan de mocks, las páginas se generan de antemano
-export function generateStaticParams() {
-  return cursos.map((c) => ({ idCurso: String(c.idCurso) }));
-}
+import {
+  obtenerCursoPorId,
+} from "@/modules/academia/consultas";
 
-// Detalle de curso (Figura 19, RF-35, RF-36, RF-37)
-export default async function DetalleCurso({ params }: PageProps<"/academia/[idCurso]">) {
+async function ContenidoCurso({
+  params,
+}: {
+  params: Promise<{ idCurso: string }>;
+}) {
   const { idCurso } = await params;
-  const curso = cursos.find((c) => c.idCurso === Number(idCurso));
-  if (!curso) notFound();
 
-  const horariosCurso = horarios.filter((h) => h.idCurso === curso.idCurso);
-  const profesor = profesores.find((p) => p.idUsuario === curso.idProfesor);
+  // Validar que recibimos un identificador válido.
+  if (!/^[1-9]\d*$/.test(idCurso)) {
+    notFound();
+  }
+
+  const id = Number(idCurso);
+
+  if (!Number.isSafeInteger(id)) {
+    notFound();
+  }
+
+  const datos = await obtenerCursoPorId(id);
+
+  if (!datos) {
+    notFound();
+  }
+
+  const {
+    curso,
+    horarios,
+    profesor,
+    cuposDisponibles,
+  } = datos;
+
+  const puedeInscribirse =
+    curso.estado === "Abierto" &&
+    cuposDisponibles > 0;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <nav className="mb-8 flex items-center gap-3 text-xs text-gris">
-        <Link href="/academia" className="hover:text-naranja">← Volver</Link>
+        <Link
+          href="/academia"
+          className="hover:text-naranja"
+        >
+          ← Volver
+        </Link>
+
         <span className="h-4 w-px bg-borde" />
-        <Link href="/academia" className="hover:text-naranja">Academia</Link>
+
+        <Link
+          href="/academia"
+          className="hover:text-naranja"
+        >
+          Academia
+        </Link>
+
         <span>/</span>
-        <span className="text-tinta">{curso.nombre}</span>
+
+        <span className="text-tinta">
+          {curso.nombre}
+        </span>
       </nav>
 
       <div className="grid lg:grid-cols-[1.2fr_1fr]">
-        <Foto src={curso.imagenUrl} alt={curso.nombre} className="min-h-[380px]" />
+        <Foto
+          src={curso.imagenUrl}
+          alt={curso.nombre}
+          className="min-h-[380px]"
+        />
+
         <div className="flex flex-col justify-center gap-5 bg-cafe px-12 py-12 text-papel">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-naranja-claro">Academia Intervallum</p>
-          <h1 className="font-serif text-5xl">{curso.nombre}</h1>
-          {profesor && <p className="text-papel/80">con {profesor.nombre}</p>}
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-naranja-claro">
+            Academia Intervallum
+          </p>
+
+          <h1 className="font-serif text-5xl">
+            {curso.nombre}
+          </h1>
+
+          {profesor && (
+            <p className="text-papel/80">
+              con {profesor}
+            </p>
+          )}
+
           <div className="flex flex-wrap items-center gap-6 border-t border-papel/20 pt-5 text-sm">
-            {horariosCurso.map((h) => (
-              <span key={h.idHorario} className="flex items-center gap-2">
-                <Icono nombre="calendario" className="size-4" />
-                {h.diaSemana} · {h.horaInicio}–{h.horaFin}
+            {horarios.map((h) => (
+              <span
+                key={h.idHorario}
+                className="flex items-center gap-2"
+              >
+                <Icono
+                  nombre="calendario"
+                  className="size-4"
+                />
+
+                {h.diaSemana} ·{" "}
+                {h.horaInicio}–{h.horaFin}
               </span>
             ))}
-            <EstadoCurso curso={curso} claro />
+
+            <EstadoCurso
+              curso={curso}
+              cuposDisponibles={cuposDisponibles}
+              claro
+            />
           </div>
-          <InscripcionCurso curso={curso} horarios={horariosCurso} />
+
+          {/* La matrícula real se implementará
+              después de la autenticación. */}
+          <button
+            type="button"
+            disabled
+            className="self-start cursor-not-allowed bg-papel/20 px-6 py-3 text-sm font-medium text-papel/80"
+          >
+            {!puedeInscribirse
+              ? curso.estado === "Cerrado"
+                ? "Curso cerrado"
+                : "Sin cupos disponibles"
+              : "Inscripciones próximamente"}
+          </button>
         </div>
       </div>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
         <section className="border border-borde bg-papel p-8">
-          <Sobretitulo>Descripción</Sobretitulo>
-          <p className="mt-4 leading-relaxed text-gris">{curso.descripcion}</p>
+          <Sobretitulo>
+            Descripción
+          </Sobretitulo>
+
+          <p className="mt-4 leading-relaxed text-gris">
+            {curso.descripcion}
+          </p>
         </section>
+
         <section className="border border-borde bg-papel p-8">
-          <Sobretitulo>Horarios</Sobretitulo>
+          <Sobretitulo>
+            Horarios
+          </Sobretitulo>
+
           <table className="mt-4 w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-gris">
               <tr>
-                <th className="pb-2 font-medium">Día</th>
-                <th className="pb-2 font-medium">Inicio</th>
-                <th className="pb-2 font-medium">Fin</th>
+                <th className="pb-2 font-medium">
+                  Día
+                </th>
+                <th className="pb-2 font-medium">
+                  Inicio
+                </th>
+                <th className="pb-2 font-medium">
+                  Fin
+                </th>
               </tr>
             </thead>
+
             <tbody>
-              {horariosCurso.map((h) => (
-                <tr key={h.idHorario} className="border-t border-borde">
-                  <td className="py-3">{h.diaSemana}</td>
-                  <td className="py-3">{h.horaInicio}</td>
-                  <td className="py-3">{h.horaFin}</td>
+              {horarios.map((h) => (
+                <tr
+                  key={h.idHorario}
+                  className="border-t border-borde"
+                >
+                  <td className="py-3">
+                    {h.diaSemana}
+                  </td>
+                  <td className="py-3">
+                    {h.horaInicio}
+                  </td>
+                  <td className="py-3">
+                    {h.horaFin}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -79,5 +186,21 @@ export default async function DetalleCurso({ params }: PageProps<"/academia/[idC
         </section>
       </div>
     </div>
+  );
+}
+
+export default function DetalleCurso({
+  params,
+}: PageProps<"/academia/[idCurso]">) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-6 py-12 text-gris">
+          Cargando información del curso...
+        </div>
+      }
+    >
+      <ContenidoCurso params={params} />
+    </Suspense>
   );
 }
