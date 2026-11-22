@@ -34,7 +34,7 @@ export function HistorialMovimientosAdmin({ productos, movimientos }: { producto
   const nombreProducto = (idProducto: number) => productos.find((p) => p.idProducto === idProducto)?.nombre ?? `Producto ${idProducto}`;
   const texto = busqueda.trim().toLowerCase();
 
-  const visibles: MovimientoConSaldo[] = calcularSaldos(movimientos)
+  const visibles: MovimientoConSaldo[] = calcularSaldos(movimientos, productos)
     .filter((m) => !texto || nombreProducto(m.idProducto).toLowerCase().includes(texto) || `n.º ${m.idMovimiento}`.includes(texto) || String(m.idMovimiento) === texto)
     .filter((m) => tipo === "Todos" || m.tipo === tipo);
   if (orden === "Más recientes") visibles.reverse();
@@ -91,7 +91,7 @@ export function HistorialMovimientosAdmin({ productos, movimientos }: { producto
                   </td>
                   <td className="px-5 py-4 text-right font-medium">{cantidadConSigno(m)}</td>
                   <td className="whitespace-nowrap px-5 py-4">
-                    {m.saldoAnterior} → {m.saldoNuevo}
+                    {m.saldoAnterior === null || m.saldoNuevo === null ? "No reconstruible" : `${m.saldoAnterior} → ${m.saldoNuevo}`}
                   </td>
                   <td className="px-5 py-4">
                     <p>{origenMovimiento(m)}</p>
