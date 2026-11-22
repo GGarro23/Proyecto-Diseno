@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { Boton } from "@/components/ui/boton";
-import { guardarPermisos } from "@/mocks/permisos";
+import { llamarApi } from "@/lib/api";
 import { PERMISOS, ROLES_INTERNOS, type MatrizPermisos } from "@/modules/autenticacion-usuarios/permisos";
 import type { NombreRol } from "@/modules/autenticacion-usuarios/schema";
 import { usePermisos } from "./permisos";
 
 // Matriz de permisos por rol (Figura 40, RF-10)
 export function PermisosSistema({ alAvisar }: { alAvisar: (texto: string) => void }) {
-  const guardada = usePermisos();
+  const { dato: guardada, cargando, error, recargar } = usePermisos();
+  const [guardando, setGuardando] = useState(false);
   const [borrador, setBorrador] = useState<MatrizPermisos | null>(null);
   const matriz = borrador ?? guardada;
   const hayCambios = borrador !== null && JSON.stringify(borrador) !== JSON.stringify(guardada);
@@ -22,13 +23,19 @@ export function PermisosSistema({ alAvisar }: { alAvisar: (texto: string) => voi
     });
   };
 
-  const guardar = () => {
+  const guardar = async () => {
     if (!borrador) return;
-    const resultado = guardarPermisos(borrador);
+    setGuardando(true);
+    const resultado = await llamarApi<MatrizPermisos>("/api/permisos", "PUT", borrador);
+    setGuardando(false);
     if (!resultado.ok) return alAvisar(resultado.error);
     setBorrador(null);
+    recargar();
     alAvisar("Permisos guardados");
   };
+
+  if (cargando) return <p className="py-12 text-center text-sm text-gris">Cargando permisos…</p>;
+  if (error) return <p className="border border-borde bg-papel p-10 text-center text-red-700">{error}</p>;
 
   return (
     <section className="flex flex-col gap-6 border border-borde bg-papel p-7">
@@ -39,7 +46,7 @@ export function PermisosSistema({ alAvisar }: { alAvisar: (texto: string) => voi
         </div>
         <div className="flex gap-3">
           {hayCambios && <Boton variante="secundario" onClick={() => setBorrador(null)}>Descartar</Boton>}
-          <Boton onClick={guardar} disabled={!hayCambios}>Guardar cambios</Boton>
+          <Boton onClick={guardar} disabled={!hayCambios || guardando}>Guardar cambios</Boton>
         </div>
       </div>
 

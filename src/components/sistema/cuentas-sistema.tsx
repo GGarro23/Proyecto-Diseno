@@ -6,14 +6,15 @@ import { Icono } from "@/components/ui/icono";
 import { Modal } from "@/components/ui/modal";
 import { PanelLateral } from "@/components/ui/panel-lateral";
 import { Insignia } from "@/components/ui/textos";
-import { desactivarCuenta } from "@/mocks/autenticacion";
+import { llamarApi } from "@/lib/api";
+import type { Cuenta } from "@/modules/autenticacion-usuarios/schema";
 import { useCuentas } from "./cuentas";
 import { FormularioCuentaSistema } from "./formulario-cuenta-sistema";
 
 // Cuentas de usuario: registro, modificación, desactivación y roles (RF-06 a RF-09).
 // Sin prototipo en el documento.
 export function CuentasSistema({ idSolicitante, alAvisar }: { idSolicitante: number; alAvisar: (texto: string) => void }) {
-  const cuentas = useCuentas();
+  const { dato: cuentas, cargando, error, recargar } = useCuentas();
   const [busqueda, setBusqueda] = useState("");
   const [panel, setPanel] = useState<{ idUsuario: number | null } | null>(null);
   const [idDesactivar, setIdDesactivar] = useState<number | null>(null);
@@ -27,15 +28,20 @@ export function CuentasSistema({ idSolicitante, alAvisar }: { idSolicitante: num
 
   const terminar = (texto: string) => {
     setPanel(null);
+    recargar();
     alAvisar(texto);
   };
 
-  const confirmarDesactivar = () => {
+  const confirmarDesactivar = async () => {
     if (idDesactivar === null) return;
-    const resultado = desactivarCuenta(idDesactivar, idSolicitante);
+    const resultado = await llamarApi<Cuenta>(`/api/cuentas/${idDesactivar}/desactivacion`, "POST");
     setIdDesactivar(null);
+    if (resultado.ok) recargar();
     alAvisar(resultado.ok ? `Cuenta desactivada: ${resultado.dato.usuario.nombre}` : resultado.error);
   };
+
+  if (cargando) return <p className="py-12 text-center text-sm text-gris">Cargando cuentas…</p>;
+  if (error) return <p className="border border-borde bg-papel p-10 text-center text-red-700">{error}</p>;
 
   return (
     <div className="flex flex-col gap-5">

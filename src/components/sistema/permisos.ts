@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
-import { leerEstadoPermisos, permisosDesde, suscribirPermisos } from "@/mocks/permisos";
+import { useConsultaApi } from "@/lib/consulta-api";
+import type { MatrizPermisos } from "@/modules/autenticacion-usuarios/permisos";
 
-// Matriz de permisos por rol; se actualiza al guardar cambios
+// Matriz de permisos por rol (GET /api/permisos)
 export function usePermisos() {
-  const estado = useSyncExternalStore(suscribirPermisos, leerEstadoPermisos, () => "");
-  return useMemo(() => permisosDesde(estado), [estado]);
+  return useConsultaApi<MatrizPermisos>("/api/permisos", {});
 }

@@ -2,7 +2,6 @@ import type { NombreRol, Sesion, UsuarioPublico } from "@/modules/autenticacion-
 import {
   validarContrasena,
   validarDatosCuenta,
-  validarRoles,
   type DatosCuenta,
   type ErroresCuenta,
 } from "@/modules/autenticacion-usuarios/validaciones";
@@ -160,92 +159,4 @@ export function actualizarPerfil(idUsuario: number, datos: DatosCuenta): Resulta
   guardarUsuario(actualizado);
   avisar();
   return { ok: true, dato: aSesion(actualizado).usuario };
-}
-
-// ---- Administración de cuentas del Administrador del sistema (RF-06 a RF-09) ----
-
-export type Cuenta = { usuario: UsuarioPublico; roles: NombreRol[] };
-
-// Convierte el texto de leerEstadoSesion en la lista de cuentas (para useSyncExternalStore)
-export function cuentasDesde(estado: string): Cuenta[] {
-  const texto = estado.slice(estado.indexOf("|") + 1);
-  const guardados: UsuarioPrueba[] = texto ? JSON.parse(texto) : [];
-  return [...base.filter((b) => !guardados.some((g) => g.idUsuario === b.idUsuario)), ...guardados]
-    .map(aSesion)
-    .sort((a, b) => a.usuario.idUsuario - b.usuario.idUsuario);
-}
-
-const correoEnUso = (usuarios: UsuarioPrueba[], correo: string, idUsuario?: number) =>
-  usuarios.some((u) => u.idUsuario !== idUsuario && u.correo.toLowerCase() === correo.trim().toLowerCase());
-
-// RF-06: cuenta interna con correo único, contraseña inicial y roles
-export function registrarCuentaInterna(datos: { nombre: string; correo: string; contrasena: string; roles: NombreRol[] }): Resultado<Cuenta> {
-  const errores = validarDatosCuenta({ nombre: datos.nombre, correo: datos.correo, telefono: "", provincia: "" });
-  const errorContrasena = validarContrasena(datos.contrasena);
-  if (errorContrasena) errores.contrasena = errorContrasena;
-  if (Object.keys(errores).length > 0) return { ok: false, error: "Revisa los datos marcados.", errores };
-  const errorRoles = validarRoles(datos.roles);
-  if (errorRoles) return { ok: false, error: errorRoles };
-
-  const usuarios = leerUsuarios();
-  if (correoEnUso(usuarios, datos.correo)) {
-    return { ok: false, error: "Ya existe una cuenta con ese correo.", errores: { correo: "Este correo ya está registrado." } };
-  }
-  const nuevo: UsuarioPrueba = {
-    idUsuario: Math.max(...usuarios.map((u) => u.idUsuario)) + 1,
-    nombre: datos.nombre.trim(),
-    correo: datos.correo.trim(),
-    telefono: "",
-    provincia: "",
-    activo: true,
-    fechaRegistro: new Date().toISOString().slice(0, 10),
-    contrasena: datos.contrasena,
-    roles: datos.roles,
-  };
-  guardarUsuario(nuevo);
-  avisar();
-  return { ok: true, dato: aSesion(nuevo) };
-}
-
-// RF-07: datos administrativos (nombre y correo)
-export function modificarCuenta(idUsuario: number, datos: { nombre: string; correo: string }): Resultado<Cuenta> {
-  const usuarios = leerUsuarios();
-  const actual = usuarios.find((u) => u.idUsuario === idUsuario);
-  if (!actual) return { ok: false, error: "La cuenta no existe." };
-  const errores = validarDatosCuenta({ nombre: datos.nombre, correo: datos.correo, telefono: "", provincia: "" });
-  if (Object.keys(errores).length > 0) return { ok: false, error: "Revisa los datos marcados.", errores };
-  if (correoEnUso(usuarios, datos.correo, idUsuario)) {
-    return { ok: false, error: "Ese correo ya está en uso.", errores: { correo: "Este correo ya está registrado." } };
-  }
-  const actualizado = { ...actual, nombre: datos.nombre.trim(), correo: datos.correo.trim() };
-  guardarUsuario(actualizado);
-  avisar();
-  return { ok: true, dato: aSesion(actualizado) };
-}
-
-// RF-08: la cuenta ya no puede iniciar sesión; su historial se conserva
-export function desactivarCuenta(idUsuario: number, idSolicitante: number): Resultado<Cuenta> {
-  const actual = leerUsuarios().find((u) => u.idUsuario === idUsuario);
-  if (!actual) return { ok: false, error: "La cuenta no existe." };
-  if (!actual.activo) return { ok: false, error: "La cuenta ya está desactivada." };
-  if (idUsuario === idSolicitante) return { ok: false, error: "No puedes desactivar tu propia cuenta." };
-  const actualizado = { ...actual, activo: false };
-  guardarUsuario(actualizado);
-  avisar();
-  return { ok: true, dato: aSesion(actualizado) };
-}
-
-// RF-09: reemplaza los roles de la cuenta
-export function asignarRoles(idUsuario: number, roles: NombreRol[], idSolicitante: number): Resultado<Cuenta> {
-  const actual = leerUsuarios().find((u) => u.idUsuario === idUsuario);
-  if (!actual) return { ok: false, error: "La cuenta no existe." };
-  const error = validarRoles(roles);
-  if (error) return { ok: false, error };
-  if (idUsuario === idSolicitante && !roles.includes("Administrador del sistema")) {
-    return { ok: false, error: "No puedes quitarte el rol Administrador del sistema." };
-  }
-  const actualizado = { ...actual, roles };
-  guardarUsuario(actualizado);
-  avisar();
-  return { ok: true, dato: aSesion(actualizado) };
 }

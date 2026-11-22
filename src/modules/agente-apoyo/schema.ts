@@ -11,3 +11,9 @@ export type Recomendacion = {
   fechaRevision: string | null;
   idRevisor: number | null;
 };
+
+// Lo que devuelve la API: la recomendación con el nombre del producto o curso y de quien la revisó
+export type RecomendacionDetalle = Recomendacion & {
+  elemento: string;
+  revisor: string | null;
+};
