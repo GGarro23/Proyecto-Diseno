@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { TarjetaCurso } from "@/components/academia/tarjeta-curso";
-import { Sobretitulo } from "@/components/ui/textos";
 import { obtenerOfertaAcademica } from "@/modules/academia/consultas";
 
 async function OfertaDesdeBD() {
@@ -25,9 +24,6 @@ export default function Academia() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
       <div className="mb-10 text-center">
-        <Sobretitulo>
-          Academia Intervallum
-        </Sobretitulo>
 
         <h1 className="mt-3 font-serif text-5xl">
           Tu música merece{" "}

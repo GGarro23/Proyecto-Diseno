@@ -6,7 +6,7 @@ import { AreaTexto, Campo } from "@/components/ui/campo";
 import { Icono } from "@/components/ui/icono";
 import { cambioEnExistencias } from "@/modules/catalogo-inventario/reglas";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
-import { validarAjuste, validarCantidad } from "@/modules/catalogo-inventario/validaciones";
+import { LIMITES_CATALOGO, validarAjuste, validarCantidad } from "@/modules/catalogo-inventario/validaciones";
 
 type TipoAjuste = "Ajuste positivo" | "Ajuste negativo";
 
@@ -55,9 +55,14 @@ const enviar = async (e: FormEvent) => {
     return;
   }
 
+  const errorTope =
+    !validarCantidad(cantidad) && producto.existencias + Number(cantidad) > LIMITES_CATALOGO.existenciasMaximas
+      ? `Las existencias no pueden superar ${LIMITES_CATALOGO.existenciasMaximas.toLocaleString("es-CR")} unidades.`
+      : undefined;
+
   const nuevos =
     clase === "entrada"
-      ? { cantidad: validarCantidad(cantidad) }
+      ? { cantidad: validarCantidad(cantidad) ?? errorTope }
       : validarAjuste(
           producto.existencias,
           tipo,
@@ -181,9 +186,14 @@ const enviar = async (e: FormEvent) => {
         etiqueta="Cantidad"
         type="number"
         min={1}
+        max={LIMITES_CATALOGO.cantidadMovimiento}
         step={1}
+        inputMode="numeric"
         value={cantidad}
-        onChange={(e) => setCantidad(e.target.value)}
+        onChange={(e) => {
+          setCantidad(e.target.value);
+          setErrores((actuales) => ({ ...actuales, cantidad: undefined }));
+        }}
         error={errores.cantidad}
       />
 
@@ -192,8 +202,12 @@ const enviar = async (e: FormEvent) => {
           etiqueta="Motivo del ajuste"
           placeholder="Ej. Producto dañado durante traslado"
           value={motivo}
-          onChange={(e) => setMotivo(e.target.value)}
+          onChange={(e) => {
+            setMotivo(e.target.value);
+            setErrores((actuales) => ({ ...actuales, motivo: undefined }));
+          }}
           error={errores.motivo}
+          maxLength={LIMITES_CATALOGO.motivo}
         />
       )}
 
@@ -211,8 +225,8 @@ const enviar = async (e: FormEvent) => {
       {errores.general && <p className="text-sm text-red-700">{errores.general}</p>}
 
       <div className="flex justify-end gap-3">
-        <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>
-        <Boton type="submit" disabled={procesando}>{procesando ? "Guardando..." : clase === "entrada" ? "Confirmar entrada" : "Confirmar ajuste"}</Boton>
+        <Boton type="button" variante="secundario" onClick={alCancelar} className="rounded-md">Cancelar</Boton>
+        <Boton type="submit" disabled={procesando} className="rounded-md">{procesando ? "Guardando..." : clase === "entrada" ? "Confirmar entrada" : "Confirmar ajuste"}</Boton>
       </div>
     </form>
   );

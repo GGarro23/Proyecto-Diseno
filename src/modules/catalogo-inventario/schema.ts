@@ -1,6 +1,8 @@
 export type Categoria = {
   idCategoria: number;
   nombre: string;
+  descripcion: string;
+  simbolo: string;
 };
 
 export type Producto = {

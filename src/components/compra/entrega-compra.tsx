@@ -12,13 +12,9 @@ import { PROVINCIAS } from "@/lib/provincias";
 import type {
   ModalidadEntrega,
 } from "@/modules/ventas-pagos/schema";
+import { LIMITES_ENTREGA, type DatosEntrega } from "@/modules/ventas-pagos/validaciones";
 
-export type DatosEntrega = {
-  modalidad: ModalidadEntrega | null;
-  provincia: string;
-  canton: string;
-  direccion: string;
-};
+export type { DatosEntrega };
 
 const OPCIONES: {
   modalidad: ModalidadEntrega;
@@ -113,6 +109,7 @@ export function EntregaCompra({
           <Selector
             etiqueta="Provincia"
             value={datos.provincia}
+            error={errores.provincia}
             onChange={(evento) =>
               cambiar(
                 "provincia",
@@ -131,6 +128,7 @@ export function EntregaCompra({
             etiqueta="Cantón"
             value={datos.canton}
             error={errores.canton}
+            maxLength={LIMITES_ENTREGA.canton}
             onChange={(evento) =>
               cambiar(
                 "canton",
@@ -144,6 +142,8 @@ export function EntregaCompra({
               etiqueta="Dirección exacta"
               value={datos.direccion}
               error={errores.direccion}
+              maxLength={LIMITES_ENTREGA.direccion}
+              placeholder="Barrio, calle, número de casa y otras señas"
               onChange={(evento) =>
                 cambiar(
                   "direccion",

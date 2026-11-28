@@ -1,13 +1,13 @@
 
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCarrito } from "@/components/carrito/proveedor-carrito";
 import { Boton } from "@/components/ui/boton";
 import { Icono } from "@/components/ui/icono";
 import type { Producto } from "@/modules/catalogo-inventario/schema";
+import { CANTIDAD_MAXIMA_LINEA } from "@/modules/ventas-pagos/validaciones";
 
 export function CompraProducto({
   producto,
@@ -28,7 +28,7 @@ export function CompraProducto({
 
   const cambiar = (valor: number) => {
     setCantidad(
-      Math.min(Math.max(1, valor), producto.existencias)
+      Math.min(Math.max(1, valor), producto.existencias, CANTIDAD_MAXIMA_LINEA)
     );
   };
 
@@ -88,7 +88,7 @@ export function CompraProducto({
             disabled={
               agotado ||
               agregando ||
-              cantidad >= producto.existencias
+              cantidad >= Math.min(producto.existencias, CANTIDAD_MAXIMA_LINEA)
             }
             aria-label="Agregar uno"
             className="px-4 py-3 disabled:text-borde"
@@ -119,13 +119,6 @@ export function CompraProducto({
           {mensaje.texto}
         </p>
       )}
-
-      <Link
-        href="/carrito"
-        className="flex items-center justify-center gap-2 text-sm text-gris hover:text-naranja"
-      >
-        Ir al carrito <Icono nombre="flecha" />
-      </Link>
     </div>
   );
 }

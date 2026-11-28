@@ -70,8 +70,8 @@ export function ProfesorCursoAdmin({
       </Selector>
       <p className="text-xs text-gris">La base de datos rechaza asignaciones con choques de horario.</p>
       <div className="flex justify-end gap-3">
-        <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>
-        <Boton type="submit" disabled={procesando}>{procesando ? "Asignando..." : "Asignar profesor"}</Boton>
+        <Boton type="button" variante="secundario" onClick={alCancelar} className="rounded-md">Cancelar</Boton>
+        <Boton type="submit" disabled={procesando} className="rounded-md">{procesando ? "Asignando..." : "Asignar profesor"}</Boton>
       </div>
     </form>
   );

@@ -1,10 +1,10 @@
 import { consulta } from "@/lib/db";
 import { ErrorApi, exito, leerCuerpo, manejar } from "@/lib/respuesta";
 import { requerirPermiso } from "@/modules/autenticacion-usuarios/service";
+import { DIAS_SEMANA, validarIntervalo } from "@/modules/academia/validaciones";
+import type { DiaSemana } from "@/modules/academia/schema";
 
 type Datos = { idCurso?: unknown; idHorario?: unknown; diaSemana?: unknown; horaInicio?: unknown; horaFin?: unknown };
-const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
-const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 function id(valor: unknown) {
   const numero = Number(valor);
@@ -13,13 +13,14 @@ function id(valor: unknown) {
 }
 
 function datosValidos(cuerpo: Datos) {
-  const dia = DIAS.indexOf(String(cuerpo.diaSemana)) + 1;
-  if (!dia || typeof cuerpo.horaInicio !== "string" || typeof cuerpo.horaFin !== "string" ||
-      !HORA.test(cuerpo.horaInicio) || !HORA.test(cuerpo.horaFin) ||
-      cuerpo.horaInicio >= cuerpo.horaFin) {
-    throw new ErrorApi(400, "Indica un día y un intervalo horario válido.");
-  }
-  return { dia, inicio: cuerpo.horaInicio, fin: cuerpo.horaFin };
+  const datos = {
+    diaSemana: String(cuerpo.diaSemana) as DiaSemana,
+    horaInicio: typeof cuerpo.horaInicio === "string" ? cuerpo.horaInicio.trim() : "",
+    horaFin: typeof cuerpo.horaFin === "string" ? cuerpo.horaFin.trim() : "",
+  };
+  const error = validarIntervalo(datos);
+  if (error) throw new ErrorApi(400, error);
+  return { dia: DIAS_SEMANA.indexOf(datos.diaSemana) + 1, inicio: datos.horaInicio, fin: datos.horaFin };
 }
 
 function errorHorario(error: unknown): never {

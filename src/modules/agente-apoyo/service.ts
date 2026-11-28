@@ -31,7 +31,7 @@ export async function generar(tipo: Recomendacion["tipo"]): Promise<{ creadas: n
 
 export async function marcarRevisada(idRecomendacion: number): Promise<RecomendacionDetalle> {
   const sesion = await requerirPermiso(PERMISO);
-  if (!Number.isInteger(idRecomendacion)) throw new ErrorApi(400, "Recomendación inválida.");
+  if (!Number.isSafeInteger(idRecomendacion) || idRecomendacion <= 0) throw new ErrorApi(400, "Recomendación inválida.");
   const actual = await repositorio.buscar(idRecomendacion);
   if (!actual) throw new ErrorApi(404, "La recomendación no existe.");
   if (actual.estado === "Revisada") throw new ErrorApi(409, "Esta recomendación ya fue revisada.");

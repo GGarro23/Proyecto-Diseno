@@ -28,23 +28,21 @@ const PUBLICO = [
 export default function Nosotros() {
   return (
     <>
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-2">
-        <div className="flex flex-col gap-6">
-          <Sobretitulo>Nosotros</Sobretitulo>
-          <h1 className="font-serif text-6xl leading-tight">
-            Una tienda y academia
-            <br />
-            <em className="text-naranja">hecha de música</em>
-          </h1>
-          <p className="max-w-md leading-relaxed text-gris">
-            Intervallum es una tienda y academia musical dedicada a la venta de instrumentos y accesorios musicales, así como a la
-            enseñanza de instrumentos, lectura y teoría musical.
-          </p>
+      <section className="grid bg-naranja-oscuro lg:grid-cols-2">
+        <div className="flex items-center px-6 py-16 lg:pl-16 lg:pr-12">
+          <div className="flex flex-col gap-6 bg-crema p-10 shadow-lg">
+            <h1 className="font-serif text-6xl leading-tight">
+              Una tienda y academia
+              <br />
+              <em className="text-naranja">hecha de música</em>
+            </h1>
+            <p className="max-w-md leading-relaxed text-gris">
+              Intervallum es una tienda y academia musical dedicada a la venta de instrumentos y accesorios musicales, así como a la
+              enseñanza de instrumentos, lectura y teoría musical.
+            </p>
+          </div>
         </div>
-        <div className="relative">
-          <div className="absolute -bottom-4 -right-4 left-4 top-4 border border-borde" aria-hidden />
-          <Foto src="/img/nosotros/tienda.jpg" alt="Instrumentos en la tienda Intervallum" className="relative h-95" />
-        </div>
+        <Foto src="/img/nosotros/tienda.jpg" alt="Instrumentos en la tienda Intervallum" className="min-h-95 h-full" />
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
@@ -54,7 +52,7 @@ export default function Nosotros() {
             <article key={s.titulo} className="flex flex-col gap-4 border border-borde bg-papel p-8">
               <h2 className="font-serif text-4xl">{s.titulo}</h2>
               <p className="leading-relaxed text-gris">{s.texto}</p>
-              <BotonEnlace href={s.enlace.href} variante="secundario" className="mt-auto self-start">
+              <BotonEnlace href={s.enlace.href} variante="secundario" className="mt-auto self-start rounded-md">
                 {s.enlace.texto} <Icono nombre="flecha" />
               </BotonEnlace>
             </article>
@@ -62,14 +60,13 @@ export default function Nosotros() {
         </div>
       </section>
 
-      <section className="mx-auto mb-16 mt-10 max-w-6xl px-6">
-        <div className="grid gap-10 bg-cafe px-12 py-12 text-papel lg:grid-cols-[1fr_1.2fr]">
+      <section className="mt-10 bg-cafe text-papel">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[1fr_1.2fr]">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-naranja-claro">Para quién</p>
             <h2 className="mt-3 font-serif text-5xl leading-tight">
               Para todas las personas
               <br />
-              <em className="text-papel/50">que viven la música</em>
+              <em className="text-papel/50">que gustan de la música</em>
             </h2>
           </div>
           <ul className="flex flex-col justify-center gap-4">

@@ -102,7 +102,7 @@ export function DetalleCursoProfesor({ idCurso, sesion }: { idCurso: number; ses
             ))}
 
           {pestana === "Asistencias" && (
-            <RegistroAsistenciasProfesor idCurso={idCurso} inscripciones={activas} nombreDe={nombreDe} />
+            <RegistroAsistenciasProfesor idCurso={idCurso} dias={[...new Set(horariosCurso.map((h) => h.diaSemana))]} inscripciones={activas} nombreDe={nombreDe} />
           )}
         </div>
       </div>

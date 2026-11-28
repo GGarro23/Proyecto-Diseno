@@ -6,6 +6,7 @@ import { Icono } from "@/components/ui/icono";
 import { estadoExistencias, type EstadoExistencias } from "@/modules/catalogo-inventario/reglas";
 import type { Categoria, MovimientoInventario, Producto } from "@/modules/catalogo-inventario/schema";
 import { EstadoProductoAdmin } from "./estado-producto-admin";
+import { formatearFecha } from "@/lib/formato";
 
 export type AccionProducto = "ficha" | "entrada" | "ajuste" | "editar" | "desactivar";
 
@@ -119,7 +120,7 @@ export function TablaExistenciasAdmin({
                   <td className="px-5 py-3">
                     <EstadoProductoAdmin producto={p} />
                   </td>
-                  <td className="px-5 py-3 text-gris">{ultimaActualizacion(p.idProducto)?.slice(0, 10) ?? "—"}</td>
+                  <td className="px-5 py-3 text-gris">{formatearFecha(ultimaActualizacion(p.idProducto))}</td>
                   <td className="px-5 py-3 text-right">
                     <button
                       aria-label={`Acciones de ${p.nombre}`}

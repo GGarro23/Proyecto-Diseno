@@ -44,8 +44,8 @@ export function PermisosSistema({ alAvisar }: { alAvisar: (texto: string) => voi
           <p className="mt-1 text-sm text-gris">Define qué operaciones puede realizar cada rol del personal.</p>
         </div>
         <div className="flex gap-3">
-          {hayCambios && <Boton variante="secundario" onClick={() => setBorrador(null)}>Descartar</Boton>}
-          <Boton onClick={guardar} disabled={!hayCambios || guardando}>Guardar cambios</Boton>
+          {hayCambios && <Boton variante="secundario" onClick={() => setBorrador(null)} className="rounded-md">Descartar</Boton>}
+          <Boton onClick={guardar} disabled={!hayCambios || guardando} className="rounded-md">Guardar cambios</Boton>
         </div>
       </div>
 

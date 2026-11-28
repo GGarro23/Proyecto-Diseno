@@ -67,7 +67,7 @@ export function PanelProfesor({ sesion }: { sesion: Sesion }) {
                         </li>
                       ))}
                   </ul>
-                  <BotonEnlace href={`/panel/cursos/${c.idCurso}`} variante="secundario" className="mt-auto">
+                  <BotonEnlace href={`/panel/cursos/${c.idCurso}`} variante="secundario" className="mt-auto rounded-md">
                     Ver mi curso
                   </BotonEnlace>
                 </div>

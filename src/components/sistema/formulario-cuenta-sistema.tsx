@@ -5,7 +5,15 @@ import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 import { llamarApi } from "@/lib/api";
 import type { Cuenta, NombreRol } from "@/modules/autenticacion-usuarios/schema";
-import { ROLES, validarRoles, type ErroresCuenta } from "@/modules/autenticacion-usuarios/validaciones";
+import {
+  ROLES,
+  validarConfirmacion,
+  validarContrasena,
+  validarCorreo,
+  validarNombrePersona,
+  validarRoles,
+  type ErroresCuenta,
+} from "@/modules/autenticacion-usuarios/validaciones";
 
 export function FormularioCuentaSistema({
   cuenta,
@@ -21,6 +29,7 @@ export function FormularioCuentaSistema({
   const [nombre, setNombre] = useState(cuenta?.usuario.nombre ?? "");
   const [correo, setCorreo] = useState(cuenta?.usuario.correo ?? "");
   const [contrasena, setContrasena] = useState("");
+  const [confirmacion, setConfirmacion] = useState("");
   const [roles, setRoles] = useState<NombreRol[]>(cuenta?.roles ?? []);
   const [errores, setErrores] = useState<ErroresCuenta>({});
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +40,20 @@ export function FormularioCuentaSistema({
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault();
+    setError(null);
+    const encontrados: ErroresCuenta = {};
+    const errorNombre = validarNombrePersona(nombre);
+    const errorCorreo = validarCorreo(correo);
+    const errorContrasena = cuenta ? undefined : validarContrasena(contrasena, correo);
+    const errorConfirmacion = cuenta ? undefined : validarConfirmacion(contrasena, confirmacion);
+    if (errorNombre) encontrados.nombre = errorNombre;
+    if (errorCorreo) encontrados.correo = errorCorreo;
+    if (errorContrasena) encontrados.contrasena = errorContrasena;
+    if (errorConfirmacion) encontrados.confirmacion = errorConfirmacion;
+    setErrores(encontrados);
     const errorRoles = validarRoles(roles);
     if (errorRoles) return setError(errorRoles);
+    if (Object.keys(encontrados).length > 0) return;
     if (cuenta && cuenta.usuario.idUsuario === idSolicitante && !roles.includes("Administrador del sistema")) {
       return setError("No puedes quitarte el rol Administrador del sistema.");
     }
@@ -51,8 +72,8 @@ export function FormularioCuentaSistema({
 
   return (
     <form onSubmit={enviar} noValidate className="flex flex-col gap-5">
-      <Campo etiqueta="Nombre completo" value={nombre} onChange={(e) => setNombre(e.target.value)} error={errores.nombre} />
-      <Campo etiqueta="Correo electrónico" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} error={errores.correo} />
+      <Campo etiqueta="Nombre completo" value={nombre} onChange={(e) => setNombre(e.target.value)} error={errores.nombre} maxLength={100} />
+      <Campo etiqueta="Correo electrónico" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} error={errores.correo} maxLength={254} />
       {!cuenta && (
         <Campo
           etiqueta="Contraseña inicial"
@@ -60,6 +81,20 @@ export function FormularioCuentaSistema({
           value={contrasena}
           onChange={(e) => setContrasena(e.target.value)}
           error={errores.contrasena}
+          placeholder="Mínimo 8 caracteres, con letras y números"
+          autoComplete="new-password"
+          maxLength={72}
+        />
+      )}
+      {!cuenta && (
+        <Campo
+          etiqueta="Confirmar contraseña"
+          type="password"
+          value={confirmacion}
+          onChange={(e) => setConfirmacion(e.target.value)}
+          error={errores.confirmacion}
+          autoComplete="new-password"
+          maxLength={72}
         />
       )}
 
@@ -76,8 +111,8 @@ export function FormularioCuentaSistema({
       {error && <p className="text-sm text-red-700">{error}</p>}
 
       <div className="flex justify-end gap-3">
-        <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>
-        <Boton type="submit" disabled={enviando}>{cuenta ? "Guardar cambios" : "Registrar cuenta"}</Boton>
+        <Boton type="button" variante="secundario" onClick={alCancelar} className="rounded-md">Cancelar</Boton>
+        <Boton type="submit" disabled={enviando} className="rounded-md">{cuenta ? "Guardar cambios" : "Registrar cuenta"}</Boton>
       </div>
     </form>
   );

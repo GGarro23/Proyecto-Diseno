@@ -2,10 +2,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { FormularioAcceso } from "@/components/cuenta/formulario-acceso";
 import { MarcoCuenta } from "@/components/cuenta/marco-cuenta";
+import { RedireccionCuenta } from "@/components/cuenta/redireccion-cuenta";
 
 export default function IniciarSesion() {
   return (
     <MarcoCuenta titulo="Bienvenido de" destacado="nuevo">
+      <Suspense>
+        <RedireccionCuenta />
+      </Suspense>
       <Suspense>
         <FormularioAcceso />
       </Suspense>

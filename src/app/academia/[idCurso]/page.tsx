@@ -102,7 +102,7 @@ async function ContenidoCurso({
                 />
 
                 {h.diaSemana} ·{" "}
-                {h.horaInicio}–{h.horaFin}
+                {h.horaInicio} – {h.horaFin}
               </span>
             ))}
 

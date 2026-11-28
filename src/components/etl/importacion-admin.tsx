@@ -10,6 +10,7 @@ import { llamarApi } from "@/lib/api";
 import { COLUMNAS_OBLIGATORIAS, COLUMNAS_OPCIONALES, PLANTILLA_CSV } from "@/modules/etl/reglas";
 import type { EjecucionETL } from "@/modules/etl/schema";
 import { useImportaciones } from "./importaciones";
+import { formatearFechaHora } from "@/lib/formato";
 
 const TAMANO_MAXIMO = 10 * 1024 * 1024;
 
@@ -137,8 +138,8 @@ export function ImportacionAdmin() {
         </div>
 
         <div className="flex justify-end gap-3">
-          {archivo && <Boton variante="secundario" onClick={() => setArchivo(null)}>Quitar archivo</Boton>}
-          <Boton onClick={importar} disabled={!archivo || importando}>{importando ? "Importando..." : "Importar archivo"}</Boton>
+          {archivo && <Boton variante="secundario" onClick={() => setArchivo(null)} className="rounded-md">Quitar archivo</Boton>}
+          <Boton onClick={importar} disabled={!archivo || importando} className="rounded-md">{importando ? "Importando..." : "Importar archivo"}</Boton>
         </div>
       </section>
 
@@ -173,7 +174,7 @@ export function ImportacionAdmin() {
                     <Fragment key={e.idEjecucion}>
                       <tr className="border-t border-borde">
                         <td className="px-5 py-4 text-gris">N.º {e.idEjecucion}</td>
-                        <td className="px-5 py-4">{e.fechaEjecucion.slice(0, 16).replace("T", " ")}</td>
+                        <td className="px-5 py-4">{formatearFechaHora(e.fechaEjecucion)}</td>
                         <td className="px-5 py-4 font-medium">{e.nombreArchivo}</td>
                         <td className="px-5 py-4">{e.responsable}</td>
                         <td className="px-5 py-4">

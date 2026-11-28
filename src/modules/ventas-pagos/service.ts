@@ -2,6 +2,7 @@
 import { ErrorApi } from "@/lib/respuesta";
 import { requerirSesion } from "@/modules/autenticacion-usuarios/service";
 import * as repositorio from "./repository";
+import { CANTIDAD_MAXIMA_LINEA, LIMITES_ENTREGA } from "./validaciones";
 import {
   prepararNotificacionCompra,
   enviarYRegistrarNotificacion,
@@ -16,11 +17,18 @@ function validarCantidad(cantidad: number) {
   if (!Number.isSafeInteger(cantidad) || cantidad <= 0) {
     throw new ErrorApi(400, "La cantidad debe ser un entero positivo.");
   }
+  if (cantidad > CANTIDAD_MAXIMA_LINEA) {
+    throw new ErrorApi(409, `Puedes llevar como máximo ${CANTIDAD_MAXIMA_LINEA} unidades de un mismo producto.`);
+  }
 }
 
 function manejarErrorCarrito(error: unknown): never {
   if (error instanceof ErrorApi) {
     throw error;
+  }
+
+  if (error && typeof error === "object" && "code" in error && error.code === "23514") {
+    throw new ErrorApi(409, `Puedes llevar como máximo ${CANTIDAD_MAXIMA_LINEA} unidades de un mismo producto.`);
   }
 
   if (error instanceof Error) {
@@ -33,6 +41,9 @@ function manejarErrorCarrito(error: unknown): never {
 
       case "No hay existencias suficientes":
         throw new ErrorApi(409, error.message);
+
+      case "Cantidad máxima por producto superada":
+        throw new ErrorApi(409, `Puedes llevar como máximo ${CANTIDAD_MAXIMA_LINEA} unidades de un mismo producto.`);
 
       case "Carrito no encontrado":
       case "El producto no está en el carrito":
@@ -156,6 +167,17 @@ export async function crearPedido(
     throw new ErrorApi(
       400,
       "Debes indicar una dirección para el envío."
+    );
+  }
+
+  if (
+    modalidadEntrega === "ENVIO" &&
+    direccion &&
+    (direccion.length < 10 || direccion.length > LIMITES_ENTREGA.direccionCompleta)
+  ) {
+    throw new ErrorApi(
+      400,
+      `La dirección debe tener entre 10 y ${LIMITES_ENTREGA.direccionCompleta} caracteres.`
     );
   }
 

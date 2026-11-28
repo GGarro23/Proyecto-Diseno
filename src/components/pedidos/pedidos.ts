@@ -32,8 +32,8 @@ export function usePedidosReales() {
     null
   );
 
-  const refrescar = useCallback(async () => {
-    setCargando(true);
+  const refrescar = useCallback(async (silencioso = false) => {
+    if (!silencioso) setCargando(true);
     setError(null);
 
     try {
@@ -117,11 +117,20 @@ export function usePedidosReales() {
   };
 }, [refrescar]);
 
+  const moverPedido = useCallback((idPedido: number, estadoOperativo: PedidoGestion["estadoOperativo"]) => {
+    setPedidos((actuales) =>
+      actuales.map((pedido) =>
+        pedido.idPedido === idPedido ? { ...pedido, estadoOperativo } : pedido
+      )
+    );
+  }, []);
+
   return {
     pedidos,
     historial,
     cargando,
     error,
     refrescar,
+    moverPedido,
   };
 }

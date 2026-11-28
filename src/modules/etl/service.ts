@@ -10,10 +10,13 @@ const TAMANO_MAXIMO = 10 * 1024 * 1024;
 
 type Resumen = Pick<EjecucionETL, "idEjecucion" | "estado" | "filasAceptadas" | "filasRechazadas">;
 
-export async function ejecutar(nombreArchivo: string, contenido: string): Promise<Resumen> {
+export async function ejecutar(nombreRecibido: unknown, contenido: unknown): Promise<Resumen> {
   const sesion = await requerirPermiso(PERMISO);
-  if (!nombreArchivo?.trim() || !nombreArchivo.toLowerCase().endsWith(".csv")) throw new ErrorApi(400, "El archivo debe ser .csv.");
-  if (typeof contenido !== "string") throw new ErrorApi(400, "El archivo no tiene contenido.");
+  const nombreArchivo = typeof nombreRecibido === "string" ? nombreRecibido.trim() : "";
+  if (!nombreArchivo) throw new ErrorApi(400, "Indica el nombre del archivo.");
+  if (nombreArchivo.length > 255) throw new ErrorApi(400, "El nombre del archivo no puede superar los 255 caracteres.");
+  if (!nombreArchivo.toLowerCase().endsWith(".csv")) throw new ErrorApi(400, "El archivo debe ser .csv.");
+  if (typeof contenido !== "string" || !contenido.trim()) throw new ErrorApi(400, "El archivo está vacío.");
   if (Buffer.byteLength(contenido) > TAMANO_MAXIMO) throw new ErrorApi(413, "El archivo supera el máximo de 10 MB.");
 
   const analisis = analizarCsv(contenido, await repositorio.productos(), await repositorio.categorias());

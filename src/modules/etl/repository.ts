@@ -20,7 +20,7 @@ export async function productos(): Promise<Producto[]> {
 }
 
 export async function categorias(): Promise<Categoria[]> {
-  return consulta<Categoria>(`SELECT id_categoria AS "idCategoria", nombre FROM categoria`);
+  return consulta<Categoria>(`SELECT id_categoria AS "idCategoria", nombre, COALESCE(descripcion, '') AS descripcion, simbolo FROM categoria`);
 }
 
 export async function crearEjecucion(cliente: PoolClient, idAdministrador: number, nombreArchivo: string): Promise<number> {

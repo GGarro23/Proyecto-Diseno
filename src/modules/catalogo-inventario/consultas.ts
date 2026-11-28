@@ -16,6 +16,8 @@ type FilaProducto = {
 type FilaCategoria = {
   id_categoria: string;
   nombre: string;
+  descripcion: string;
+  simbolo: string;
 };
 
 export async function obtenerProductos(): Promise<Producto[]> {
@@ -50,7 +52,7 @@ export async function obtenerProductos(): Promise<Producto[]> {
 
 export async function obtenerCategorias(): Promise<Categoria[]> {
   const resultado = await db.query<FilaCategoria>(`
-    SELECT id_categoria, nombre
+    SELECT id_categoria, nombre, COALESCE(descripcion, '') AS descripcion, simbolo
     FROM categoria
     ORDER BY id_categoria;
   `);
@@ -58,12 +60,16 @@ export async function obtenerCategorias(): Promise<Categoria[]> {
   return resultado.rows.map((fila) => ({
     idCategoria: Number(fila.id_categoria),
     nombre: fila.nombre,
+    descripcion: fila.descripcion,
+    simbolo: fila.simbolo,
   }));
 }
 
 
 type FilaDetalleProducto = FilaProducto & {
   nombre_categoria: string;
+  descripcion_categoria: string;
+  simbolo_categoria: string;
 };
 
 export async function obtenerProductoPorId(
@@ -84,7 +90,9 @@ export async function obtenerProductoPorId(
       p.activo,
       p.existencias,
       p.imagen_url,
-      c.nombre AS nombre_categoria
+      c.nombre AS nombre_categoria,
+      COALESCE(c.descripcion, '') AS descripcion_categoria,
+      c.simbolo AS simbolo_categoria
     FROM producto p
     INNER JOIN categoria c
       ON p.id_categoria = c.id_categoria
@@ -116,6 +124,8 @@ export async function obtenerProductoPorId(
     categoria: {
       idCategoria: Number(fila.id_categoria),
       nombre: fila.nombre_categoria,
+      descripcion: fila.descripcion_categoria,
+      simbolo: fila.simbolo_categoria,
     },
   };
 }

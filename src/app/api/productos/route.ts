@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { consulta } from "@/lib/db";
-import { ErrorApi, exito, leerCuerpo, manejar } from "@/lib/respuesta";
+import { ErrorApi, exito, leerCuerpo, leerId, manejar } from "@/lib/respuesta";
+import { espacios } from "@/lib/validacion";
 import { requerirPermiso } from "@/modules/autenticacion-usuarios/service";
 import { obtenerCategorias, obtenerProductos } from "@/modules/catalogo-inventario/consultas";
 import { validarProducto, type DatosProducto } from "@/modules/catalogo-inventario/validaciones";
@@ -44,16 +45,12 @@ function datosValidos(valor: unknown): DatosProducto {
       datos[campo] = dato.trim();
     }
   }
-  if (datos.codigo.length > 60 || datos.nombre.length > 180 || datos.imagenUrl.length > 500) {
-    throw new ErrorApi(400, "Uno de los campos supera el tamaño permitido.");
-  }
+  datos.nombre = espacios(datos.nombre);
   return datos;
 }
 
 function idValido(valor: unknown): number {
-  const id = Number(valor);
-  if (!Number.isSafeInteger(id) || id <= 0) throw new ErrorApi(400, "Identificador de producto inválido.");
-  return id;
+  return leerId(valor, "Identificador de producto inválido.");
 }
 
 function errorBaseDatos(error: unknown): never {
@@ -70,8 +67,10 @@ function errorBaseDatos(error: unknown): never {
 async function comprobar(datos: DatosProducto, idProducto?: number) {
   const [productos, categorias] = await Promise.all([obtenerProductos(), obtenerCategorias()]);
   const errores = validarProducto(datos, productos, categorias, idProducto);
-  delete errores.descripcion;
-  if (Object.keys(errores).length) throw new ErrorApi(400, "Revisa los datos marcados.", errores);
+  if (Object.keys(errores).length) {
+    const duplicado = errores.codigo === "Ya existe un producto con ese código.";
+    throw new ErrorApi(duplicado ? 409 : 400, "Revisa los datos marcados.", errores);
+  }
   if (!Number.isSafeInteger(Number(datos.idCategoria)) || Number(datos.idCategoria) <= 0) {
     throw new ErrorApi(400, "Categoría inválida.", { idCategoria: "Selecciona una categoría existente." });
   }

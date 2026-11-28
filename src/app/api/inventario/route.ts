@@ -6,7 +6,7 @@ import {
 import { consulta } from "@/lib/db";
 import { transaccion } from "@/lib/db";
 import { ErrorApi, leerCuerpo } from "@/lib/respuesta";
-import {validarCantidad,validarAjuste,} from "@/modules/catalogo-inventario/validaciones";
+import { LIMITES_CATALOGO, validarAjuste, validarCantidad, validarMotivo } from "@/modules/catalogo-inventario/validaciones";
 import { requerirPermiso } from
   "@/modules/autenticacion-usuarios/service";
 
@@ -40,7 +40,9 @@ export function GET() {
         consulta<Categoria>(`
           SELECT
             id_categoria AS "idCategoria",
-            nombre
+            nombre,
+            COALESCE(descripcion, '') AS descripcion,
+            simbolo
           FROM categoria
           ORDER BY nombre
         `),
@@ -130,8 +132,13 @@ export function POST(peticion: Request) {
 
     const motivo =
       typeof datos.motivo === "string"
-        ? datos.motivo.trim()
+        ? datos.motivo.trim().replace(/\s+/g, " ")
         : "";
+
+    if (datos.tipo === "Entrada") {
+      const errorMotivo = validarMotivo(motivo, false);
+      if (errorMotivo) throw new ErrorApi(400, errorMotivo);
+    }
 
     const tiposSQL = {
       Entrada: "ENTRADA_MANUAL",
@@ -190,11 +197,11 @@ export function POST(peticion: Request) {
       if (
         !Number.isSafeInteger(nuevasExistencias) ||
         nuevasExistencias < 0 ||
-        nuevasExistencias > 2147483647
+        nuevasExistencias > LIMITES_CATALOGO.existenciasMaximas
       ) {
         throw new ErrorApi(
           400,
-          "Las existencias resultantes no son válidas."
+          `Las existencias resultantes deben estar entre 0 y ${LIMITES_CATALOGO.existenciasMaximas.toLocaleString("es-CR")} unidades.`
         );
       }
 
@@ -217,7 +224,7 @@ export function POST(peticion: Request) {
           tiposSQL[datos.tipo],
           cantidad,
           datos.tipo === "Entrada"
-            ? "Entrada manual de inventario"
+            ? motivo || "Entrada manual de inventario"
             : motivo,
           sesion.usuario.idUsuario,
         ]

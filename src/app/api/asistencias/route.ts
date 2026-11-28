@@ -1,7 +1,12 @@
 import { consulta, transaccion } from "@/lib/db";
 import { ErrorApi, exito, leerCuerpo, manejar } from "@/lib/respuesta";
 import { requerirPermiso, requerirSesion } from "@/modules/autenticacion-usuarios/service";
-import type { Asistencia } from "@/modules/academia/schema";
+import type { Asistencia, DiaSemana } from "@/modules/academia/schema";
+import { DIAS_SEMANA, validarFechaAsistencia } from "@/modules/academia/validaciones";
+
+function hoyEnCostaRica(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Costa_Rica" }).format(new Date());
+}
 
 type Cuerpo = {
   idCurso?: unknown;
@@ -82,6 +87,13 @@ export function POST(peticion: Request) {
         if (Number(curso.rows[0].id_profesor) !== sesion.usuario.idUsuario) {
           throw new ErrorApi(403, "No tienes asignado este curso.");
         }
+
+        const horarios = await cliente.query<{ dia_semana: number }>(
+          "SELECT DISTINCT dia_semana FROM horario WHERE id_curso = $1 ORDER BY dia_semana", [idCurso]
+        );
+        const dias = horarios.rows.map((h) => DIAS_SEMANA[Number(h.dia_semana) - 1]) as DiaSemana[];
+        const errorFecha = validarFechaAsistencia(fecha, dias, hoyEnCostaRica());
+        if (errorFecha) throw new ErrorApi(400, errorFecha);
 
         const inscritas = await cliente.query<{ id_inscripcion: number }>(
           `SELECT id_inscripcion FROM inscripcion

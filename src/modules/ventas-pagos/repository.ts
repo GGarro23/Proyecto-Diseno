@@ -1,4 +1,5 @@
 import { consulta, transaccion } from "@/lib/db";
+import { CANTIDAD_MAXIMA_LINEA } from "./validaciones";
 
 export async function obtenerCarrito(idUsuario: number) {
   const filas = await consulta<{
@@ -90,6 +91,10 @@ export async function agregarProductoCarrito(
 
     const nuevaCantidad = Number(resultado.rows[0].cantidad);
 
+    if (nuevaCantidad > CANTIDAD_MAXIMA_LINEA) {
+      throw new Error("Cantidad máxima por producto superada");
+    }
+
     if (nuevaCantidad > producto.rows[0].existencias) {
       throw new Error("No hay existencias suficientes");
     }
@@ -133,6 +138,10 @@ export async function actualizarCantidadCarrito(
 
     if (!producto.rows[0] || !producto.rows[0].activo) {
       throw new Error("El producto no está disponible");
+    }
+
+    if (cantidad > CANTIDAD_MAXIMA_LINEA) {
+      throw new Error("Cantidad máxima por producto superada");
     }
 
     if (cantidad > producto.rows[0].existencias) {

@@ -1,4 +1,11 @@
+import { rutaImagen } from "@/lib/validacion";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
+import {
+  LIMITES_CATALOGO,
+  validarCodigo,
+  validarDescripcionProducto,
+  validarNombreProducto,
+} from "@/modules/catalogo-inventario/validaciones";
 import type { EjecucionETL, ErrorETL } from "./schema";
 
 export const COLUMNAS_OBLIGATORIAS = ["código", "nombre", "categoría", "precio", "existencias"] as const;
@@ -6,6 +13,8 @@ export const COLUMNAS_OPCIONALES = ["descripción", "imagen"] as const;
 type Columna = (typeof COLUMNAS_OBLIGATORIAS)[number] | (typeof COLUMNAS_OPCIONALES)[number];
 
 export type ErrorFila = Omit<ErrorETL, "idError" | "idEjecucion">;
+
+export const MAXIMO_FILAS = 5000;
 
 export type FilaValida = {
   numeroFila: number;
@@ -85,6 +94,19 @@ export function analizarCsv(texto: string, productos: Producto[], categorias: Ca
   if (datos.length === 0) {
     return { estructuraValida: false, errores: [{ numeroFila: null, campo: null, motivo: "El archivo no tiene filas de productos." }] };
   }
+  if (datos.length > MAXIMO_FILAS) {
+    return {
+      estructuraValida: false,
+      errores: [{ numeroFila: null, campo: null, motivo: `El archivo tiene ${datos.length} filas; el máximo por carga es ${MAXIMO_FILAS}.` }],
+    };
+  }
+  const repetidas = encabezado.filter((columna, i) => columna && encabezado.indexOf(columna) !== i);
+  if (repetidas.length > 0) {
+    return {
+      estructuraValida: false,
+      errores: [{ numeroFila: null, campo: null, motivo: `Hay columnas repetidas en el encabezado: ${[...new Set(repetidas)].join(", ")}.` }],
+    };
+  }
 
   const codigosExistentes = new Set(productos.map((p) => normalizar(p.codigo)));
   const codigosDelArchivo = new Set<string>();
@@ -101,23 +123,39 @@ export function analizarCsv(texto: string, productos: Producto[], categorias: Ca
     const error = (campo: string, motivo: string) => erroresFila.push({ numeroFila, campo, motivo });
 
     const codigo = valor("código");
-    if (!codigo) error("código", "El código está vacío.");
+    const errorCodigo = validarCodigo(codigo);
+    if (errorCodigo) error("código", errorCodigo);
     else if (codigosExistentes.has(normalizar(codigo))) error("código", `El código ${codigo} ya está registrado.`);
     else if (codigosDelArchivo.has(normalizar(codigo))) error("código", `El código ${codigo} está repetido en el archivo.`);
 
-    const nombre = valor("nombre");
-    if (!nombre) error("nombre", "El nombre está vacío.");
+    const nombre = valor("nombre").replace(/\s+/g, " ");
+    const errorNombre = validarNombreProducto(nombre);
+    if (errorNombre) error("nombre", errorNombre);
 
     const categoria = categorias.find((c) => normalizar(c.nombre) === normalizar(valor("categoría")));
-    if (!categoria) error("categoría", `La categoría "${valor("categoría")}" no existe.`);
+    if (!valor("categoría")) error("categoría", "La categoría está vacía.");
+    else if (!categoria) error("categoría", `La categoría "${valor("categoría")}" no existe.`);
 
     const precio = interpretarPrecio(valor("precio"));
-    if (!(precio > 0)) error("precio", `El precio "${valor("precio")}" no es un número positivo.`);
+    if (!valor("precio")) error("precio", "El precio está vacío.");
+    else if (!(precio > 0)) error("precio", `El precio "${valor("precio")}" no es un número positivo.`);
+    else if (Math.round(precio * 100) !== precio * 100) error("precio", `El precio "${valor("precio")}" tiene más de dos decimales.`);
+    else if (precio > LIMITES_CATALOGO.precioMaximo) {
+      error("precio", `El precio no puede superar ₡${LIMITES_CATALOGO.precioMaximo.toLocaleString("es-CR")}.`);
+    }
 
     const existencias = Number(valor("existencias"));
-    if (!valor("existencias") || !Number.isInteger(existencias) || existencias < 0) {
+    if (!/^\d+$/.test(valor("existencias")) || !Number.isInteger(existencias)) {
       error("existencias", `Las existencias "${valor("existencias")}" no son un entero mayor o igual a cero.`);
+    } else if (existencias > LIMITES_CATALOGO.existenciasMaximas) {
+      error("existencias", `Las existencias no pueden superar ${LIMITES_CATALOGO.existenciasMaximas.toLocaleString("es-CR")} unidades.`);
     }
+
+    const errorDescripcion = validarDescripcionProducto(valor("descripción"), false);
+    if (errorDescripcion) error("descripción", errorDescripcion);
+
+    const errorImagen = rutaImagen(valor("imagen"));
+    if (errorImagen) error("imagen", errorImagen);
 
     if (codigo) codigosDelArchivo.add(normalizar(codigo));
     if (erroresFila.length > 0) {

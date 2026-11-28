@@ -5,6 +5,7 @@ import { Icono } from "@/components/ui/icono";
 import { Insignia } from "@/components/ui/textos";
 import { calcularSaldos, cambioEnExistencias, type MovimientoConSaldo } from "@/modules/catalogo-inventario/reglas";
 import type { MovimientoInventario, Producto, TipoMovimiento } from "@/modules/catalogo-inventario/schema";
+import { formatearFechaHora } from "@/lib/formato";
 
 const TIPOS: TipoMovimiento[] = ["Entrada", "Ajuste positivo", "Ajuste negativo", "Descuento"];
 const ORDENES = ["Más recientes", "Más antiguos"] as const;
@@ -81,7 +82,7 @@ export function HistorialMovimientosAdmin({ productos, movimientos }: { producto
               {visibles.map((m) => (
                 <tr key={m.idMovimiento} className="border-t border-borde">
                   <td className="px-5 py-4 text-gris">N.º {m.idMovimiento}</td>
-                  <td className="px-5 py-4">{m.fecha.slice(0, 16).replace("T", " ")}</td>
+                  <td className="px-5 py-4">{formatearFechaHora(m.fecha)}</td>
                   <td className="px-5 py-4 font-medium">{nombreProducto(m.idProducto)}</td>
                   <td className="px-5 py-4">
                     <Insignia>{m.tipo}</Insignia>

@@ -53,7 +53,7 @@ export function CuentasSistema({ idSolicitante, alAvisar }: { idSolicitante: num
             className="w-full py-3 text-sm outline-none"
           />
         </label>
-        <Boton onClick={() => setPanel({ idUsuario: null })}>Registrar cuenta interna</Boton>
+        <Boton onClick={() => setPanel({ idUsuario: null })} className="rounded-md">Registrar cuenta interna</Boton>
       </div>
 
       <section className="overflow-x-auto border border-borde bg-papel">
@@ -117,8 +117,8 @@ export function CuentasSistema({ idSolicitante, alAvisar }: { idSolicitante: num
           No podrá iniciar sesión. Sus pedidos, inscripciones y demás registros se conservan.
         </p>
         <div className="mt-8 flex justify-end gap-3">
-          <Boton variante="secundario" onClick={() => setIdDesactivar(null)}>Cancelar</Boton>
-          <Boton onClick={confirmarDesactivar}>Desactivar</Boton>
+          <Boton variante="secundario" onClick={() => setIdDesactivar(null)} className="rounded-md">Cancelar</Boton>
+          <Boton onClick={confirmarDesactivar} className="rounded-md">Desactivar</Boton>
         </div>
       </Modal>
     </div>

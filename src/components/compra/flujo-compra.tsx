@@ -12,10 +12,10 @@ import { useCarrito } from "@/components/carrito/proveedor-carrito";
 import { useSesion } from "@/components/sesion/proveedor-sesion";
 import { Boton, BotonEnlace } from "@/components/ui/boton";
 import { Pasos } from "@/components/ui/pasos";
-import { Sobretitulo } from "@/components/ui/textos";
 
 import {apiCrearPedido, apiSimularPago,apiConsultarPedido, type ModalidadEntrega, type EscenarioPago,} from "@/lib/api-ventas";
 import { ConfirmacionCompra } from "./confirmacion-compra";
+import { validarEntrega } from "@/modules/ventas-pagos/validaciones";
 import {
   EntregaCompra,
   type DatosEntrega,
@@ -54,7 +54,7 @@ export function FlujoCompra() {
 
   const [entrega, setEntrega] = useState<DatosEntrega>({
     modalidad: null,
-    provincia: "San José",
+    provincia: "Alajuela",
     canton: "",
     direccion: "",
   });
@@ -163,7 +163,7 @@ export function FlujoCompra() {
             pedido.modalidadEntrega === "ENVIO"
               ? "Envío a domicilio"
               : "Retiro presencial",
-          provincia: "San José",
+          provincia: "Alajuela",
           canton: "",
           direccion: pedido.direccionEntrega ?? "",
         });
@@ -243,7 +243,7 @@ export function FlujoCompra() {
           pedido.modalidadEntrega === "ENVIO"
             ? "Envío a domicilio"
             : "Retiro presencial",
-        provincia: "San José",
+        provincia: "Alajuela",
         canton: "",
         direccion: pedido.direccionEntrega ?? "",
       });
@@ -283,23 +283,7 @@ export function FlujoCompra() {
       return;
     }
 
-    const errores: typeof erroresEntrega = {};
-
-    if (!entrega.modalidad) {
-      errores.modalidad =
-        "Selecciona una modalidad de entrega.";
-    }
-
-    if (entrega.modalidad === "Envío a domicilio") {
-      if (!entrega.canton.trim()) {
-        errores.canton = "Indica el cantón.";
-      }
-
-      if (!entrega.direccion.trim()) {
-        errores.direccion =
-          "Indica la dirección exacta.";
-      }
-    }
+    const errores: typeof erroresEntrega = validarEntrega(entrega);
 
     setErroresEntrega(errores);
 
@@ -466,9 +450,6 @@ export function FlujoCompra() {
 
   const encabezado = (
     <div className="mb-10 flex flex-col items-center gap-3 text-center">
-      <Sobretitulo>
-        Compra segura · Simulación académica
-      </Sobretitulo>
 
       <h1 className="font-serif text-5xl">
         {TITULOS[paso - 1]}
@@ -499,7 +480,7 @@ export function FlujoCompra() {
         encabezado={encabezado}
         texto="Inicia sesión para revisar tu carrito y completar la compra."
       >
-        <BotonEnlace href="/iniciar-sesion?volver=/carrito">
+        <BotonEnlace href="/iniciar-sesion?volver=/carrito" className="rounded-md">
           Iniciar sesión
         </BotonEnlace>
       </Mensaje>
@@ -541,7 +522,7 @@ export function FlujoCompra() {
           encabezado={encabezado}
           texto="Tu carrito está vacío. Puedes explorar productos o continuar el pago de un pedido pendiente."
         >
-          <BotonEnlace href="/catalogo">
+          <BotonEnlace href="/catalogo" className="rounded-md">
             Explorar instrumentos
           </BotonEnlace>
         </Mensaje>
@@ -623,6 +604,7 @@ export function FlujoCompra() {
             <Boton
               disabled={procesando}
               onClick={() => setPaso(2)}
+              className="rounded-md"
             >
               Continuar
             </Boton>
@@ -632,6 +614,7 @@ export function FlujoCompra() {
             <Boton
               disabled={procesando}
               onClick={continuarEntrega}
+              className="rounded-md"
             >
               {procesando
                 ? "Creando pedido..."
@@ -643,6 +626,7 @@ export function FlujoCompra() {
             <Boton
               disabled={procesando}
               onClick={pagar}
+              className="rounded-md"
             >
               {procesando
                 ? "Procesando..."
