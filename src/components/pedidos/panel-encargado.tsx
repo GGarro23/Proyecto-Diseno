@@ -10,7 +10,7 @@ import {
   Sobretitulo,
 } from "@/components/ui/textos";
 
-import { formatearColones } from "@/lib/formato";
+import { formatearColones, formatearFecha, formatearFechaHora } from "@/lib/formato";
 
 import {
   apiCambiarEstadoPedido,
@@ -109,6 +109,7 @@ export function PanelEncargado({
     cargando,
     error,
     refrescar,
+    moverPedido,
   } = usePedidosReales();
 
   const [vista, setVista] = useState<
@@ -174,11 +175,13 @@ export function PanelEncargado({
         return;
       }
 
+      moverPedido(pedido.idPedido, estadoNuevo);
+
       setAviso(
         `Pedido N.º ${pedido.idPedido} actualizado a ${nombreEstado(estadoNuevo)}.`
       );
 
-      await refrescar();
+      void refrescar(true);
     } catch {
       setAviso(
         "No fue posible actualizar el pedido. Consulta su estado antes de reintentarlo."
@@ -357,7 +360,7 @@ export function PanelEncargado({
               filas={confirmados.map((pedido) => [
                 `N.º ${pedido.idPedido}`,
                 `Cliente N.º ${pedido.idUsuario}`,
-                pedido.fechaCreacion.slice(0, 10),
+                formatearFecha(pedido.fechaCreacion),
                 nombreModalidad(
                   pedido.modalidadEntrega
                 ),
@@ -383,9 +386,7 @@ export function PanelEncargado({
                 "Responsable",
               ]}
               filas={historial.map((cambio) => [
-                cambio.fechaCambio
-                  .slice(0, 16)
-                  .replace("T", " "),
+                formatearFechaHora(cambio.fechaCambio),
                 `N.º ${cambio.idPedido}`,
                 nombreEstado(
                   cambio.estadoAnterior

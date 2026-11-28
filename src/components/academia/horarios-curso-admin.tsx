@@ -5,7 +5,7 @@ import { Boton } from "@/components/ui/boton";
 import { Campo, Selector } from "@/components/ui/campo";
 import { DIAS } from "@/lib/horarios";
 import type { DiaSemana, Horario } from "@/modules/academia/schema";
-import type { DatosHorario } from "@/modules/academia/validaciones";
+import { cruceEnCurso, validarIntervalo, type DatosHorario } from "@/modules/academia/validaciones";
 
 export function HorariosCursoAdmin({
   idCurso,
@@ -37,6 +37,7 @@ export function HorariosCursoAdmin({
                   <FormularioHorario
                     inicial={h}
                     textoBoton="Guardar"
+                    validar={(datos) => cruceEnCurso(datos, idCurso, horarios, h.idHorario)}
                     alGuardar={(datos) => guardarHorario("PUT", { ...datos, idHorario: h.idHorario })}
                     alTerminar={() => {
                       setEdicion(null);
@@ -51,7 +52,7 @@ export function HorariosCursoAdmin({
                   <span>
                     <span className="font-medium">{h.diaSemana}</span> · {h.horaInicio} a {h.horaFin}
                   </span>
-                  <Boton variante="secundario" onClick={() => setEdicion(h.idHorario)}>Editar</Boton>
+                  <Boton variante="secundario" onClick={() => setEdicion(h.idHorario)} className="rounded-md">Editar</Boton>
                 </li>
               )
             )}
@@ -65,6 +66,7 @@ export function HorariosCursoAdmin({
           key={propios.length}
           inicial={{ diaSemana: "Lunes", horaInicio: "", horaFin: "" }}
           textoBoton="Agregar horario"
+          validar={(datos) => cruceEnCurso(datos, idCurso, horarios)}
           alGuardar={(datos) => guardarHorario("POST", { ...datos, idCurso })}
           alTerminar={() => { alAvisar("Horario registrado"); void alActualizar(); }}
         />
@@ -76,12 +78,14 @@ export function HorariosCursoAdmin({
 function FormularioHorario({
   inicial,
   textoBoton,
+  validar,
   alGuardar,
   alTerminar,
   alCancelar,
 }: {
   inicial: DatosHorario;
   textoBoton: string;
+  validar: (datos: DatosHorario) => string | undefined;
   alGuardar: (datos: DatosHorario) => Promise<{ ok: true } | { ok: false; error: string }>;
   alTerminar: () => void;
   alCancelar?: () => void;
@@ -93,6 +97,8 @@ function FormularioHorario({
   const enviar = async (e: FormEvent) => {
     e.preventDefault();
     if (procesando) return;
+    const errorLocal = validarIntervalo(datos) ?? validar(datos);
+    if (errorLocal) return setError(errorLocal);
     setProcesando(true);
     try {
       const resultado = await alGuardar(datos);
@@ -112,13 +118,13 @@ function FormularioHorario({
             <option key={d} value={d}>{d}</option>
           ))}
         </Selector>
-        <Campo etiqueta="Inicio" type="time" value={datos.horaInicio} onChange={(e) => setDatos({ ...datos, horaInicio: e.target.value })} />
-        <Campo etiqueta="Fin" type="time" value={datos.horaFin} onChange={(e) => setDatos({ ...datos, horaFin: e.target.value })} />
+        <Campo etiqueta="Inicio" type="time" min="06:00" max="22:00" value={datos.horaInicio} onChange={(e) => setDatos({ ...datos, horaInicio: e.target.value })} />
+        <Campo etiqueta="Fin" type="time" min="06:00" max="22:00" value={datos.horaFin} onChange={(e) => setDatos({ ...datos, horaFin: e.target.value })} />
       </div>
       {error && <p className="text-sm text-red-700">{error}</p>}
       <div className="flex justify-end gap-3">
-        {alCancelar && <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>}
-        <Boton type="submit" disabled={procesando}>{procesando ? "Guardando..." : textoBoton}</Boton>
+        {alCancelar && <Boton type="button" variante="secundario" onClick={alCancelar} className="rounded-md">Cancelar</Boton>}
+        <Boton type="submit" disabled={procesando} className="rounded-md">{procesando ? "Guardando..." : textoBoton}</Boton>
       </div>
     </form>
   );

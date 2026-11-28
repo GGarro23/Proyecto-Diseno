@@ -1,39 +1,50 @@
 import { NextResponse } from "next/server";
 import { consulta } from "@/lib/db";
-import { ErrorApi, exito, leerCuerpo, manejar } from "@/lib/respuesta";
+import { ErrorApi, exito, leerCuerpo, leerId, manejar } from "@/lib/respuesta";
 import { requerirPermiso } from "@/modules/autenticacion-usuarios/service";
 import { obtenerOfertaAcademica } from "@/modules/academia/consultas";
+import { espacios } from "@/lib/validacion";
 import { validarCurso, type DatosCurso } from "@/modules/academia/validaciones";
 
 type CuerpoCurso = Partial<DatosCurso> & { idCurso?: unknown };
 
 function limpiarCurso(datos: CuerpoCurso): DatosCurso {
   return {
-    nombre: typeof datos.nombre === "string" ? datos.nombre.trim() : "",
+    nombre: typeof datos.nombre === "string" ? espacios(datos.nombre) : "",
     descripcion: typeof datos.descripcion === "string" ? datos.descripcion.trim() : "",
-    cupoMaximo: typeof datos.cupoMaximo === "string" ? datos.cupoMaximo : "",
+    cupoMaximo:
+      typeof datos.cupoMaximo === "string"
+        ? datos.cupoMaximo.trim()
+        : typeof datos.cupoMaximo === "number"
+          ? String(datos.cupoMaximo)
+          : "",
     estado: datos.estado === "Cerrado" ? "Cerrado" : "Abierto",
     imagenUrl: typeof datos.imagenUrl === "string" ? datos.imagenUrl.trim() : "",
   };
 }
 
-function comprobar(datos: CuerpoCurso) {
+async function comprobar(datos: CuerpoCurso, idCurso?: number) {
   if (datos.estado !== "Abierto" && datos.estado !== "Cerrado") {
-    throw new ErrorApi(400, "Estado de curso inválido.");
+    throw new ErrorApi(400, "Estado de curso inválido.", { estado: "Selecciona un estado válido." });
   }
   const limpios = limpiarCurso(datos);
-  const errores = validarCurso(limpios);
-  if (Object.keys(errores).length) throw new ErrorApi(400, "Revisa los datos del curso.", errores);
-  if (limpios.nombre.length > 180 || limpios.imagenUrl.length > 500) {
-    throw new ErrorApi(400, "El nombre o la ruta de imagen superan la longitud permitida.");
+  const cursos = await consulta<{ idCurso: number; nombre: string; inscritos: number }>(
+    `SELECT c.id_curso AS "idCurso", c.nombre,
+            (SELECT COUNT(*) FROM inscripcion i WHERE i.id_curso = c.id_curso AND i.estado = 'CONFIRMADA')::int AS inscritos
+     FROM curso c`
+  );
+  if (idCurso !== undefined && !cursos.some((c) => c.idCurso === idCurso)) throw new ErrorApi(404, "El curso no existe.");
+  const inscritos = cursos.find((c) => c.idCurso === idCurso)?.inscritos ?? 0;
+  const errores = validarCurso(limpios, inscritos, cursos, idCurso);
+  if (Object.keys(errores).length) {
+    const duplicado = errores.nombre === "Ya existe un curso con ese nombre.";
+    throw new ErrorApi(duplicado ? 409 : 400, "Revisa los datos del curso.", errores);
   }
   return limpios;
 }
 
 function comprobarId(valor: unknown) {
-  const id = Number(valor);
-  if (!Number.isSafeInteger(id) || id <= 0) throw new ErrorApi(400, "Identificador de curso inválido.");
-  return id;
+  return leerId(valor, "Identificador de curso inválido.");
 }
 
 function errorBD(error: unknown): never {
@@ -59,7 +70,7 @@ export async function GET() {
 export function POST(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("academia.administrar");
-    const datos = comprobar(await leerCuerpo<CuerpoCurso>(peticion));
+    const datos = await comprobar(await leerCuerpo<CuerpoCurso>(peticion));
     try {
       const filas = await consulta<{ id_curso: number }>(
         `INSERT INTO curso (nombre, descripcion, cupo_maximo, estado, imagen_url)
@@ -79,7 +90,7 @@ export function PUT(peticion: Request) {
     await requerirPermiso("academia.administrar");
     const cuerpo = await leerCuerpo<CuerpoCurso>(peticion);
     const idCurso = comprobarId(cuerpo.idCurso);
-    const datos = comprobar(cuerpo);
+    const datos = await comprobar(cuerpo, idCurso);
     try {
       const filas = await consulta<{ id_curso: number }>(
         `UPDATE curso SET nombre = $2, descripcion = $3, cupo_maximo = $4,

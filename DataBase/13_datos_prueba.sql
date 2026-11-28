@@ -1,11 +1,11 @@
 BEGIN;
 
 INSERT INTO usuario (id_usuario, nombre, correo, contrasena_hash, activo, telefono, provincia, fecha_registro) VALUES
- (1,    'Ana Mora',          'ana@intervallum.cr',     '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '+506 8888 1840', 'San José', '2023-02-14'),
+ (1,    'Ana Mora',          'ana@intervallum.cr',     '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '8888-1840',      'San José', '2023-02-14'),
  (2,    'Carlos Rojas',      'carlos@intervallum.cr',  '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  NULL,             NULL,       '2024-05-03'),
- (10,   'Mariana Solano',    'mariana@intervallum.cr', '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '+506 8800 1010', 'San José', '2021-03-01'),
- (11,   'Andrés Quesada',    'andres@intervallum.cr',  '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '+506 8800 1111', 'Heredia',  '2021-08-15'),
- (12,   'Lucía Vargas',      'lucia@intervallum.cr',   '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '+506 8800 1212', 'Cartago',  '2022-01-10'),
+ (10,   'Mariana Solano',    'mariana@intervallum.cr', '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '8800-1010',      'San José', '2021-03-01'),
+ (11,   'Andrés Quesada',    'andres@intervallum.cr',  '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '8800-1111',      'Heredia',  '2021-08-15'),
+ (12,   'Lucía Vargas',      'lucia@intervallum.cr',   '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  '8800-1212',      'Cartago',  '2022-01-10'),
  (20,   'Diego Campos',      'pedidos@intervallum.cr', '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  NULL,             'San José', '2022-06-20'),
  (30,   'Laura Jiménez',     'admin@intervallum.cr',   '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  NULL,             'San José', '2020-01-15'),
  (31,   'Pablo Arias',       'sistema@intervallum.cr', '$2b$10$Xx/5a5.VeZ2WNgX6qrL3b.Pju9IHG4fCyS6Sqj1DbN80Cpkz/fjci', TRUE,  NULL,             'San José', '2020-01-15'),
@@ -61,15 +61,15 @@ JOIN permiso p ON p.codigo = v.codigo
 ON CONFLICT DO NOTHING;
 
 UPDATE curso SET id_profesor = 10 WHERE nombre IN ('Piano para principiantes', 'Ensambles avanzados') AND id_profesor IS NULL;
-UPDATE curso SET id_profesor = 11 WHERE nombre = 'Violin inicial' AND id_profesor IS NULL;
-UPDATE curso SET id_profesor = 12 WHERE nombre = 'Teoria musical I' AND id_profesor IS NULL;
+UPDATE curso SET id_profesor = 11 WHERE nombre = 'Violín inicial' AND id_profesor IS NULL;
+UPDATE curso SET id_profesor = 12 WHERE nombre = 'Teoría musical I' AND id_profesor IS NULL;
 
 SELECT inscribir_en_curso(v.id_usuario, c.id_curso)
 FROM (VALUES
  (1, 'Piano para principiantes'),
  (1000, 'Piano para principiantes'), (1001, 'Piano para principiantes'), (1002, 'Piano para principiantes'),
- (1003, 'Violin inicial'), (1004, 'Violin inicial'), (1000, 'Violin inicial'),
- (1001, 'Teoria musical I'), (1002, 'Teoria musical I'), (2, 'Teoria musical I')
+ (1003, 'Violín inicial'), (1004, 'Violín inicial'), (1000, 'Violín inicial'),
+ (1001, 'Teoría musical I'), (1002, 'Teoría musical I'), (2, 'Teoría musical I')
 ) AS v(id_usuario, nombre)
 JOIN curso c ON c.nombre = v.nombre
 WHERE NOT EXISTS (SELECT 1 FROM inscripcion i WHERE i.id_usuario = v.id_usuario AND i.id_curso = c.id_curso);
@@ -84,23 +84,24 @@ JOIN curso c ON c.nombre = 'Piano para principiantes'
 JOIN inscripcion i ON i.id_usuario = 1 AND i.id_curso = c.id_curso
 ON CONFLICT DO NOTHING;
 
-CREATE TEMP TABLE compra_prueba (orden INT, id_usuario BIGINT, codigo TEXT, cantidad INT, modalidad TEXT, direccion TEXT, pago TEXT, avances TEXT[]);
-INSERT INTO compra_prueba VALUES
- (1, 1,    'ARCO-EBANO',   1, 'ENVIO',  'San José, Montes de Oca. 100 m norte del parque', 'PAGO_OK', ARRAY[]::TEXT[]),
- (2, 2,    'PIANO-AUREUM', 1, 'RETIRO', NULL, 'PAGO_OK', ARRAY['EN_PREPARACION']),
- (3, 1000, 'FLAU-DUL-01',  2, 'ENVIO',  'Alajuela centro, 200 m sur de la catedral', 'PAGO_OK', ARRAY['EN_PREPARACION', 'EMPACADO']),
- (4, 1001, 'GUIT-CLAS-01', 1, 'RETIRO', NULL, 'PAGO_OK', ARRAY['EN_PREPARACION', 'LISTO_RETIRO']),
- (5, 1002, 'AFIN-CROM-01', 1, 'ENVIO',  'Heredia, San Pablo. Casa 12', 'PAGO_OK', ARRAY['EN_PREPARACION', 'EMPACADO', 'ENVIADO']),
- (6, 1003, 'CAJ-PER-01',   1, 'RETIRO', NULL, 'PAGO_RECHAZADO', ARRAY[]::TEXT[]);
-
 DO $$
 DECLARE
-  c compra_prueba%ROWTYPE;
+  c RECORD;
   v_carrito BIGINT;
   v_pedido BIGINT;
   v_estado TEXT;
 BEGIN
-  FOR c IN SELECT * FROM compra_prueba ORDER BY orden LOOP
+  FOR c IN
+    SELECT * FROM (VALUES
+      (1, 1::BIGINT,    'ARCO-EBANO',   1, 'ENVIO',  'San José, Montes de Oca. 100 m norte del parque', 'PAGO_OK', ARRAY[]::TEXT[]),
+      (2, 2::BIGINT,    'PIANO-AUREUM', 1, 'RETIRO', NULL, 'PAGO_OK', ARRAY['EN_PREPARACION']),
+      (3, 1000::BIGINT, 'FLAU-DUL-01',  2, 'ENVIO',  'Alajuela centro, 200 m sur de la catedral', 'PAGO_OK', ARRAY['EN_PREPARACION', 'EMPACADO']),
+      (4, 1001::BIGINT, 'GUIT-CLAS-01', 1, 'RETIRO', NULL, 'PAGO_OK', ARRAY['EN_PREPARACION', 'LISTO_RETIRO']),
+      (5, 1002::BIGINT, 'AFIN-CROM-01', 1, 'ENVIO',  'Heredia, San Pablo. Casa 12', 'PAGO_OK', ARRAY['EN_PREPARACION', 'EMPACADO', 'ENVIADO']),
+      (6, 1003::BIGINT, 'CAJ-PER-01',   1, 'RETIRO', NULL, 'PAGO_RECHAZADO', ARRAY[]::TEXT[])
+    ) AS v(orden, id_usuario, codigo, cantidad, modalidad, direccion, pago, avances)
+    ORDER BY orden
+  LOOP
     CONTINUE WHEN EXISTS (SELECT 1 FROM pedido WHERE id_usuario = c.id_usuario);
     INSERT INTO carrito (id_usuario) VALUES (c.id_usuario) ON CONFLICT DO NOTHING;
     SELECT id_carrito INTO v_carrito FROM carrito WHERE id_usuario = c.id_usuario;
@@ -116,10 +117,8 @@ BEGIN
   END LOOP;
 END $$;
 
-DROP TABLE compra_prueba;
-
 UPDATE recomendacion SET estado = 'REVISADA', fecha_revision = NOW(), id_revisor = 30
-WHERE tipo = 'PROMOCION_ACADEMICA' AND estado = 'PENDIENTE';
+WHERE tipo = 'PROMOCION_ACADEMICA' AND estado = 'PENDIENTE' AND motivo IN ('La ocupación del curso está por debajo del 50 %; conviene promocionarlo antes del próximo ciclo.', 'Dato de prueba: curso abierto con cupos disponibles');
 
 COMMIT;
 

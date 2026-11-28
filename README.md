@@ -94,8 +94,9 @@ Los scripts están en `DataBase/` y se ejecutan en orden:
 | `12_ajustes_frontend.sql` | Teléfono, provincia y fecha de registro del usuario |
 | `13_datos_prueba.sql` | Usuarios, roles, permisos, inscripciones, asistencias, pedidos y recomendaciones de prueba |
 | `14_vaciar_carrito_al_crear_pedido.sql` | Vacía el carrito al registrar un pedido |
+| `15_categorias_y_validaciones.sql` | Descripción y símbolo de las categorías, normalización de correos y teléfonos, y restricciones de validación |
 
-En Supabase, ejecutar del `01` al `14` en el SQL Editor y activar RLS en las tablas para bloquear el acceso directo desde la API pública de Supabase. Más detalle en `DataBase/README.md`.
+En Supabase, ejecutar del `01` al `15` en el SQL Editor y activar RLS en las tablas para bloquear el acceso directo desde la API pública de Supabase. Más detalle en `DataBase/README.md`.
 
 ## Cuentas de prueba
 

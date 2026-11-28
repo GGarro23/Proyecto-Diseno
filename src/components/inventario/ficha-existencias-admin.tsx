@@ -2,7 +2,7 @@
 
 import { Boton } from "@/components/ui/boton";
 import { Foto } from "@/components/ui/foto";
-import { formatearColones } from "@/lib/formato";
+import { formatearColones, formatearFecha } from "@/lib/formato";
 import { calcularSaldos } from "@/modules/catalogo-inventario/reglas";
 import type {
   Categoria,
@@ -59,7 +59,7 @@ export function FichaExistenciasAdmin({
         <div>
           <p className="text-xs text-gris">Existencias actuales</p>
           <p className="mt-1 text-sm text-gris">
-            Última actualización: {recientes[0]?.fecha.slice(0, 10) ?? "—"}
+            Última actualización: {formatearFecha(recientes[0]?.fecha)}
           </p>
         </div>
         <p className="font-serif text-5xl">{producto.existencias}</p>
@@ -81,7 +81,7 @@ export function FichaExistenciasAdmin({
                 <div>
                   <p>{m.tipo}</p>
                   <p className="mt-1 text-xs text-gris">
-                    {m.fecha.slice(0, 10)} · {origenMovimiento(m)}
+                    {formatearFecha(m.fecha)} · {origenMovimiento(m)}
                   </p>
                 </div>
                 <div className="text-right">
@@ -102,10 +102,10 @@ export function FichaExistenciasAdmin({
         <Boton variante="enlace" onClick={() => alElegir("editar")}>
           Editar producto
         </Boton>
-        <Boton variante="secundario" onClick={() => alElegir("ajuste")}>
+        <Boton variante="secundario" onClick={() => alElegir("ajuste")} className="rounded-md">
           Registrar ajuste
         </Boton>
-        <Boton onClick={() => alElegir("entrada")}>Registrar entrada</Boton>
+        <Boton onClick={() => alElegir("entrada")} className="rounded-md">Registrar entrada</Boton>
       </div>
     </div>
   );

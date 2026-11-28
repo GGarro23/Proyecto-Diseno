@@ -2,14 +2,12 @@
 
 import { ListaPedidosCliente } from "@/components/cuenta/lista-pedidos-cliente";
 import { ControlSesion } from "@/components/cuenta/control-sesion";
-import { Sobretitulo } from "@/components/ui/textos";
 
 export default function MisPedidos() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
       <div className="mb-8">
-        <Sobretitulo>Tienda Intervallum</Sobretitulo>
-        <h1 className="mt-3 font-serif text-5xl">
+        <h1 className="font-serif text-5xl">
           Mis <em className="text-naranja">pedidos</em>
         </h1>
       </div>

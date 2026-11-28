@@ -87,7 +87,7 @@ async function ContenidoDetalle({
           </h1>
 
           <div className="flex items-center gap-4 border-b border-borde pb-6">
-            <span className="font-serif text-3xl">
+            <span className="text-3xl font-bold tabular-nums text-naranja">
               {formatearColones(producto.precio)}
             </span>
 

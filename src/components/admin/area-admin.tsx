@@ -17,7 +17,7 @@ export function AreaAdmin({ children }: { children: ReactNode }) {
         ) : (
           <div className="mx-auto my-12 flex max-w-xl flex-col items-center gap-5 border border-borde bg-papel p-12 text-center">
             <p className="text-gris">Esta sección es exclusiva del Administrador.</p>
-            <BotonEnlace href="/">Volver al inicio</BotonEnlace>
+            <BotonEnlace href="/" className="rounded-md">Volver al inicio</BotonEnlace>
           </div>
         )
       }

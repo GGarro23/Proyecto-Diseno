@@ -1,5 +1,5 @@
 import { consulta } from "@/lib/db";
-import { ErrorApi, exito, leerCuerpo, manejar } from "@/lib/respuesta";
+import { ErrorApi, exito, leerCuerpo, leerId, manejar } from "@/lib/respuesta";
 import { requerirSesion } from "@/modules/autenticacion-usuarios/service";
 
 type Solicitud = { idCurso?: unknown };
@@ -55,10 +55,7 @@ export function POST(peticion: Request) {
   return manejar(async () => {
     const sesion = await requerirSesion();
     const cuerpo = await leerCuerpo<Solicitud>(peticion);
-    const idCurso = Number(cuerpo.idCurso);
-    if (!Number.isSafeInteger(idCurso) || idCurso <= 0) {
-      throw new ErrorApi(400, "Selecciona un curso válido.");
-    }
+    const idCurso = leerId(cuerpo.idCurso, "Selecciona un curso válido.");
     try {
       const inscripcion = await consulta<{ idInscripcion: number }>(
         `SELECT inscribir_en_curso($1, $2) AS "idInscripcion"`,

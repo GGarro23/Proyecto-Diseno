@@ -28,7 +28,7 @@ export function ListadoCatalogo({ productos, categorias }: { productos: Producto
 
   return (
     <div className="flex flex-col gap-6">
-      <label className="flex items-center gap-3 border border-borde bg-papel px-4 focus-within:border-cafe">
+      <label className="flex items-center gap-3 rounded-md border border-borde bg-papel px-4 focus-within:border-cafe">
         <Icono nombre="buscar" className="size-5 text-gris" />
         <input
           value={busqueda}

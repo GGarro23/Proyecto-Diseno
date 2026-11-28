@@ -5,16 +5,18 @@ import { avisarAsistenciasActualizadas, useAsistencias } from "@/components/acad
 import { Avatar } from "@/components/ui/avatar";
 import { Boton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/textos";
-import type { Asistencia, Inscripcion } from "@/modules/academia/schema";
+import type { Asistencia, DiaSemana, Inscripcion } from "@/modules/academia/schema";
+import { validarFechaAsistencia } from "@/modules/academia/validaciones";
 
 type Estado = Asistencia["estadoAsistencia"];
 type Props = {
   idCurso: number;
+  dias: DiaSemana[];
   inscripciones: Inscripcion[];
   nombreDe: (idUsuario: number) => string;
 };
 
-export function RegistroAsistenciasProfesor({ idCurso, inscripciones, nombreDe }: Props) {
+export function RegistroAsistenciasProfesor({ idCurso, dias, inscripciones, nombreDe }: Props) {
   const asistencias = useAsistencias();
   const [fecha, setFecha] = useState(() => new Date().toLocaleDateString("en-CA"));
   const [marcas, setMarcas] = useState<Record<number, Estado>>({});
@@ -37,6 +39,8 @@ export function RegistroAsistenciasProfesor({ idCurso, inscripciones, nombreDe }
 
   const guardar = async () => {
     if (procesando || pendientes.length === 0) return;
+    const errorFecha = validarFechaAsistencia(fecha, dias, new Date().toLocaleDateString("en-CA"));
+    if (errorFecha) return setMensaje({ texto: errorFecha, error: true });
     setProcesando(true);
     setMensaje(null);
     try {
@@ -74,6 +78,7 @@ export function RegistroAsistenciasProfesor({ idCurso, inscripciones, nombreDe }
           Fecha de la sesión
           <input
             type="date"
+            max={new Date().toLocaleDateString("en-CA")}
             value={fecha}
             onChange={(e) => { setFecha(e.target.value); setMarcas({}); setMensaje(null); }}
             className="border border-borde bg-white px-4 py-2 text-sm outline-none focus:border-cafe"
@@ -110,7 +115,7 @@ export function RegistroAsistenciasProfesor({ idCurso, inscripciones, nombreDe }
 
       {mensaje && <p className={`text-sm ${mensaje.error ? "text-red-800" : "text-gris"}`}>{mensaje.texto}</p>}
       {pendientes.length > 0 && (
-        <Boton onClick={guardar} disabled={procesando} className="self-start">{procesando ? "Guardando..." : "Guardar asistencia"}</Boton>
+        <Boton onClick={guardar} disabled={procesando} className="self-start rounded-md">{procesando ? "Guardando..." : "Guardar asistencia"}</Boton>
       )}
     </div>
   );

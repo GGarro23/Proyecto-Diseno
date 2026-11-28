@@ -1,67 +1,72 @@
 import { consulta } from "@/lib/db";
-import {
-  ErrorApi,
-  exito,
-  leerCuerpo,
-  manejar,
-} from "@/lib/respuesta";
+import { ErrorApi, exito, leerCuerpo, leerId, manejar } from "@/lib/respuesta";
+import { aTexto, espacios } from "@/lib/validacion";
 import { requerirPermiso } from "@/modules/autenticacion-usuarios/service";
 import { obtenerCategorias } from "@/modules/catalogo-inventario/consultas";
-import { validarCategoria } from "@/modules/catalogo-inventario/validaciones";
+import { validarCategoria, type DatosCategoria } from "@/modules/catalogo-inventario/validaciones";
 
-type DatosCategoria = {
-  nombre?: unknown;
-  idCategoria?: unknown;
+type CuerpoCategoria = { idCategoria?: unknown; nombre?: unknown; descripcion?: unknown; simbolo?: unknown };
+
+type CategoriaConTotal = {
+  idCategoria: number;
+  nombre: string;
+  descripcion: string;
+  simbolo: string;
+  totalProductos: number;
 };
 
-function validarNombre(valor: unknown): string {
-  if (typeof valor !== "string" || !valor.trim()) {
-    throw new ErrorApi(400, "Indica el nombre de la categoría.");
-  }
+const COLUMNAS = `
+  id_categoria AS "idCategoria",
+  nombre,
+  COALESCE(descripcion, '') AS descripcion,
+  simbolo`;
 
-  const nombre = valor.trim();
-
-  if (nombre.length > 120) {
-    throw new ErrorApi(
-      400,
-      "El nombre no puede superar los 120 caracteres."
-    );
-  }
-
-  return nombre;
+function leerDatos(cuerpo: CuerpoCategoria): DatosCategoria {
+  return {
+    nombre: espacios(aTexto(cuerpo.nombre)),
+    descripcion: espacios(aTexto(cuerpo.descripcion)),
+    simbolo: aTexto(cuerpo.simbolo),
+  };
 }
 
-function manejarErrorBD(error: unknown): never {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "23505"
-  ) {
-    throw new ErrorApi(409, "Ya existe una categoría con ese nombre.");
+async function comprobar(datos: DatosCategoria, idCategoria?: number) {
+  const categorias = await obtenerCategorias();
+  if (idCategoria !== undefined && !categorias.some((c) => c.idCategoria === idCategoria)) {
+    throw new ErrorApi(404, "La categoría no existe.");
   }
+  const errores = validarCategoria(datos, categorias, idCategoria);
+  if (Object.keys(errores).length > 0) {
+    const duplicado = errores.nombre === "Ya existe una categoría con ese nombre.";
+    throw new ErrorApi(duplicado ? 409 : 400, duplicado ? errores.nombre! : "Revisa los datos marcados.", errores);
+  }
+}
 
+function errorBaseDatos(error: unknown): never {
+  if (error && typeof error === "object" && "code" in error) {
+    if (error.code === "23505") {
+      throw new ErrorApi(409, "Ya existe una categoría con ese nombre.", { nombre: "Ya existe una categoría con ese nombre." });
+    }
+    if (error.code === "23514" || error.code === "22001") {
+      throw new ErrorApi(400, "Los datos de la categoría no cumplen las reglas permitidas.");
+    }
+  }
   throw error;
 }
 
 export function GET() {
   return manejar(async () => {
-    const categorias = await consulta<{
-      idCategoria: number;
-      nombre: string;
-      totalProductos: number;
-    }>(`
+    const categorias = await consulta<CategoriaConTotal>(`
       SELECT
         c.id_categoria AS "idCategoria",
         c.nombre,
+        COALESCE(c.descripcion, '') AS descripcion,
+        c.simbolo,
         COUNT(p.id_producto)::integer AS "totalProductos"
       FROM categoria c
-      LEFT JOIN producto p
-        ON p.id_categoria = c.id_categoria
-      GROUP BY c.id_categoria, c.nombre
+      LEFT JOIN producto p ON p.id_categoria = c.id_categoria
+      GROUP BY c.id_categoria
       ORDER BY c.nombre
     `);
-
     return exito(categorias);
   });
 }
@@ -69,36 +74,18 @@ export function GET() {
 export function POST(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");
-
-    const datos = await leerCuerpo<DatosCategoria>(peticion);
-    const nombre = validarNombre(datos.nombre);
-
-    const categorias = await obtenerCategorias();
-    const error = validarCategoria(nombre, categorias);
-
-    if (error) {
-      throw new ErrorApi(
-        error.includes("Ya existe") ? 409 : 400,
-        error
-      );
-    }
-
+    const datos = leerDatos(await leerCuerpo<CuerpoCategoria>(peticion));
+    await comprobar(datos);
     try {
-      const resultado = await consulta<{
-        idCategoria: number;
-        nombre: string;
-      }>(
-        `INSERT INTO categoria (nombre)
-         VALUES ($1)
-         RETURNING
-           id_categoria AS "idCategoria",
-           nombre`,
-        [nombre]
+      const filas = await consulta<CategoriaConTotal>(
+        `INSERT INTO categoria (nombre, descripcion, simbolo)
+         VALUES ($1, $2, $3)
+         RETURNING ${COLUMNAS}`,
+        [datos.nombre, datos.descripcion, datos.simbolo]
       );
-
-      return exito(resultado[0], 201);
+      return exito(filas[0], 201);
     } catch (error) {
-      manejarErrorBD(error);
+      errorBaseDatos(error);
     }
   });
 }
@@ -106,51 +93,22 @@ export function POST(peticion: Request) {
 export function PUT(peticion: Request) {
   return manejar(async () => {
     await requerirPermiso("catalogo.administrar");
-
-    const datos = await leerCuerpo<DatosCategoria>(peticion);
-
-    const idCategoria = Number(datos.idCategoria);
-    const nombre = validarNombre(datos.nombre);
-
-    if (!Number.isSafeInteger(idCategoria) || idCategoria <= 0) {
-      throw new ErrorApi(400, "Identificador de categoría inválido.");
-    }
-
-    const categorias = await obtenerCategorias();
-
-    if (!categorias.some(c => c.idCategoria === idCategoria)) {
-      throw new ErrorApi(404, "La categoría no existe.");
-    }
-
-    const error = validarCategoria(
-      nombre,
-      categorias,
-      idCategoria
-    );
-
-    if (error) throw new ErrorApi(409, error);
-
+    const cuerpo = await leerCuerpo<CuerpoCategoria>(peticion);
+    const idCategoria = leerId(cuerpo.idCategoria, "El identificador de la categoría no es válido.");
+    const datos = leerDatos(cuerpo);
+    await comprobar(datos, idCategoria);
     try {
-      const resultado = await consulta<{
-        idCategoria: number;
-        nombre: string;
-      }>(
+      const filas = await consulta<CategoriaConTotal>(
         `UPDATE categoria
-         SET nombre = $2
+         SET nombre = $2, descripcion = $3, simbolo = $4
          WHERE id_categoria = $1
-         RETURNING
-           id_categoria AS "idCategoria",
-           nombre`,
-        [idCategoria, nombre]
+         RETURNING ${COLUMNAS}`,
+        [idCategoria, datos.nombre, datos.descripcion, datos.simbolo]
       );
-
-      if (!resultado[0]) {
-        throw new ErrorApi(404, "La categoría no existe.");
-      }
-
-      return exito(resultado[0]);
+      if (!filas[0]) throw new ErrorApi(404, "La categoría no existe.");
+      return exito(filas[0]);
     } catch (error) {
-      manejarErrorBD(error);
+      errorBaseDatos(error);
     }
   });
 }

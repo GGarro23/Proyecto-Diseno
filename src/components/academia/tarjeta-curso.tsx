@@ -22,16 +22,15 @@ export function TarjetaCurso({ curso, horarios, profesor, cuposDisponibles }: Pr
           />
         <h3 className="font-serif text-2xl">{curso.nombre}</h3>
         {profesor && <p className="text-sm text-gris">con {profesor}</p>}
-        <p className="line-clamp-2 text-sm text-gris">{curso.descripcion}</p>
         <ul className="flex flex-col gap-1 border-t border-borde pt-3 text-sm">
           {horarios.map((h) => (
             <li key={h.idHorario} className="flex items-center gap-2">
               <Icono nombre="calendario" className="size-4 text-naranja" />
-              {h.diaSemana} · {h.horaInicio}–{h.horaFin}
+              {h.diaSemana} · {h.horaInicio} – {h.horaFin}
             </li>
           ))}
         </ul>
-        <BotonEnlace href={`/academia/${curso.idCurso}`} className="mt-auto">
+        <BotonEnlace href={`/academia/${curso.idCurso}`} className="mt-auto rounded-md">
           Ver curso
         </BotonEnlace>
       </div>

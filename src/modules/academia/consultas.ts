@@ -135,3 +135,34 @@ export async function obtenerCursoPorId(
     ) ?? null
   );
 }
+
+export async function obtenerCifrasAcademia(): Promise<{
+  profesores: number;
+  cursosAbiertos: number;
+}> {
+  const resultado = await db.query<{
+    profesores: number;
+    cursos_abiertos: number;
+  }>(`
+    SELECT
+      (
+        SELECT COUNT(DISTINCT u.id_usuario)
+        FROM usuario u
+        JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+        JOIN rol r ON r.id_rol = ur.id_rol
+        WHERE r.nombre = 'Profesor' AND u.activo
+      )::INTEGER AS profesores,
+      (
+        SELECT COUNT(*)
+        FROM curso
+        WHERE estado = 'ABIERTO'
+      )::INTEGER AS cursos_abiertos
+  `);
+
+  const fila = resultado.rows[0];
+
+  return {
+    profesores: fila.profesores,
+    cursosAbiertos: fila.cursos_abiertos,
+  };
+}

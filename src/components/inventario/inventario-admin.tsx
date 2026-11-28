@@ -115,8 +115,8 @@ export function InventarioAdmin() {
           ))}
         </div>
         <div className="flex gap-3">
-          <Boton variante="secundario" onClick={() => setPanel({ clase: "producto", idProducto: null })}>Registrar producto</Boton>
-          <Boton onClick={() => setPanel({ clase: "entrada", idProducto: null })}>Registrar entrada</Boton>
+          <Boton variante="secundario" onClick={() => setPanel({ clase: "producto", idProducto: null })} className="rounded-md">Registrar producto</Boton>
+          <Boton onClick={() => setPanel({ clase: "entrada", idProducto: null })} className="rounded-md">Registrar entrada</Boton>
         </div>
       </div>
 
@@ -158,7 +158,7 @@ export function InventarioAdmin() {
           />
         )}
         {panel?.clase === "producto" && (
-          <FormularioProductoAdmin producto={productoPanel} categorias={categorias} alTerminar={terminar} alCancelar={() => setPanel(null)} />
+          <FormularioProductoAdmin producto={productoPanel} productos={productos} categorias={categorias} alTerminar={terminar} alCancelar={() => setPanel(null)} />
         )}
       </PanelLateral>
 
@@ -168,8 +168,8 @@ export function InventarioAdmin() {
           No se podrá agregar a nuevas compras. Sus movimientos y los pedidos donde aparece se conservan.
         </p>
         <div className="mt-8 flex justify-end gap-3">
-          <Boton variante="secundario" onClick={() => setIdDesactivar(null)}>Cancelar</Boton>
-          <Boton onClick={confirmarDesactivar} disabled={desactivando}>{desactivando ? "Desactivando..." : "Desactivar"}</Boton>
+          <Boton variante="secundario" onClick={() => setIdDesactivar(null)} className="rounded-md">Cancelar</Boton>
+          <Boton onClick={confirmarDesactivar} disabled={desactivando} className="rounded-md">{desactivando ? "Desactivando..." : "Desactivar"}</Boton>
         </div>
       </Modal>
 

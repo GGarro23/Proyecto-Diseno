@@ -5,6 +5,9 @@ import { Encabezado } from "@/components/layout/encabezado";
 import "./globals.css";
 import { ProveedorCarrito } from "@/components/carrito/proveedor-carrito";
 import { ProveedorSesion } from "@/components/sesion/proveedor-sesion";
+import { PiePagina } from "@/components/layout/footer";
+import { BotonWhatsapp } from "@/components/layout/boton-whatsapp";
+import { AvisoCookies } from "@/components/ayuda/aviso-cookies";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -36,6 +39,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     </Suspense>
 
     <main className="flex-1">{children}</main>
+    <PiePagina />
+    <BotonWhatsapp />
+    <AvisoCookies />
   </ProveedorCarrito>
 </ProveedorSesion>
 

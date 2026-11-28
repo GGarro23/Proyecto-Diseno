@@ -9,6 +9,7 @@ import { Insignia, Sobretitulo } from "@/components/ui/textos";
 import { DIAS, proximoHorario, textoProximaClase } from "@/lib/horarios";
 import { useOferta } from "@/components/academia/oferta";
 import type { Sesion } from "@/modules/autenticacion-usuarios/schema";
+import { formatearFecha } from "@/lib/formato";
 
 export function PanelEstudiante({ sesion }: { sesion: Sesion }) {
   const { cursos, horarios, nombresProfesores, cargando, error } = useOferta();
@@ -90,7 +91,7 @@ export function PanelEstudiante({ sesion }: { sesion: Sesion }) {
                     </div>
                     <h3 className="font-serif text-2xl">{curso.nombre}</h3>
                     <p className="text-sm text-gris">con {curso.idProfesor === null ? "Sin asignar" : nombresProfesores[curso.idProfesor] ?? "Profesor"}</p>
-                    <p className="text-xs text-gris">Inscrito el {i.fechaInscripcion.slice(0, 10)}</p>
+                    <p className="text-xs text-gris">Inscrito el {formatearFecha(i.fechaInscripcion)}</p>
                     <Link href={`/academia/${curso.idCurso}`} className="mt-auto flex items-center gap-2 pt-2 text-sm font-medium hover:text-naranja">
                       Ver curso <Icono nombre="flecha" />
                     </Link>

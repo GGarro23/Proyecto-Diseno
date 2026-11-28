@@ -35,7 +35,9 @@ export function tienePermiso(matriz: MatrizPermisos, roles: NombreRol[], codigo:
 export function validarMatriz(matriz: MatrizPermisos): string | undefined {
   for (const [rol, codigos] of Object.entries(matriz)) {
     if (!ROLES_INTERNOS.includes(rol as NombreRol)) return `El rol ${rol} no existe o no se configura aquí.`;
-    const invalido = codigos?.find((c) => !PERMISOS.some((p) => p.codigo === c));
+    if (!Array.isArray(codigos) || codigos.some((c) => typeof c !== "string")) return `Los permisos de ${rol} no tienen un formato válido.`;
+    if (new Set(codigos).size !== codigos.length) return `Hay permisos repetidos en ${rol}.`;
+    const invalido = codigos.find((c) => !PERMISOS.some((p) => p.codigo === c));
     if (invalido) return `El permiso ${invalido} no existe.`;
   }
 }

@@ -4,7 +4,12 @@ import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type For
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, Selector } from "@/components/ui/campo";
 import type { Categoria, Producto } from "@/modules/catalogo-inventario/schema";
-import type { DatosProducto, ErroresProducto } from "@/modules/catalogo-inventario/validaciones";
+import {
+  LIMITES_CATALOGO,
+  validarProducto,
+  type DatosProducto,
+  type ErroresProducto,
+} from "@/modules/catalogo-inventario/validaciones";
 
 type ResultadoBiblioteca =
   | { ok: true; imagenes: string[] }
@@ -23,11 +28,13 @@ async function pedirBiblioteca(): Promise<ResultadoBiblioteca> {
 
 export function FormularioProductoAdmin({
   producto,
+  productos,
   categorias,
   alTerminar,
   alCancelar,
 }: {
   producto: Producto | null;
+  productos: Producto[];
   categorias: Categoria[];
   alTerminar: (texto: string) => void;
   alCancelar: () => void;
@@ -113,15 +120,22 @@ export function FormularioProductoAdmin({
     void subirImagen(evento.dataTransfer.files?.[0]);
   };
 
-  const cambiar = (campo: keyof DatosProducto) => (e: { target: { value: string } }) =>
+  const cambiar = (campo: keyof DatosProducto) => (e: { target: { value: string } }) => {
     setDatos((d) => ({ ...d, [campo]: e.target.value }));
+    setErrores((actuales) => ({ ...actuales, [campo]: undefined }));
+  };
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault();
-    if (procesando) return;
+    if (procesando || subiendo) return;
+    setErrorGeneral(null);
+    const encontrados = validarProducto(datos, productos, categorias, producto?.idProducto);
+    if (Object.keys(encontrados).length > 0) {
+      setErrores(encontrados);
+      return setErrorGeneral("Revisa los datos marcados.");
+    }
     setProcesando(true);
     setErrores({});
-    setErrorGeneral(null);
     try {
       const respuesta = await fetch("/api/productos", {
         method: producto ? "PUT" : "POST",
@@ -147,7 +161,7 @@ export function FormularioProductoAdmin({
   return (
     <form onSubmit={enviar} noValidate className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Campo etiqueta="Código" value={datos.codigo} onChange={cambiar("codigo")} error={errores.codigo} />
+        <Campo etiqueta="Código" value={datos.codigo} onChange={cambiar("codigo")} error={errores.codigo} maxLength={LIMITES_CATALOGO.codigo} placeholder="GUIT-CLAS-01" />
         <Selector etiqueta="Categoría" value={datos.idCategoria} onChange={cambiar("idCategoria")} error={errores.idCategoria}>
           <option value="">Selecciona una categoría</option>
           {categorias.map((c) => (
@@ -155,9 +169,9 @@ export function FormularioProductoAdmin({
           ))}
         </Selector>
       </div>
-      <Campo etiqueta="Nombre" value={datos.nombre} onChange={cambiar("nombre")} error={errores.nombre} />
-      <Campo etiqueta="Precio (₡)" type="number" min={0} value={datos.precio} onChange={cambiar("precio")} error={errores.precio} />
-      <AreaTexto etiqueta="Descripción" value={datos.descripcion} onChange={cambiar("descripcion")} error={errores.descripcion} />
+      <Campo etiqueta="Nombre" value={datos.nombre} onChange={cambiar("nombre")} error={errores.nombre} maxLength={LIMITES_CATALOGO.nombreProducto} />
+      <Campo etiqueta="Precio (₡)" type="number" min={1} max={LIMITES_CATALOGO.precioMaximo} step="0.01" inputMode="decimal" value={datos.precio} onChange={cambiar("precio")} error={errores.precio} />
+      <AreaTexto etiqueta="Descripción" value={datos.descripcion} onChange={cambiar("descripcion")} error={errores.descripcion} maxLength={LIMITES_CATALOGO.descripcionProducto} />
       <section className="flex flex-col gap-3 text-sm">
         <span>Imagen del producto (opcional)</span>
         <div
@@ -178,10 +192,10 @@ export function FormularioProductoAdmin({
             onChange={archivoElegido}
           />
           <div className="flex flex-wrap justify-center gap-2">
-            <Boton type="button" variante="secundario" disabled={subiendo} onClick={() => archivoRef.current?.click()}>
+            <Boton type="button" variante="secundario" disabled={subiendo} onClick={() => archivoRef.current?.click()} className="rounded-md">
               Elegir archivo
             </Boton>
-            <Boton type="button" variante="secundario" onClick={() => setMostrarBiblioteca((valor) => !valor)}>
+            <Boton type="button" variante="secundario" onClick={() => setMostrarBiblioteca((valor) => !valor)} className="rounded-md">
               {mostrarBiblioteca ? "Ocultar imágenes" : "Ver imágenes existentes"}
             </Boton>
           </div>
@@ -215,7 +229,7 @@ export function FormularioProductoAdmin({
             </div>
           </div>
         )}
-        <Campo etiqueta="O ingresá una ruta o URL de imagen" placeholder="/imagenes/productos/nombre.jpg" value={datos.imagenUrl} onChange={cambiar("imagenUrl")} />
+        <Campo etiqueta="O ingresá una ruta o URL de imagen" placeholder="/imagenes/productos/nombre.jpg" value={datos.imagenUrl} onChange={cambiar("imagenUrl")} error={errores.imagenUrl} maxLength={500} />
         {errorImagen && <p role="alert" className="text-sm text-red-700">{errorImagen}</p>}
       </section>
 
@@ -228,8 +242,8 @@ export function FormularioProductoAdmin({
       {errorGeneral && <p className="text-sm text-red-700">{errorGeneral}</p>}
 
       <div className="flex justify-end gap-3">
-        <Boton type="button" variante="secundario" onClick={alCancelar}>Cancelar</Boton>
-        <Boton type="submit" disabled={procesando || subiendo}>{procesando ? "Guardando..." : producto ? "Guardar cambios" : "Registrar producto"}</Boton>
+        <Boton type="button" variante="secundario" onClick={alCancelar} className="rounded-md">Cancelar</Boton>
+        <Boton type="submit" disabled={procesando || subiendo} className="rounded-md">{procesando ? "Guardando..." : producto ? "Guardar cambios" : "Registrar producto"}</Boton>
       </div>
     </form>
   );

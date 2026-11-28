@@ -48,7 +48,7 @@ export function OfertaAdmin() {
             {sinProfesor > 0 && ` · ${sinProfesor} sin profesor`}
           </p>
         </div>
-        <Boton onClick={() => setPanel({ clase: "curso", idCurso: null })}>Registrar curso</Boton>
+        <Boton onClick={() => setPanel({ clase: "curso", idCurso: null })} className="rounded-md">Registrar curso</Boton>
       </div>
 
       {cargando && <p className="text-sm text-gris">Cargando cursos desde PostgreSQL...</p>}

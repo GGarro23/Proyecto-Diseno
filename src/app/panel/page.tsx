@@ -21,7 +21,7 @@ export default function Panel() {
           return (
             <div className="mx-auto flex max-w-xl flex-col items-center gap-5 border border-borde bg-papel p-12 text-center">
               <p className="text-gris">El panel de tu rol todavía no está disponible.</p>
-              <BotonEnlace href="/">Volver al inicio</BotonEnlace>
+              <BotonEnlace href="/" className="rounded-md">Volver al inicio</BotonEnlace>
             </div>
           );
         }}

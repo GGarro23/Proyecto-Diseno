@@ -12,9 +12,13 @@ function Logo() {
       <span className="flex size-11 items-center justify-center rounded-full border border-cafe font-serif text-lg text-cafe">
         IV
       </span>
-      <span className="flex flex-col items-center leading-none">
-        <span className="font-serif text-xl tracking-[0.25em] text-tinta">INTERVALLUM</span>
-        <span className="mt-1 text-[10px] tracking-[0.3em] text-naranja">TIENDA · ACADEMIA</span>
+            <span className="flex flex-col leading-none">
+        <span className="-mr-[0.25em] font-serif text-xl tracking-[0.25em] text-tinta">INTERVALLUM</span>
+        <span className="mt-1 flex justify-between text-[10px] text-naranja" aria-label="Tienda · Academia">
+          {"TIENDA · ACADEMIA".split("").map((letra, indice) => (
+            <span key={indice} aria-hidden>{letra}</span>
+          ))}
+        </span>
       </span>
     </Link>
   );

@@ -21,7 +21,7 @@ export function InscripcionCurso({ curso, horarios, cuposDisponibles }: Props) {
   const [confirmado, setConfirmado] = useState(false);
 
   if (!sesion) {
-    return <BotonEnlace href={`/iniciar-sesion?volver=/academia/${curso.idCurso}`} className="self-start">Inicia sesión para inscribirte</BotonEnlace>;
+    return <BotonEnlace href={`/iniciar-sesion?volver=/academia/${curso.idCurso}`} className="self-start rounded-md">Inicia sesión para inscribirte</BotonEnlace>;
   }
 
   const inscrito = confirmado || inscripciones.some(
@@ -40,7 +40,7 @@ export function InscripcionCurso({ curso, horarios, cuposDisponibles }: Props) {
 
   if (curso.estado === "Cerrado" || cuposDisponibles === 0) {
     return (
-      <Boton disabled className="self-start">
+      <Boton disabled className="self-start rounded-md">
         {curso.estado === "Cerrado" ? "Curso cerrado" : "Sin cupos disponibles"}
       </Boton>
     );
@@ -73,7 +73,7 @@ export function InscripcionCurso({ curso, horarios, cuposDisponibles }: Props) {
 
   return (
     <>
-      <Boton onClick={() => { setError(null); setAbierto(true); }} className="self-start">
+      <Boton onClick={() => { setError(null); setAbierto(true); }} className="self-start rounded-md">
         Inscribirme
       </Boton>
       <Modal abierto={abierto} alCerrar={() => setAbierto(false)}>
@@ -94,8 +94,8 @@ export function InscripcionCurso({ curso, horarios, cuposDisponibles }: Props) {
           </div>
           {error && <p className="text-sm text-red-800">{error}</p>}
           <div className="flex gap-3">
-            <Boton onClick={confirmar} disabled={procesando}>{procesando ? "Inscribiendo..." : "Confirmar inscripción"}</Boton>
-            <Boton variante="secundario" onClick={() => setAbierto(false)}>Cancelar</Boton>
+            <Boton onClick={confirmar} disabled={procesando} className="rounded-md">{procesando ? "Inscribiendo..." : "Confirmar inscripción"}</Boton>
+            <Boton variante="secundario" onClick={() => setAbierto(false)} className="rounded-md">Cancelar</Boton>
           </div>
         </div>
       </Modal>

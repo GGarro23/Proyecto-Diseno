@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { useSesion } from "@/components/sesion/proveedor-sesion";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
+import { validarAcceso } from "@/modules/autenticacion-usuarios/validaciones";
 
 export function FormularioAcceso() {
   const { iniciarSesion } = useSesion();
@@ -18,7 +19,8 @@ export function FormularioAcceso() {
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault();
-    if (!correo.trim() || !contrasena) return setError("Completa el correo y la contraseña.");
+    const errorAcceso = validarAcceso(correo, contrasena);
+    if (errorAcceso) return setError(errorAcceso);
     setEnviando(true);
     const resultado = await iniciarSesion(correo, contrasena);
     setEnviando(false);
@@ -31,9 +33,9 @@ export function FormularioAcceso() {
       <Campo etiqueta="Correo electrónico" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} autoComplete="email" />
       <Campo etiqueta="Contraseña" type="password" value={contrasena} onChange={(e) => setContrasena(e.target.value)} autoComplete="current-password" />
       {error && <p className="text-sm text-red-800">{error}</p>}
-      <Boton type="submit" disabled={enviando}>{enviando ? "Ingresando…" : "Iniciar sesión"}</Boton>
+      <Boton type="submit" disabled={enviando} className="rounded-md">{enviando ? "Ingresando…" : "Iniciar sesión"}</Boton>
       <p className="text-center text-sm text-gris">
-        ¿No tienes cuenta?{" "}
+        ¿No tienes una cuenta?{" "}
         <Link href="/registro" className="font-medium text-naranja hover:underline">Regístrate</Link>
       </p>
       <Link href="/" className="text-center text-sm text-gris hover:text-naranja">Cancelar</Link>

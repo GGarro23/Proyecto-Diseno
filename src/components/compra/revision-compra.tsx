@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useCarrito } from "@/components/carrito/proveedor-carrito";
 import { Icono } from "@/components/ui/icono";
 import { formatearColones } from "@/lib/formato";
+import { CANTIDAD_MAXIMA_LINEA } from "@/modules/ventas-pagos/validaciones";
 
 export function RevisionCompra() {
   const {
@@ -172,7 +173,7 @@ export function RevisionCompra() {
                     linea.cantidad + 1
                   )
                 }
-                disabled={estaProcesando}
+                disabled={estaProcesando || linea.cantidad >= CANTIDAD_MAXIMA_LINEA}
                 aria-label={`Agregar una unidad de ${linea.nombre}`}
                 className="px-3 py-2 disabled:text-borde"
               >

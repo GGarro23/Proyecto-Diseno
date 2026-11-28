@@ -9,6 +9,7 @@ import { Insignia, Sobretitulo } from "@/components/ui/textos";
 import { llamarApi } from "@/lib/api";
 import type { Recomendacion, RecomendacionDetalle } from "@/modules/agente-apoyo/schema";
 import { useRecomendaciones } from "./recomendaciones";
+import { formatearFecha } from "@/lib/formato";
 
 const FILTROS = ["Pendientes", "Revisadas", "Todas"] as const;
 
@@ -71,8 +72,8 @@ export function RecomendacionesAdmin() {
           ))}
         </div>
         <div className="flex flex-wrap gap-3">
-          <Boton variante="secundario" disabled={ocupado} onClick={() => generar("Promoción académica")}>Generar promoción académica</Boton>
-          <Boton disabled={ocupado} onClick={() => generar("Reabastecimiento")}>Generar reabastecimiento</Boton>
+          <Boton variante="secundario" disabled={ocupado} onClick={() => generar("Promoción académica")} className="rounded-md">Generar promoción académica</Boton>
+          <Boton disabled={ocupado} onClick={() => generar("Reabastecimiento")} className="rounded-md">Generar reabastecimiento</Boton>
         </div>
       </div>
 
@@ -97,12 +98,12 @@ export function RecomendacionesAdmin() {
                   <h2 className="mt-2 font-serif text-2xl">{r.elemento}</h2>
                   <p className="mt-1 text-sm text-gris">{r.motivo}</p>
                   <p className="mt-1 text-xs text-gris">
-                    Generada el {r.fechaGeneracion.slice(0, 10)}
-                    {r.estado === "Revisada" && ` · Revisada el ${r.fechaRevision?.slice(0, 10)} por ${r.revisor}`}
+                    Generada el {formatearFecha(r.fechaGeneracion)}
+                    {r.estado === "Revisada" && ` · Revisada el ${formatearFecha(r.fechaRevision)} por ${r.revisor}`}
                   </p>
                 </div>
                 {r.estado === "Pendiente" ? (
-                  <Boton variante="secundario" onClick={() => revisar(r)}>Marcar revisada</Boton>
+                  <Boton variante="secundario" onClick={() => revisar(r)} className="rounded-md">Marcar revisada</Boton>
                 ) : (
                   <span className="text-sm font-medium text-gris">Revisada</span>
                 )}

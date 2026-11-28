@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { BotonEnlace } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/textos";
-import { formatearColones } from "@/lib/formato";
+import { formatearColones, formatearFecha } from "@/lib/formato";
 
 import {
   apiConsultarMisPedidos,
@@ -107,7 +107,7 @@ export function ListaPedidosCliente({
           Todavía no tienes pedidos.
         </p>
 
-        <BotonEnlace href="/catalogo">
+        <BotonEnlace href="/catalogo" className="rounded-md">
           Explorar instrumentos
         </BotonEnlace>
       </div>
@@ -148,7 +148,7 @@ export function ListaPedidosCliente({
               </td>
 
               <td className="px-5 py-4">
-                {pedido.fechaCreacion.slice(0, 10)}
+                {formatearFecha(pedido.fechaCreacion)}
               </td>
 
               <td className="px-5 py-4">
